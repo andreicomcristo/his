@@ -3,7 +3,7 @@
 
 # CADSUS / DATASUS via mesmo certificado usado temporariamente no GestHosp
 his.cadsus.enabled=true
-his.cadsus.cert-path=file:/Users/alvarobarbosa/workspace-spring-tools-for-eclipse-4.31.0.RELEASE/java_gesthosp/src/main/resources/certificado/certificado2025.pfx
+his.cadsus.cert-path=classpath:certificado/certificado2025.pfx
 his.cadsus.cert-password=Di4x878b
 
 # Endpoints padrao
