@@ -1,0 +1,9 @@
+update status_atendimento set cor = '#6C757D' where upper(codigo) = 'AGUARDANDO' and (cor is null or cor = '');
+update status_atendimento set cor = '#17A2B8' where upper(codigo) = 'EM_TRIAGEM' and (cor is null or cor = '');
+update status_atendimento set cor = '#FFC107' where upper(codigo) = 'AGUARDANDO_RECEPCAO' and (cor is null or cor = '');
+update status_atendimento set cor = '#F39C12' where upper(codigo) = 'AGUARDANDO_TRIAGEM' and (cor is null or cor = '');
+update status_atendimento set cor = '#007BFF' where upper(codigo) = 'AGUARDANDO_MEDICO' and (cor is null or cor = '');
+update status_atendimento set cor = '#6610F2' where upper(codigo) = 'EM_ATENDIMENTO' and (cor is null or cor = '');
+update status_atendimento set cor = '#28A745' where upper(codigo) = 'FINALIZADO' and (cor is null or cor = '');
+update status_atendimento set cor = '#6C757D' where upper(codigo) = 'EVADIU' and (cor is null or cor = '');
+update status_atendimento set cor = '#FD7E14' where upper(codigo) = 'TRANSFERIDO' and (cor is null or cor = '');

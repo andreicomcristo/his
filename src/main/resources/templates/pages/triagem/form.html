@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:replace="~{layout/base :: layout('HIS | Triagem', ~{::section})}">
+    <section>
+        <style>
+            .required-mark {
+                color: #d92550;
+                margin-left: 2px;
+                font-weight: 700;
+            }
+
+            .pain-scale {
+                border: 1px solid #d8dbe2;
+                border-radius: 8px;
+                background: #fff;
+                padding: 0 16px 14px;
+                min-height: 260px;
+                box-shadow: 0 6px 14px rgba(17, 24, 39, 0.08);
+            }
+
+            .pain-scale-gradient {
+                height: 8px;
+                margin: 0 -16px 12px;
+                border-radius: 8px 8px 0 0;
+                background: linear-gradient(90deg, #11a63a 0%, #c2d313 40%, #f39c12 70%, #e53935 100%);
+            }
+
+            .pain-scale-grid {
+                display: grid;
+                grid-template-columns: repeat(11, minmax(0, 1fr));
+                gap: 6px;
+                margin-bottom: 10px;
+            }
+
+            .pain-scale-item {
+                text-align: center;
+                position: relative;
+                padding: 4px 2px 2px;
+                border-radius: 6px;
+                cursor: pointer;
+            }
+
+            .pain-scale-item.split::after {
+                content: "";
+                position: absolute;
+                top: 2px;
+                right: -4px;
+                width: 1px;
+                height: 42px;
+                background: #cfd6de;
+            }
+
+            .pain-scale-value {
+                display: block;
+                font-weight: 700;
+                font-size: 1.35rem;
+                color: #2f3541;
+                line-height: 1;
+            }
+
+            .pain-scale-dot {
+                width: 20px;
+                height: 20px;
+                margin: 8px auto 0;
+                border-radius: 999px;
+                border: 2px solid #c7cdd5;
+                background: #fff;
+                transition: all 0.15s ease;
+            }
+
+            .pain-scale-item.is-selected .pain-scale-dot {
+                border-color: #2b82c9;
+                box-shadow: inset 0 0 0 5px #2b82c9;
+            }
+
+            .pain-scale-item input {
+                display: none;
+            }
+
+            .pain-scale-levels {
+                display: flex;
+                justify-content: space-around;
+                gap: 8px;
+                margin-top: 8px;
+                color: #364151;
+                font-weight: 700;
+            }
+
+            .pain-scale-level {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                font-size: 1.05rem;
+            }
+
+            .pain-scale-icon {
+                font-size: 1.4rem;
+                line-height: 1;
+            }
+
+            .pain-scale-level.leve {
+                color: #1f8a36;
+            }
+
+            .pain-scale-level.moderada {
+                color: #cf7f0f;
+            }
+
+            .pain-scale-level.intensa {
+                color: #c72e2a;
+            }
+
+            .glasgow-panel {
+                border: 1px solid #d8dbe2;
+                border-radius: 8px;
+                background: #fff;
+                padding: 12px 12px 10px;
+                min-height: 260px;
+                box-shadow: 0 6px 14px rgba(17, 24, 39, 0.08);
+            }
+
+            .glasgow-total-display {
+                text-align: center;
+                font-weight: 800;
+                font-size: 3rem;
+                color: #1f8a36;
+                line-height: 1;
+                margin-top: 8px;
+            }
+        </style>
+        <div class="main-card card">
+            <div class="card-body">
+                <h5 class="card-title"
+                    th:text="${modoReclassificacao} ? 'Reclassificacao - Atendimento #' + atendimento.id : 'Triagem - Atendimento #' + atendimento.id">Triagem - Atendimento #</h5>
+                <p class="text-muted">Paciente: <span th:text="${atendimento.paciente.nomeExibicao}"></span></p>
+
+                <div class="alert alert-success" th:if="${successMessage}" th:text="${successMessage}"></div>
+                <div class="alert alert-danger" th:if="${errorMessage}" th:text="${errorMessage}"></div>
+                <div class="alert alert-info" th:if="${modoReclassificacao}">
+                    Reclassificacao: os dados da classificacao inicial sao mantidos, e esta tela registra apenas a reavaliacao.
+                </div>
+
+                <form th:if="${!triagemAberta and !modoReclassificacao}" th:action="@{/ui/triagem/{id}/iniciar(id=${atendimento.id})}" method="post" class="mb-3">
+                    <button type="submit" class="btn btn-outline-primary btn-sm">Iniciar triagem</button>
+                </form>
+
+                <form th:action="${modoReclassificacao} ? @{/ui/triagem/{id}/reclassificar(id=${atendimento.id})} : @{/ui/triagem/{id}/finalizar(id=${atendimento.id})}" method="post" th:object="${form}">
+                    <div class="card mb-3">
+                        <div class="card-header"><strong>Queixa e observacoes</strong></div>
+                        <div class="card-body">
+                            <div class="form-row" th:if="${!modoReclassificacao}">
+                                <div class="form-group col-md-6">
+                                    <label>Queixa principal<span class="required-mark">*</span></label>
+                                    <textarea class="form-control" rows="3" th:field="*{queixaPrincipal}"></textarea>
+                                    <small class="text-danger" th:errors="*{queixaPrincipal}"></small>
+                                </div>
+                                <div class="form-group col-md-6">
+                                    <label>Medicacoes de uso continuo</label>
+                                    <textarea class="form-control" rows="3" th:field="*{medicacoesUsoContinuo}"></textarea>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group col-md-6">
+                                    <label>Discriminador</label>
+                                    <textarea class="form-control" rows="2" th:field="*{discriminador}"></textarea>
+                                </div>
+                                <div class="form-group col-md-6">
+                                    <label>Observacoes complementares</label>
+                                    <textarea class="form-control" rows="2" th:field="*{observacao}"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card mb-3">
+                        <div class="card-header"><strong>Sinais vitais</strong></div>
+                        <div class="card-body">
+                            <div class="form-row">
+                                <div class="form-group col-md-3">
+                                    <label>Pressao arterial</label>
+                                    <input class="form-control" type="text" th:field="*{pressaoArterial}" placeholder="120x80">
+                                </div>
+                                <div class="form-group col-md-2">
+                                    <label>Temperatura</label>
+                                    <input class="form-control" type="number" step="0.1" th:field="*{temperatura}">
+                                </div>
+                                <div class="form-group col-md-2">
+                                    <label>FC</label>
+                                    <input class="form-control" type="number" th:field="*{frequenciaCardiaca}">
+                                </div>
+                                <div class="form-group col-md-2">
+                                    <label>Sat O2</label>
+                                    <input class="form-control" type="number" th:field="*{saturacaoO2}">
+                                </div>
+                                <div class="form-group col-md-2">
+                                    <label>FR</label>
+                                    <input class="form-control" type="number" th:field="*{frequenciaRespiratoria}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card mb-3">
+                        <div class="card-header"><strong>Oxigenacao</strong></div>
+                        <div class="card-body">
+                            <div class="form-row">
+                                <div class="form-group col-md-3">
+                                    <label>Sat O2 c/ terapia</label>
+                                    <input class="form-control" type="number" th:field="*{saturacaoO2ComTerapiaO2}">
+                                </div>
+                                <div class="form-group col-md-3">
+                                    <label>Sat O2 AA</label>
+                                    <input class="form-control" type="number" th:field="*{saturacaoO2Aa}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card mb-3">
+                        <div class="card-header"><strong>Glicemia e antropometria</strong></div>
+                        <div class="card-body">
+                            <div class="form-row">
+                                <div class="form-group col-md-3">
+                                    <label>Glicemia capilar</label>
+                                    <input class="form-control" type="number" step="0.1" th:field="*{glicemiaCapilar}">
+                                </div>
+                                <div class="form-group col-md-3">
+                                    <label>HGT</label>
+                                    <input class="form-control" type="number" th:field="*{hgt}">
+                                </div>
+                                <div class="form-group col-md-3">
+                                    <label>Peso (kg)</label>
+                                    <input class="form-control" type="number" step="0.1" th:field="*{pesoKg}">
+                                </div>
+                                <div class="form-group col-md-3">
+                                    <label>Altura (cm)</label>
+                                    <input class="form-control" type="number" step="0.1" th:field="*{alturaCm}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card mb-3">
+                        <div class="card-header"><strong>Perfusao capilar</strong></div>
+                        <div class="card-body">
+                            <div class="form-row">
+                                <div class="form-group col-md-3">
+                                    <label>Perfusao capilar (seg)</label>
+                                    <input class="form-control" type="number" th:field="*{perfusaoCapilarPerifericaSeg}">
+                                </div>
+                                <div class="form-group col-md-3">
+                                    <label>Preenchimento capilar (seg)</label>
+                                    <input class="form-control" type="number" th:field="*{preenchimentoCapilarCentralSeg}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card mb-3">
+                        <div class="card-header"><strong>Escala de dor e Escala de Glasgow</strong></div>
+                        <div class="card-body">
+                            <div class="form-row">
+                                <div class="form-group col-md-6">
+                                    <label>Escala de dor<span class="required-mark">*</span></label>
+                                    <select class="form-control d-none" id="reguaDorId" th:field="*{reguaDorId}">
+                                        <option value="">Selecione</option>
+                                        <option th:each="item : ${reguasDor}" th:value="${item.id}" th:text="${item.valor + ' - ' + item.descricao}"></option>
+                                    </select>
+                                    <div class="pain-scale" id="painScaleForm">
+                                        <div class="pain-scale-gradient"></div>
+                                        <div class="pain-scale-grid">
+                                            <label class="pain-scale-item"
+                                                   th:each="item : ${reguasDor}"
+                                                   th:classappend="${item.valor == 0 or item.valor == 4 or item.valor == 7} ? ' split' : ''">
+                                                <input type="radio" class="js-regua-dor-radio" name="painScaleFormRadio" th:value="${item.id}">
+                                                <span class="pain-scale-value" th:text="${item.valor < 10 ? '0' + item.valor : item.valor}">00</span>
+                                                <span class="pain-scale-dot"></span>
+                                            </label>
+                                        </div>
+                                        <div class="pain-scale-levels">
+                                            <span class="pain-scale-level leve"><span class="pain-scale-icon">🙂</span>Leve</span>
+                                            <span class="pain-scale-level moderada"><span class="pain-scale-icon">😐</span>Moderada</span>
+                                            <span class="pain-scale-level intensa"><span class="pain-scale-icon">☹️</span>Intensa</span>
+                                        </div>
+                                    </div>
+                                    <small class="text-danger" th:errors="*{reguaDorId}"></small>
+                                </div>
+                                <div class="form-group col-md-6">
+                                    <label>Escala de Glasgow</label>
+                                    <div class="glasgow-panel">
+                                        <div class="form-row">
+                                            <div class="form-group col-md-6">
+                                                <label>Abertura ocular</label>
+                                                <select class="form-control js-glasgow-input" id="glasgowAberturaOcularId" th:field="*{glasgowAberturaOcularId}">
+                                                    <option value="">Selecione</option>
+                                                    <option th:each="item : ${glasgowAberturaOcular}"
+                                                            th:value="${item.id}"
+                                                            th:data-pontos="${item.pontos}"
+                                                            th:text="${item.pontos + ' - ' + item.descricao}"></option>
+                                                </select>
+                                                <small class="text-danger" th:errors="*{glasgowAberturaOcularId}"></small>
+                                            </div>
+                                            <div class="form-group col-md-6">
+                                                <label>Resposta verbal</label>
+                                                <select class="form-control js-glasgow-input" id="glasgowRespostaVerbalId" th:field="*{glasgowRespostaVerbalId}">
+                                                    <option value="">Selecione</option>
+                                                    <option th:each="item : ${glasgowRespostaVerbal}"
+                                                            th:value="${item.id}"
+                                                            th:data-pontos="${item.pontos}"
+                                                            th:text="${item.pontos + ' - ' + item.descricao}"></option>
+                                                </select>
+                                                <small class="text-danger" th:errors="*{glasgowRespostaVerbalId}"></small>
+                                            </div>
+                                        </div>
+                                        <div class="form-row">
+                                            <div class="form-group col-md-6">
+                                                <label>Resposta motora</label>
+                                                <select class="form-control js-glasgow-input" id="glasgowRespostaMotoraId" th:field="*{glasgowRespostaMotoraId}">
+                                                    <option value="">Selecione</option>
+                                                    <option th:each="item : ${glasgowRespostaMotora}"
+                                                            th:value="${item.id}"
+                                                            th:data-pontos="${item.pontos}"
+                                                            th:text="${item.pontos + ' - ' + item.descricao}"></option>
+                                                </select>
+                                                <small class="text-danger" th:errors="*{glasgowRespostaMotoraId}"></small>
+                                            </div>
+                                            <div class="form-group col-md-6">
+                                                <label>Pupilar (opcional)</label>
+                                                <select class="form-control js-glasgow-input" id="glasgowRespostaPupilarId" th:field="*{glasgowRespostaPupilarId}">
+                                                    <option value="">Selecione</option>
+                                                    <option th:each="item : ${glasgowRespostaPupilar}"
+                                                            th:value="${item.id}"
+                                                            th:data-pontos="${item.pontos}"
+                                                            th:text="${item.pontos + ' - ' + item.descricao}"></option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="form-row">
+                                            <div class="form-group col-md-12 mb-0">
+                                                <input class="form-control d-none" type="number" id="glasgowTotal" th:field="*{glasgowTotal}" readonly>
+                                                <div class="glasgow-total-display" id="glasgowTotalDisplay">--</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card mb-3" th:if="${!modoReclassificacao}">
+                        <div class="card-header"><strong>Alergias</strong></div>
+                        <div class="card-body">
+                            <div class="form-row align-items-end">
+                                <div class="form-group col-md-4">
+                                    <label>Alergia - substancia</label>
+                                    <select class="form-control" id="alergiaSubstanciaInput">
+                                        <option value="">Selecione</option>
+                                        <option th:each="item : ${alergiaSubstancias}" th:value="${item.id}" th:text="${item.descricao}"></option>
+                                    </select>
+                                </div>
+                                <div class="form-group col-md-3">
+                                    <label>Alergia - severidade</label>
+                                    <select class="form-control" id="alergiaSeveridadeInput">
+                                        <option value="">Selecione</option>
+                                        <option th:each="item : ${alergiaSeveridades}" th:value="${item.id}" th:text="${item.descricao}"></option>
+                                    </select>
+                                </div>
+                                <div class="form-group col-md-4">
+                                    <label>Alergia - detalhe</label>
+                                    <input class="form-control" type="text" id="alergiaDescricaoInput" placeholder="Ex.: DIPIRONA, CAMARAO, VACINA INFLUENZA">
+                                </div>
+                                <div class="form-group col-md-1">
+                                    <button class="btn btn-outline-primary btn-sm" type="button" id="btnInserirAlergia">Inserir</button>
+                                </div>
+                            </div>
+                            <div class="mb-2">
+                                <button class="btn btn-outline-secondary btn-sm" type="button" id="btnNaoRelataAlergia">Nao relata alergia</button>
+                            </div>
+                            <small class="text-danger d-block mb-2" th:errors="*{alergias}"></small>
+                            <table class="table table-sm table-bordered mb-0">
+                                <thead>
+                                <tr>
+                                    <th>Substancia</th>
+                                    <th>Severidade</th>
+                                    <th>Detalhe</th>
+                                    <th style="width: 90px;">Acao</th>
+                                </tr>
+                                </thead>
+                                <tbody id="alergiasBody">
+                                <tr th:each="item,iter : *{alergias}" class="js-alergia-row"
+                                    th:attr="data-substancia-id=${item.substanciaId},data-severidade-id=${item.severidadeId},data-descricao=${item.descricao}">
+                                    <td th:text="${alergiaSubstanciaMap[item.substanciaId]}">-</td>
+                                    <td th:text="${item.severidadeId != null ? alergiaSeveridadeMap[item.severidadeId] : '-'}">-</td>
+                                    <td th:text="${item.descricao}">-</td>
+                                    <td>
+                                        <button class="btn btn-outline-danger btn-sm js-remove-alergia" type="button">Remover</button>
+                                        <input type="hidden" th:name="${'alergias[' + iter.index + '].substanciaId'}" th:value="${item.substanciaId}">
+                                        <input type="hidden" th:name="${'alergias[' + iter.index + '].severidadeId'}" th:value="${item.severidadeId}">
+                                        <input type="hidden" th:name="${'alergias[' + iter.index + '].descricao'}" th:value="${item.descricao}">
+                                    </td>
+                                </tr>
+                                <tr id="alergiasEmptyRow">
+                                    <td colspan="4" class="text-muted text-center">Nenhuma alergia adicionada.</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="card mb-3" th:if="${!modoReclassificacao}">
+                        <div class="card-header"><strong>Comorbidades</strong></div>
+                        <div class="card-body">
+                            <div class="form-row align-items-end">
+                                <div class="form-group col-md-11">
+                                    <label>Comorbidade</label>
+                                    <select class="form-control" id="comorbidadeInput">
+                                        <option value="">Selecione</option>
+                                        <option th:each="item : ${comorbidades}" th:value="${item.id}" th:text="${item.descricao}"></option>
+                                    </select>
+                                </div>
+                                <div class="form-group col-md-1">
+                                    <button class="btn btn-outline-primary btn-sm" type="button" id="btnInserirComorbidade">Inserir</button>
+                                </div>
+                            </div>
+                            <div class="mb-2">
+                                <button class="btn btn-outline-secondary btn-sm" type="button" id="btnNaoRelataComorbidade">Nao relata comorbidade</button>
+                            </div>
+                            <table class="table table-sm table-bordered mb-0">
+                                <thead>
+                                <tr>
+                                    <th>Comorbidade</th>
+                                    <th style="width: 90px;">Acao</th>
+                                </tr>
+                                </thead>
+                                <tbody id="comorbidadesBody">
+                                <tr th:each="id,iter : *{comorbidadeIds}" class="js-comorbidade-row" th:attr="data-id=${id}">
+                                    <td th:text="${comorbidadeMap[id]}">-</td>
+                                    <td>
+                                        <button class="btn btn-outline-danger btn-sm js-remove-comorbidade" type="button">Remover</button>
+                                        <input type="hidden" th:name="${'comorbidadeIds[' + iter.index + ']'}" th:value="${id}">
+                                    </td>
+                                </tr>
+                                <tr id="comorbidadesEmptyRow">
+                                    <td colspan="2" class="text-muted text-center">Nenhuma comorbidade adicionada.</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="card mb-3" th:if="${!modoReclassificacao}">
+                        <div class="card-header"><strong>AVC - Sinais de alerta</strong></div>
+                        <div class="card-body p-0">
+                            <table class="table table-sm mb-0">
+                                <thead>
+                                <tr>
+                                    <th class="pl-3">Questao</th>
+                                    <th class="text-center" style="width: 120px;">Acoes</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr th:each="item : ${avcSinaisAlerta}">
+                                    <td class="pl-3" th:text="${item.descricao}">-</td>
+                                    <td class="text-center">
+                                        <input type="checkbox"
+                                               class="form-check-input position-static"
+                                               th:field="*{avcSinalAlertaIds}"
+                                               th:value="${item.id}">
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="card mb-3">
+                        <div class="card-header"><strong>Classificacao de risco</strong></div>
+                        <div class="card-body">
+                            <div class="form-row">
+                                <div class="form-group col-md-4">
+                                    <label>Cor de classificacao<span class="required-mark">*</span></label>
+                                    <select class="form-control" th:field="*{classificacaoCorId}">
+                                        <option value="">Selecione</option>
+                                        <option th:each="item : ${classificacaoCores}"
+                                                th:value="${item.id}"
+                                                th:text="${item.descricao}"></option>
+                                    </select>
+                                    <small class="text-danger" th:errors="*{classificacaoCorId}"></small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-sm" th:text="${modoReclassificacao} ? 'Salvar reclassificacao' : 'Finalizar triagem'">Finalizar triagem</button>
+                    <a th:href="@{/ui/triagem}" class="btn btn-secondary btn-sm">Voltar</a>
+                </form>
+            </div>
+        </div>
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                var alergias = [];
+                var comorbidades = [];
+
+                var alergiasBody = document.getElementById('alergiasBody');
+                var comorbidadesBody = document.getElementById('comorbidadesBody');
+                var alergiaEmpty = document.getElementById('alergiasEmptyRow');
+                var comorbidadeEmpty = document.getElementById('comorbidadesEmptyRow');
+
+                var substanciaInput = document.getElementById('alergiaSubstanciaInput');
+                var severidadeInput = document.getElementById('alergiaSeveridadeInput');
+                var descricaoInput = document.getElementById('alergiaDescricaoInput');
+                var comorbidadeInput = document.getElementById('comorbidadeInput');
+                var reguaDorSelect = document.getElementById('reguaDorId');
+                var reguaDorRadios = Array.from(document.querySelectorAll('.js-regua-dor-radio'));
+                var glasgowInputs = Array.from(document.querySelectorAll('.js-glasgow-input'));
+                var glasgowTotalInput = document.getElementById('glasgowTotal');
+                var glasgowTotalDisplay = document.getElementById('glasgowTotalDisplay');
+
+                function selectedPontos(select) {
+                    if (!select || !select.value) return 0;
+                    var option = select.options[select.selectedIndex];
+                    var pontos = option ? Number(option.getAttribute('data-pontos')) : 0;
+                    return Number.isNaN(pontos) ? 0 : pontos;
+                }
+
+                function recomputeGlasgow() {
+                    if (!glasgowTotalInput) return;
+                    var ocular = selectedPontos(document.getElementById('glasgowAberturaOcularId'));
+                    var verbal = selectedPontos(document.getElementById('glasgowRespostaVerbalId'));
+                    var motora = selectedPontos(document.getElementById('glasgowRespostaMotoraId'));
+                    var pupilar = selectedPontos(document.getElementById('glasgowRespostaPupilarId'));
+                    if (!ocular && !verbal && !motora && !pupilar) {
+                        glasgowTotalInput.value = '';
+                        if (glasgowTotalDisplay) {
+                            glasgowTotalDisplay.textContent = '--';
+                        }
+                        return;
+                    }
+                    var total = ocular + verbal + motora - pupilar;
+                    glasgowTotalInput.value = total >= 0 ? String(total) : '';
+                    if (glasgowTotalDisplay) {
+                        glasgowTotalDisplay.textContent = total >= 0 ? String(total) : '--';
+                    }
+                }
+
+                function syncPainScaleFromSelect() {
+                    var selected = reguaDorSelect ? reguaDorSelect.value : '';
+                    reguaDorRadios.forEach(function (radio) {
+                        var checked = selected && radio.value === selected;
+                        radio.checked = checked;
+                        var item = radio.closest('.pain-scale-item');
+                        if (item) {
+                            item.classList.toggle('is-selected', checked);
+                        }
+                    });
+                }
+
+                function optionText(select, value) {
+                    if (!select) return '-';
+                    if (!value) return '-';
+                    var option = select.querySelector('option[value="' + value + '"]');
+                    return option ? option.textContent : value;
+                }
+
+                function normalize(text) {
+                    if (!text) return null;
+                    var t = text.trim();
+                    return t.length ? t : null;
+                }
+
+                function normalizeKey(text) {
+                    return (text || '')
+                        .normalize('NFD')
+                        .replace(/[\u0300-\u036f]/g, '')
+                        .toUpperCase()
+                        .trim();
+                }
+
+                function findOptionByText(select, expectedText) {
+                    var expected = normalizeKey(expectedText);
+                    for (var i = 0; i < select.options.length; i++) {
+                        var option = select.options[i];
+                        if (!option.value) continue;
+                        if (normalizeKey(option.textContent).indexOf(expected) >= 0) {
+                            return option;
+                        }
+                    }
+                    return null;
+                }
+
+                function renderAlergias() {
+                    if (!alergiasBody || !alergiaEmpty || !substanciaInput) return;
+                    Array.from(alergiasBody.querySelectorAll('.js-alergia-row')).forEach(function (row) { row.remove(); });
+                    alergias.forEach(function (item, index) {
+                        var tr = document.createElement('tr');
+                        tr.className = 'js-alergia-row';
+                        tr.innerHTML =
+                            '<td>' + optionText(substanciaInput, item.substanciaId) + '</td>' +
+                            '<td>' + (item.severidadeId ? optionText(severidadeInput, item.severidadeId) : '-') + '</td>' +
+                            '<td>' + (item.descricao || '-') + '</td>' +
+                            '<td>' +
+                            '<button class="btn btn-outline-danger btn-sm js-remove-alergia" type="button" data-index="' + index + '">Remover</button>' +
+                            '<input type="hidden" name="alergias[' + index + '].substanciaId" value="' + item.substanciaId + '">' +
+                            '<input type="hidden" name="alergias[' + index + '].severidadeId" value="' + (item.severidadeId || '') + '">' +
+                            '<input type="hidden" name="alergias[' + index + '].descricao" value="' + (item.descricao || '') + '">' +
+                            '</td>';
+                        alergiasBody.insertBefore(tr, alergiaEmpty);
+                    });
+                    alergiaEmpty.style.display = alergias.length ? 'none' : '';
+                }
+
+                function renderComorbidades() {
+                    if (!comorbidadesBody || !comorbidadeEmpty || !comorbidadeInput) return;
+                    Array.from(comorbidadesBody.querySelectorAll('.js-comorbidade-row')).forEach(function (row) { row.remove(); });
+                    comorbidades.forEach(function (id, index) {
+                        var tr = document.createElement('tr');
+                        tr.className = 'js-comorbidade-row';
+                        tr.innerHTML =
+                            '<td>' + optionText(comorbidadeInput, id) + '</td>' +
+                            '<td>' +
+                            '<button class="btn btn-outline-danger btn-sm js-remove-comorbidade" type="button" data-index="' + index + '">Remover</button>' +
+                            '<input type="hidden" name="comorbidadeIds[' + index + ']" value="' + id + '">' +
+                            '</td>';
+                        comorbidadesBody.insertBefore(tr, comorbidadeEmpty);
+                    });
+                    comorbidadeEmpty.style.display = comorbidades.length ? 'none' : '';
+                }
+
+                if (alergiasBody) {
+                    Array.from(alergiasBody.querySelectorAll('.js-alergia-row')).forEach(function (row) {
+                        alergias.push({
+                            substanciaId: row.getAttribute('data-substancia-id') || '',
+                            severidadeId: row.getAttribute('data-severidade-id') || '',
+                            descricao: row.getAttribute('data-descricao') || ''
+                        });
+                    });
+                }
+                if (comorbidadesBody) {
+                    Array.from(comorbidadesBody.querySelectorAll('.js-comorbidade-row')).forEach(function (row) {
+                        var id = row.getAttribute('data-id');
+                        if (id) comorbidades.push(id);
+                    });
+                }
+                renderAlergias();
+                renderComorbidades();
+                glasgowInputs.forEach(function (input) {
+                    input.addEventListener('change', recomputeGlasgow);
+                });
+                recomputeGlasgow();
+                reguaDorRadios.forEach(function (radio) {
+                    radio.addEventListener('change', function () {
+                        if (!reguaDorSelect || !radio.checked) return;
+                        reguaDorSelect.value = radio.value;
+                        syncPainScaleFromSelect();
+                    });
+                });
+                if (reguaDorSelect) {
+                    reguaDorSelect.addEventListener('change', syncPainScaleFromSelect);
+                }
+                syncPainScaleFromSelect();
+
+                var btnInserirAlergia = document.getElementById('btnInserirAlergia');
+                if (btnInserirAlergia) btnInserirAlergia.addEventListener('click', function () {
+                    var substanciaId = substanciaInput.value;
+                    if (!substanciaId) return;
+                    var noRelataOption = findOptionByText(substanciaInput, 'NAO RELATA ALERGIA');
+                    if (noRelataOption) {
+                        alergias = alergias.filter(function (item) {
+                            return item.substanciaId !== noRelataOption.value;
+                        });
+                    }
+                    alergias.push({
+                        substanciaId: substanciaId,
+                        severidadeId: severidadeInput.value || '',
+                        descricao: normalize(descricaoInput.value) || ''
+                    });
+                    severidadeInput.value = '';
+                    descricaoInput.value = '';
+                    renderAlergias();
+                });
+
+                var btnInserirComorbidade = document.getElementById('btnInserirComorbidade');
+                if (btnInserirComorbidade) btnInserirComorbidade.addEventListener('click', function () {
+                    var id = comorbidadeInput.value;
+                    if (!id) return;
+                    var noRelataOption = findOptionByText(comorbidadeInput, 'NAO RELATA');
+                    if (noRelataOption) {
+                        comorbidades = comorbidades.filter(function (item) { return item !== noRelataOption.value; });
+                    }
+                    if (comorbidades.indexOf(id) >= 0) return;
+                    comorbidades.push(id);
+                    comorbidadeInput.value = '';
+                    renderComorbidades();
+                });
+
+                var btnNaoRelataAlergia = document.getElementById('btnNaoRelataAlergia');
+                if (btnNaoRelataAlergia) btnNaoRelataAlergia.addEventListener('click', function () {
+                    var option = findOptionByText(substanciaInput, 'NAO RELATA ALERGIA');
+                    if (!option) {
+                        window.alert('Substancia "NAO RELATA ALERGIA" nao encontrada no cadastro.');
+                        return;
+                    }
+                    alergias = [{
+                        substanciaId: option.value,
+                        severidadeId: '',
+                        descricao: ''
+                    }];
+                    severidadeInput.value = '';
+                    descricaoInput.value = '';
+                    renderAlergias();
+                });
+
+                var btnNaoRelataComorbidade = document.getElementById('btnNaoRelataComorbidade');
+                if (btnNaoRelataComorbidade) btnNaoRelataComorbidade.addEventListener('click', function () {
+                    var option = findOptionByText(comorbidadeInput, 'NAO RELATA');
+                    if (!option) {
+                        window.alert('Comorbidade de "NAO RELATA" nao encontrada no cadastro.');
+                        return;
+                    }
+                    comorbidades = [option.value];
+                    renderComorbidades();
+                });
+
+                if (alergiasBody) {
+                    alergiasBody.addEventListener('click', function (event) {
+                        var btn = event.target.closest('.js-remove-alergia');
+                        if (!btn) return;
+                        var index = Number(btn.getAttribute('data-index'));
+                        if (!Number.isNaN(index)) {
+                            alergias.splice(index, 1);
+                            renderAlergias();
+                        }
+                    });
+                }
+
+                if (comorbidadesBody) {
+                    comorbidadesBody.addEventListener('click', function (event) {
+                        var btn = event.target.closest('.js-remove-comorbidade');
+                        if (!btn) return;
+                        var index = Number(btn.getAttribute('data-index'));
+                        if (!Number.isNaN(index)) {
+                            comorbidades.splice(index, 1);
+                            renderComorbidades();
+                        }
+                    });
+                }
+            });
+        </script>
+    </section>
+</th:block>
+</body>
+</html>

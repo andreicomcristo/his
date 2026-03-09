@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?><comments xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><authors><author></author></authors><commentList><comment authorId="0" ref="E27"><text><t xml:space="preserve">======
+ID#AAAAwmtFOl0
+    (2023-05-08 17:04:05)
+DEFINIÇÃO: Tempo de espera em horas do último paciente que foi transferido do Serviço de Urgência para as unidades de internação ou UTI, considerando apenas o tempo desde a disponibilização do leito de internação até a sua efetiva chegada no leito.
+Exemplo: Verificar o intervalo de tempo entre a disponibilização do leito (quando a informação chegar no Pronto Socorro) e o horário da efetiva internação do último paciente internado em um leito do hospital.
+
+Horário da coleta: 16h do dia 21/10
+- Paciente 1: Enfermeira da UTI notifica a disponibilidade do leito às 11h do dia 21/10. Paciente chegou no leito de internação às 15:32h do dia 21/10.
+Tempo de espera para chegada no leito: 4,53
+- Paciente 2: Enfermeiro da Unidade de Internação notifica a disponibilidade do leito às 23h do dia 20/10. Paciente chegou no leito de internação às 12:48h do dia 21/10.
+Tempo de espera para chegada no leito: 13,8.
+
+Último tempo de espera para chegada no leito: 4,53 (Paciente 1)
+
+RESTRIÇÕES:
+- Considerar somente os pacientes que já foram transferidos para um leito de internação e que, portanto, não estão mais no Pronto Socorro.
+- Esse dado não deve ser igual a zero. Se não ocorreram internações desde a última coleta, considerar sempre o último tempo coletado.
+- Esse dado deve ser menor que o valor apresentado na letra F, portanto F &gt; G, pois a letra G refere-se apenas ao tempo entre a disponibilização do leito e a chegada do paciente no leito de internação.
+- Se ocorreram várias internações deve ser selecionada apenas a do último paciente que chegou em um leito de internação.</t></text></comment><comment authorId="0" ref="E16"><text><t xml:space="preserve">======
+ID#AAAAwmtFOls
+    (2023-05-08 17:04:05)
+DEFINIÇÃO: Total de pacientes no Serviço de Urgência, com decisão de internação, aguardando disponibilização de leito no hospital no momento da medição.
+Exemplo: Contar os pacientes que já foram atendidos, mas que ainda estão no Serviço de Urgência, e possuem direcionamento para internar, no momento da medição:
+- 5 pacientes na sala de observação, aguardando leitos de internação
+- 3 pacientes na sala vermelha, aguardando leitos da UTI
+- 8 pacientes no corredor, aguardando leitos de internação
+TOTAL: 16 pacientes admitidos no Serviço de Urgência aguardando internação
+(dados meramente ilustrativos)
+
+RESTRIÇÕES:
+- Considerar somente os pacientes que estão aguardando internação.
+- Paciente “internado” no Serviço de Urgência também deve ser considerado neste item, pois “PRONTO SOCORRO NÃO INTERNA”.
+- Este número tem que ser menor do que a letra A, pois ele é uma parte do total de pacientes no Serviço de Urgência, ou seja, A &gt; C.
+- Geralmente este número deve ser maior do que o item E, portanto C &gt; E, pois pacientes que estão no respirador provavelmente estão aguardando internação.
+- Se houver variação entre a coleta das 16h em relação à coleta das 10h, entende-se que os pacientes foram transferidos para as unidades de internação ou tiveram alta a partir do próprio Pronto Socorro.</t></text></comment><comment authorId="0" ref="E21"><text><t xml:space="preserve">======
+ID#AAAAwmtFOlo
+    (2023-05-08 17:04:05)
+DEFINIÇÃO: Total de pacientes intubados no Serviço de Urgência.
+Exemplo: Contar os pacientes intubados no espaço físico do Serviço de Urgência e que utilizem recursos exclusivos do Serviço de Urgência, no momento da coleta (10h ou 16h):
+- 3 pacientes no respirador dentro da sala vermelha, aguardando leito de internação
+TOTAL: 3 pacientes no respirador no Serviço de Urgência (dados meramente ilustrativos)
+
+RESTRIÇÕES:
+- Deve ser menor ou igual ao que o número apresentado na letra C e menor do que a letra A.</t></text></comment><comment authorId="0" ref="E9"><text><t xml:space="preserve">======
+ID#AAAAwmtFOlg
+    (2023-05-08 17:04:05)
+DEFINIÇÃO: Total de pacientes que estão no Serviço de Urgência em espera ou em atendimento nos corredores, salas destinadas à assistência, consultórios, sala de sutura, em frente aos consultórios médicos e na sala de espera da recepção do Pronto Socorro.
+Exemplo: Contar todos os pacientes no Serviço de Urgência no momento da coleta (10h ou 16h):
+- 17 pacientes aguardando triagem (recepção)
+- 3 pacientes aguardando para abrir ficha (recepção)
+- 10 pacientes na sala de espera para atendimento médico
+- 5 pacientes nos corredores aguardando internação
+- 4 pacientes em consultórios passando por atendimento
+- 8 pacientes na sala de medicação
+- 2 pacientes na sala de gesso
+TOTAL: 49 pacientes no Serviço de Urgência
+(dados meramente ilustrativos)
+
+RESTRIÇÕES:
+- Não considerar os acompanhantes.
+- Não considerar pacientes eletivos.
+- Considerar apenas recursos do Serviço de Urgência. (Questione-se: Apesar de estar no espaço físico do Pronto Socorro, o paciente está sendo atendido por recursos do Pronto Socorro? Se sim, considere-o, se não, não o considere na contabilização).
+- Este número deve ser maior do que a letra C, pois considera o total de pacientes no Serviço de Urgência, inclusive aqueles que estão aguardando transferências para Unidades de Internação (Enfermarias ou UTI), portanto, A &gt; C.</t></text></comment><comment authorId="0" ref="E19"><text><t xml:space="preserve">======
+ID#AAAAwmtFOlY
+    (2023-05-08 17:04:05)
+DEFINIÇÃO: Total de leitos operacionais no hospital disponíveis ao Serviço de Urgência, trata-se de um número fixo que revela a capacidade instalada do hospital para atender as internações provenientes do Serviço de Urgência, ou seja, se o hospital possui 300 leitos, mas somente disponibiliza 150 para as internações vindas do Serviço de Urgência, o número a ser considerado é 150 e não 300.
+
+Exemplo: Total de leitos disponibilizados para os pacientes que são admitidos pelo Serviço de Urgência:
+- Enfermaria 1: possui 20 leitos que podem ser ocupados pelos pacientes que são internados após serem atendidos pelo Serviço de Urgência
+- Enfermaria 2: possui 15 leitos que podem ser ocupados pelos pacientes que são internados após serem atendidos pelo Serviço de Urgência
+- UTI: possui 10 leitos que podem ser ocupados pelos pacientes que são internados após serem atendidos pelo Serviço de Urgência
+TOTAL: 45 leitos de internação no hospital disponíveis ao Serviço de Urgência
+(dados meramente ilustrativos)
+
+RESTRIÇÕES:
+- Descontar os leitos ocupados a mais de 90 dias, em manutenção ou bloqueados por alguma razão no momento da coleta.</t></text></comment><comment authorId="0" ref="E24"><text><t xml:space="preserve">======
+ID#AAAAwmtFOlU
+    (2023-05-08 17:04:05)
+DEFINIÇÃO: Tempo, em horas, do paciente que permaneceu por mais tempo no Serviço de Urgência desde a sua entrada no Serviço de Urgência até a chegada no leito de internação (Enfermaria ou UTI).
+Exemplo: Identificar quais foram as internações realizadas desde a última coleta, verificar a data e a hora que os pacientes deram entrada no Pronto Socorro e calcular os tempos de permanência em horas até o momento da efetiva transferência para a unidade de destino. Considerar o maior tempo dentre esses pacientes.
+
+Horário da coleta: 10h do dia 21/10
+- Paciente 1: Entrou no Serviço de Urgência dia 20/10 às 15h e chegou no leito de internação no dia 21/10 às 08h – Tempo total para internação: 17 horas
+- Paciente 2: Entrou no Serviço de Urgência dia 20/10 às 16:35h e chegou no leito de internação no dia 20/10 às 23:45h – Tempo total para internação: 7,17 horas
+
+Maior tempo para internação desde a última coleta = 17 horas
+
+RESTRIÇÕES:
+- Considerar somente os pacientes que já foram transferidos para um leito de internação e que, portanto, não estão mais no Pronto Socorro.
+- Esse dado não deve ser igual a zero. Se não ocorreram internações desde a última coleta, considerar sempre o último tempo coletado.
+- Esse dado deve ser maior que o valor apresentado na letra G, portanto F &gt; G, pois refere-se ao tempo TOTAL de permanência no Serviço de Urgência, desde a entrada do paciente.
+- Se ocorreram várias internações deve ser selecionada apenas a do paciente que demorou mais para chegar em um leito de internação.</t></text></comment><comment authorId="0" ref="E12"><text><t xml:space="preserve">======
+ID#AAAAwmtFOlQ
+    (2023-05-08 17:04:05)
+DEFINIÇÃO: Total de espaços dedicados ao cuidado de pacientes no Serviço de Urgência. Considerar todos os pontos de cuidado: consultórios, salas de sutura, salas de gesso, poltronas da sala de medicação, leitos de emergência, raio x (exclusivo PS), macas e leitos da observação. É um número fixo que demonstra a capacidade instalada do Serviço de Urgência.
+Exemplo: Contar todos os pontos de cuidado ocupáveis pelos pacientes do Serviço de Urgência no momento da coleta, disponíveis ou já ocupados:
+- 1 Maca em cada um dos 5 consultórios do Serviço de Urgência (total 5 macas)
+- 10 Poltronas na sala de medicação (somando as ocupadas e as que estão vazias)
+- 2 Macas na sala de gesso
+- 4 Leitos na sala de emergência
+- 1 Leito na sala de Raio X
+- 10 Leitos de observação
+TOTAL: 32 Pontos de Cuidado no Serviço de Urgência
+(dados meramente ilustrativos)
+
+RESTRIÇÕES: 
+- Não contabilizar leitos virtuais (leitos extras, leitos no corredor, criados para suprir a demanda da superlotação). Deve-se considerar a capacidade normal do hospital.
+- Não contabilizar cadeiras das salas de espera.
+- Considerar somente recursos dedicados ao Serviço de Urgência, portanto, se existir um ala com pacientes internados, sendo atendidos por recursos específicos, que não sejam exclusivos do Serviço de Urgência, essa ala não deve ser considerada.</t></text></comment></commentList><extLst><ext uri="GoogleSheetsCustomDataVersion2"><go:sheetsCustomData xmlns:go="http://customooxmlschemas.google.com/" r:id="rId1" roundtripDataSignature="AMtx7mihbb3AeHRCKziNuS5sa0t+7QXLfg=="/></ext></extLst></comments>

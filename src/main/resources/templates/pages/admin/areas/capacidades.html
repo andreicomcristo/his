@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout('Administracao - Capacidades da Area', ~{::content})}">
+<th:block th:fragment="content">
+    <div class="main-card mb-3 card">
+        <div class="card-body">
+            <h5 class="card-title">Capacidades da area</h5>
+            <p class="text-muted mb-3">
+                <strong th:text="${area.nome}">AREA</strong>
+                <span> | </span>
+                <span th:text="${area.unidade.nome}">UNIDADE</span>
+            </p>
+            <form th:object="${form}" method="post" th:action="@{'/ui/admin/areas/' + ${area.id} + '/capacidades'}">
+                <div class="form-group" th:each="capacidade : ${capacidades}">
+                    <div class="form-check">
+                        <input class="form-check-input"
+                               type="checkbox"
+                               th:field="*{capacidadeIds}"
+                               th:value="${capacidade.id}"
+                               th:id="${'capacidade_' + capacidade.id}">
+                        <label class="form-check-label" th:for="${'capacidade_' + capacidade.id}">
+                            <span th:text="${capacidade.nome}">CAPACIDADE</span>
+                            <small class="text-muted" th:if="${capacidade.descricao != null}" th:text="${' - ' + capacidade.descricao}"></small>
+                        </label>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <button type="submit" class="btn btn-primary mr-2">Salvar</button>
+                    <a class="btn btn-secondary" th:href="@{/ui/admin/areas}">Voltar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</th:block>
+</html>

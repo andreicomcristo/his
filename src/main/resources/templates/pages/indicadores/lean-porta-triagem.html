@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:replace="~{layout/base :: layout('HIS | Indicadores Lean - Porta e Triagem', ~{::section})}">
+    <section>
+        <style>
+            .filtro-label {
+                font-weight: 700;
+            }
+
+            .lean-page-title {
+                margin-bottom: 1rem;
+            }
+
+            .lean-page-title .title-main {
+                font-size: 1.2rem;
+                font-weight: 700;
+                color: #2f3542;
+            }
+
+            .lean-page-title .title-sub {
+                color: #6c757d;
+                font-size: .9rem;
+            }
+
+            .lean-filter-card {
+                border: 1px solid #e7ebf0;
+                border-radius: .35rem;
+                background: #fff;
+                box-shadow: 0 .46875rem 2.1875rem rgba(31, 10, 6, .03),
+                            0 .9375rem 1.40625rem rgba(31, 10, 6, .03),
+                            0 .25rem .53125rem rgba(31, 10, 6, .05),
+                            0 .125rem .1875rem rgba(31, 10, 6, .03);
+            }
+
+            .lean-kpi-card {
+                box-shadow: 0 .46875rem 2.1875rem rgba(31, 10, 6, .03),
+                            0 .9375rem 1.40625rem rgba(31, 10, 6, .03),
+                            0 .25rem .53125rem rgba(31, 10, 6, .05),
+                            0 .125rem .1875rem rgba(31, 10, 6, .03);
+            }
+
+            .lean-kpi-code {
+                font-weight: 700;
+                font-size: .75rem;
+                letter-spacing: .02em;
+                color: #da624a;
+            }
+
+            .lean-kpi-info {
+                margin-top: .35rem;
+                font-size: .78rem;
+                color: #6c757d;
+            }
+
+            .lean-kpi-progress {
+                margin: .6rem 0 .1rem;
+                height: 6px;
+                background: #edf1f7;
+            }
+
+            .lean-table-card {
+                border: 1px solid #e7ebf0;
+                border-radius: .35rem;
+                box-shadow: 0 .46875rem 2.1875rem rgba(31, 10, 6, .03),
+                            0 .9375rem 1.40625rem rgba(31, 10, 6, .03),
+                            0 .25rem .53125rem rgba(31, 10, 6, .05),
+                            0 .125rem .1875rem rgba(31, 10, 6, .03);
+            }
+
+            .lean-table-card .card-header {
+                background: #f8f9fb;
+                border-bottom: 1px solid #e9edf2;
+            }
+
+            .lean-table-card .table thead th {
+                text-transform: uppercase;
+                font-size: .73rem;
+                letter-spacing: .03em;
+                color: #6c757d;
+                border-top: 0;
+            }
+
+            .lean-indicador-link {
+                display: inline-flex;
+                align-items: center;
+                gap: .35rem;
+                font-weight: 700;
+                color: #2f3542;
+                cursor: pointer;
+                text-decoration: none;
+            }
+
+            .lean-indicador-link:hover,
+            .lean-indicador-link:focus {
+                text-decoration: none;
+                color: #da624a;
+            }
+        </style>
+
+        <div class="lean-page-title d-flex justify-content-between align-items-start">
+            <div>
+                <div class="title-main">Indicadores Lean - Porta e Triagem</div>
+                <div class="title-sub">Painel consolidado dos KPIs POR-* e TRI-* no periodo filtrado</div>
+            </div>
+            <a class="btn btn-outline-secondary btn-sm"
+               th:href="@{/api/assistencial/indicadores/lean/porta-triagem(dataInicio=${dataInicio},dataFim=${dataFim})}">
+                Ver JSON
+            </a>
+        </div>
+
+        <div class="lean-filter-card card mb-3">
+            <div class="card-body">
+                <div class="alert alert-danger" th:if="${errorMessage}" th:text="${errorMessage}"></div>
+
+                <form th:action="@{/ui/indicadores/lean/porta-triagem}" method="get">
+                    <div class="form-row">
+                        <div class="form-group col-md-3">
+                            <label for="dataInicio" class="filtro-label">Data inicio</label>
+                            <input id="dataInicio" name="dataInicio" type="date" class="form-control" th:value="${dataInicio}">
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label for="dataFim" class="filtro-label">Data fim</label>
+                            <input id="dataFim" name="dataFim" type="date" class="form-control" th:value="${dataFim}">
+                        </div>
+                        <div class="form-group col-md-2 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary btn-block">Consultar</button>
+                        </div>
+                        <div class="form-group col-md-2 d-flex align-items-end">
+                            <a th:href="@{/ui/indicadores/lean/porta-triagem}" class="btn btn-outline-secondary btn-block">Limpar</a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="mb-2" th:if="${resultado != null}">
+            <h6 class="font-weight-bold">PORTA</h6>
+        </div>
+        <div class="row" th:if="${resultado != null}">
+            <div class="col-md-6 col-xl-4 mb-3" th:each="item : ${resultado.indicadoresPorta}"
+                 th:with="
+                    accent=${item.codigo == 'POR-01'} ? '#da624a'
+                        : (${item.codigo == 'POR-02'} ? '#3ac47d'
+                        : (${item.codigo == 'POR-03'} ? '#f7b924'
+                        : (${item.codigo == 'POR-04'} ? '#16aaff'
+                        : (${item.codigo == 'POR-05'} ? '#794c8a'
+                        : (${item.codigo == 'POR-06'} ? '#4a6fdc'
+                        : (${item.codigo == 'POR-07'} ? '#20c997'
+                        : (${item.codigo == 'POR-08'} ? '#e55353' : '#6c757d'))))))),
+                    progress=${item.valor == null ? 0 : (item.valor > 100 ? 100 : item.valor)}">
+                <div class="card card-btm-border lean-kpi-card" th:style="'border-bottom-color:' + ${accent} + ';'">
+                    <div class="widget-chart widget-chart-hover text-left p-3">
+                        <div class="icon-wrapper rounded-circle mr-3" th:style="'border:1px solid ' + ${accent} + ';'">
+                            <div class="icon-wrapper-bg" th:style="'background:' + ${accent} + ';'"></div>
+                            <i class="pe-7s-network" th:style="'color:' + ${accent} + ';'"></i>
+                        </div>
+                        <div class="widget-chart-content">
+                            <div class="widget-subheading" th:text="${item.descricao}">Indicador</div>
+                            <div class="widget-numbers">
+                                <span th:text="${item.valor != null ? #numbers.formatDecimal(item.valor, 1, 2) : 'N/A'}">0,00</span>
+                                <small class="text-muted ml-1" th:if="${item.unidade != null}" th:text="${item.unidade}">%</small>
+                            </div>
+                            <div class="widget-description">
+                                <a href="#" class="lean-indicador-link"
+                                   th:attr="data-codigo=${item.codigo},data-descricao=${item.descricao}">
+                                    <span class="lean-kpi-code" th:text="${item.codigo}">POR-01</span>
+                                    <i class="pe-7s-help1"></i>
+                                </a>
+                                <div class="lean-kpi-info" th:if="${item.observacao != null}" th:text="${item.observacao}"></div>
+                            </div>
+                            <div class="progress lean-kpi-progress">
+                                <div class="progress-bar" role="progressbar"
+                                     th:style="'width:' + ${progress} + '%; background:' + ${accent} + ';'"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-2 mt-2" th:if="${resultado != null}">
+            <h6 class="font-weight-bold">TRIAGEM</h6>
+        </div>
+        <div class="row" th:if="${resultado != null}">
+            <div class="col-md-6 col-xl-4 mb-3" th:each="item : ${resultado.indicadoresTriagem}"
+                 th:with="
+                    accent=${item.codigo == 'TRI-02'} ? '#16aaff'
+                        : (${item.codigo == 'TRI-03'} ? '#da624a'
+                        : (${item.codigo == 'TRI-04'} ? '#3ac47d'
+                        : (${item.codigo == 'TRI-05'} ? '#6c757d' : '#794c8a'))),
+                    progress=${item.valor == null ? 0 : (item.valor > 100 ? 100 : item.valor)}">
+                <div class="card card-btm-border lean-kpi-card" th:style="'border-bottom-color:' + ${accent} + ';'">
+                    <div class="widget-chart widget-chart-hover text-left p-3">
+                        <div class="icon-wrapper rounded-circle mr-3" th:style="'border:1px solid ' + ${accent} + ';'">
+                            <div class="icon-wrapper-bg" th:style="'background:' + ${accent} + ';'"></div>
+                            <i class="pe-7s-note2" th:style="'color:' + ${accent} + ';'"></i>
+                        </div>
+                        <div class="widget-chart-content">
+                            <div class="widget-subheading" th:text="${item.descricao}">Indicador</div>
+                            <div class="widget-numbers">
+                                <span th:text="${item.valor != null ? #numbers.formatDecimal(item.valor, 1, 2) : 'N/A'}">0,00</span>
+                                <small class="text-muted ml-1" th:if="${item.unidade != null}" th:text="${item.unidade}">%</small>
+                            </div>
+                            <div class="widget-description">
+                                <a href="#" class="lean-indicador-link"
+                                   th:attr="data-codigo=${item.codigo},data-descricao=${item.descricao}">
+                                    <span class="lean-kpi-code" th:text="${item.codigo}">TRI-02</span>
+                                    <i class="pe-7s-help1"></i>
+                                </a>
+                                <div class="lean-kpi-info" th:if="${item.observacao != null}" th:text="${item.observacao}"></div>
+                            </div>
+                            <div class="progress lean-kpi-progress">
+                                <div class="progress-bar" role="progressbar"
+                                     th:style="'width:' + ${progress} + '%; background:' + ${accent} + ';'"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row" th:if="${resultado != null}">
+            <div class="col-lg-6 mb-3">
+                <div class="lean-table-card card h-100">
+                    <div class="card-header">
+                        <strong>POR-05.x - Chegadas por hora (media)</strong>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-striped mb-0">
+                                <thead>
+                                <tr>
+                                    <th>Codigo</th>
+                                    <th>Hora</th>
+                                    <th>Media</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr th:each="item, stat : ${resultado.chegadasPorHora}">
+                                    <td th:text="${'POR-05.' + (stat.index + 1)}">POR-05.1</td>
+                                    <td th:text="${#numbers.formatInteger(item.hora, 2)} + ':00'">00:00</td>
+                                    <td th:text="${#numbers.formatDecimal(item.mediaChegadas, 1, 2)}">0,00</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6 mb-3">
+                <div class="lean-table-card card h-100">
+                    <div class="card-header">
+                        <strong>POR-06.x - Chegadas por dia da semana (media)</strong>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-striped mb-0">
+                                <thead>
+                                <tr>
+                                    <th>Codigo</th>
+                                    <th>Dia</th>
+                                    <th>Media</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr th:each="item : ${resultado.chegadasPorDiaSemana}">
+                                    <td th:text="${'POR-06.' + (item.ordem + 1)}">POR-06.1</td>
+                                    <td th:text="${item.diaSemana}">DOMINGO</td>
+                                    <td th:text="${item.mediaChegadas != null ? #numbers.formatDecimal(item.mediaChegadas, 1, 2) : 'N/A'}">0,00</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row" th:if="${resultado != null}">
+            <div class="col-lg-6 mb-3">
+                <div class="lean-table-card card h-100">
+                    <div class="card-header">
+                        <strong>TRI-02 - Distribuicao por classificacao de cor</strong>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-striped mb-0">
+                                <thead>
+                                <tr>
+                                    <th>Classificacao</th>
+                                    <th>Qtd</th>
+                                    <th>%</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr th:if="${#lists.isEmpty(resultado.distribuicaoTriagem)}">
+                                    <td colspan="3" class="text-center">Sem classificacoes no periodo</td>
+                                </tr>
+                                <tr th:each="item : ${resultado.distribuicaoTriagem}">
+                                    <td th:text="${item.classificacaoCor}">VERDE</td>
+                                    <td th:text="${item.quantidade}">0</td>
+                                    <td th:text="${item.percentual != null ? #numbers.formatDecimal(item.percentual, 1, 2) : 'N/A'}">0,00</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6 mb-3">
+                <div class="lean-table-card card h-100">
+                    <div class="card-header">
+                        <strong>TRI-04 - Tempo de triagem</strong>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <small class="text-muted">Media (min)</small>
+                                <div class="font-weight-bold" th:text="${resultado.tempoTriagem.mediaMinutos != null ? #numbers.formatDecimal(resultado.tempoTriagem.mediaMinutos, 1, 2) : 'N/A'}">0,00</div>
+                            </div>
+                            <div class="col-md-3">
+                                <small class="text-muted">Mediana (min)</small>
+                                <div class="font-weight-bold" th:text="${resultado.tempoTriagem.medianaMinutos != null ? #numbers.formatDecimal(resultado.tempoTriagem.medianaMinutos, 1, 2) : 'N/A'}">0,00</div>
+                            </div>
+                            <div class="col-md-3">
+                                <small class="text-muted">P90 (min)</small>
+                                <div class="font-weight-bold" th:text="${resultado.tempoTriagem.p90Minutos != null ? #numbers.formatDecimal(resultado.tempoTriagem.p90Minutos, 1, 2) : 'N/A'}">0,00</div>
+                            </div>
+                            <div class="col-md-3">
+                                <small class="text-muted">Total triagens</small>
+                                <div class="font-weight-bold" th:text="${resultado.tempoTriagem.totalTriagensComTempo}">0</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="modalRegraIndicadorPortaTriagem" tabindex="-1" role="dialog" aria-labelledby="modalRegraIndicadorPortaTriagemLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modalRegraIndicadorPortaTriagemLabel">Regra do indicador</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="mb-2"><strong id="modalRegraIndicadorCodigo">POR-01</strong> - <span id="modalRegraIndicadorDescricao">Descricao</span></p>
+                        <div id="modalRegraIndicadorTexto"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const regras = {
+                    'POR-01': 'Total de atendimentos por unidade no ano de referencia.',
+                    'POR-02': 'Total de atendimentos por unidade na data de referencia.',
+                    'POR-03': 'Percentual de atendimentos com forma de chegada classificada como HORIZONTAL.',
+                    'POR-04': 'Percentual de atendimentos com forma de chegada classificada como VERTICAL.',
+                    'POR-05': 'Media de chegadas por hora no periodo; detalhamento em POR-05.1 a POR-05.24.',
+                    'POR-06': 'Media de chegadas por dia no periodo; detalhamento em POR-06.1 a POR-06.7.',
+                    'POR-07': 'Percentual de atendimentos com desfecho ORIENTADO_REDE.',
+                    'POR-08': 'Percentual de atendimentos evadidos (status EVADIU ou motivo EVASAO).',
+                    'POR-09': 'Percentual de abandonos (status/motivo ABANDONO, quando configurado).',
+                    'TRI-02': 'Distribuicao percentual dos pacientes por classificacao de cor.',
+                    'TRI-03': 'Percentual de classificacoes em cores marcadas como risco maior.',
+                    'TRI-04': 'Tempo de triagem: media, mediana e p90 com base em atendimento_periodo tipo TRIAGEM.',
+                    'TRI-05': 'Nao implementado no momento (depende de modulo de escala de equipe).',
+                    'TRI-06': 'Quantidade de areas ativas da unidade com capacidade SALA_CLASSIFICACAO.'
+                };
+
+                if (!window.jQuery) {
+                    return;
+                }
+
+                const $ = window.jQuery;
+
+                $('.lean-indicador-link').each(function () {
+                    const codigo = ($(this).data('codigo') || '').toString();
+                    const title = regras[codigo] || 'Sem regra documentada para este indicador.';
+                    $(this).attr('title', title);
+                    $(this).attr('data-toggle', 'tooltip');
+                    $(this).attr('data-placement', 'top');
+                });
+
+                $('[data-toggle="tooltip"]').tooltip();
+
+                $('.lean-indicador-link').on('click', function (event) {
+                    event.preventDefault();
+                    const codigo = ($(this).data('codigo') || '').toString();
+                    const descricao = ($(this).data('descricao') || '').toString();
+                    const regra = regras[codigo] || 'Regra ainda nao cadastrada para este indicador.';
+
+                    $('#modalRegraIndicadorCodigo').text(codigo || 'N/A');
+                    $('#modalRegraIndicadorDescricao').text(descricao || 'Indicador');
+                    $('#modalRegraIndicadorTexto').html('<p class="mb-0">' + regra + '</p>');
+                    $('#modalRegraIndicadorPortaTriagem').modal('show');
+                });
+            });
+        </script>
+    </section>
+</th:block>
+</body>
+</html>

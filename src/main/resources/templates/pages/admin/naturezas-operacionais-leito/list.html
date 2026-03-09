@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout('Administracao - Natureza Operacional de Leito', ~{::content})}">
+<th:block th:fragment="content">
+    <div class="main-card mb-3 card">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="card-title mb-0">Natureza operacional de leito</h5>
+                <a class="btn btn-primary btn-sm" th:href="@{/ui/admin/naturezas-operacionais-leito/novo}">Nova natureza operacional</a>
+            </div>
+            <form method="get" class="form-inline mb-3">
+                <input type="text" name="q" class="form-control mr-2"
+                       placeholder="Buscar por codigo ou descricao"
+                       th:value="${q}">
+                <button class="btn btn-outline-secondary btn-sm" type="submit">Buscar</button>
+            </form>
+            <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+            <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
+            <table class="table table-sm table-striped">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Codigo</th>
+                    <th>Descricao</th>
+                    <th>Taxa nominal</th>
+                    <th>Taxa operacional</th>
+                    <th>Virtual superlotacao</th>
+                    <th>Ativo</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="item : ${items}">
+                    <td th:text="${item.id}"></td>
+                    <td th:text="${item.codigo}"></td>
+                    <td th:text="${item.descricao}"></td>
+                    <td th:text="${item.consideraTaxaNominal ? 'SIM' : 'NAO'}"></td>
+                    <td th:text="${item.consideraTaxaOperacional ? 'SIM' : 'NAO'}"></td>
+                    <td th:text="${item.virtualSuperlotacao ? 'SIM' : 'NAO'}"></td>
+                    <td th:text="${item.ativo ? 'SIM' : 'NAO'}"></td>
+                    <td class="text-right">
+                        <a class="btn btn-sm btn-outline-primary" th:href="@{'/ui/admin/naturezas-operacionais-leito/' + ${item.id} + '/editar'}">Editar</a>
+                        <form method="post" class="d-inline" th:action="@{'/ui/admin/naturezas-operacionais-leito/' + ${item.id} + '/excluir'}">
+                            <button type="submit" class="btn btn-sm btn-outline-danger"
+                                    onclick="return confirm('Excluir natureza operacional?');">Excluir</button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</th:block>
+</html>

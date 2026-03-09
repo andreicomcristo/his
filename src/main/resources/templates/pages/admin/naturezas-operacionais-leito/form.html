@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(${modoEdicao} ? 'Administracao - Editar Natureza Operacional de Leito' : 'Administracao - Nova Natureza Operacional de Leito', ~{::content})}">
+<th:block th:fragment="content">
+    <div class="main-card mb-3 card">
+        <div class="card-body">
+            <h5 class="card-title" th:text="${modoEdicao} ? 'Editar natureza operacional de leito' : 'Nova natureza operacional de leito'">Natureza operacional de leito</h5>
+            <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
+            <form method="post"
+                  th:object="${form}"
+                  th:action="${modoEdicao} ? @{'/ui/admin/naturezas-operacionais-leito/' + ${itemId}} : @{/ui/admin/naturezas-operacionais-leito}">
+                <div class="form-row">
+                    <div class="form-group col-md-4">
+                        <label>Codigo<span class="required-mark">*</span></label>
+                        <input type="text" class="form-control" th:field="*{codigo}">
+                        <small class="text-danger" th:errors="*{codigo}"></small>
+                    </div>
+                    <div class="form-group col-md-8">
+                        <label>Descricao<span class="required-mark">*</span></label>
+                        <input type="text" class="form-control" th:field="*{descricao}">
+                        <small class="text-danger" th:errors="*{descricao}"></small>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group col-md-3 d-flex align-items-center">
+                        <div class="form-check mt-2">
+                            <input type="checkbox" class="form-check-input" th:field="*{consideraTaxaNominal}">
+                            <label class="form-check-label" for="consideraTaxaNominal">Conta taxa nominal</label>
+                        </div>
+                    </div>
+                    <div class="form-group col-md-3 d-flex align-items-center">
+                        <div class="form-check mt-2">
+                            <input type="checkbox" class="form-check-input" th:field="*{consideraTaxaOperacional}">
+                            <label class="form-check-label" for="consideraTaxaOperacional">Conta taxa operacional</label>
+                        </div>
+                    </div>
+                    <div class="form-group col-md-3 d-flex align-items-center">
+                        <div class="form-check mt-2">
+                            <input type="checkbox" class="form-check-input" th:field="*{virtualSuperlotacao}">
+                            <label class="form-check-label" for="virtualSuperlotacao">Virtual superlotacao</label>
+                        </div>
+                    </div>
+                    <div class="form-group col-md-3 d-flex align-items-center">
+                        <div class="form-check mt-2">
+                            <input type="checkbox" class="form-check-input" th:field="*{ativo}">
+                            <label class="form-check-label" for="ativo">Ativo</label>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-sm">Salvar</button>
+                <a th:href="@{/ui/admin/naturezas-operacionais-leito}" class="btn btn-secondary btn-sm">Voltar</a>
+            </form>
+        </div>
+    </div>
+</th:block>
+</html>

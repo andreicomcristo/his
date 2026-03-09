@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(${modoEdicao} ? 'Editar Desfecho' : 'Novo Desfecho', ~{::content})}">
+<th:block th:fragment="content">
+    <div class="main-card mb-3 card">
+        <div class="card-body">
+            <h5 class="card-title" th:text="${modoEdicao} ? 'Editar desfecho' : 'Novo desfecho'">Desfecho</h5>
+            <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
+            <form method="post"
+                  th:object="${form}"
+                  th:action="${modoEdicao} ? @{'/ui/desfechos/' + ${itemId}} : @{/ui/desfechos}">
+                <input th:if="${!modoEdicao and atendimentoTravado}" type="hidden" name="atendimentoTravado" value="true">
+                <div class="form-row">
+                    <div class="form-group col-md-12">
+                        <label>Atendimento<span class="required-mark">*</span></label>
+                        <th:block th:if="${!modoEdicao and atendimentoTravado and atendimentoSelecionado != null}">
+                            <input type="hidden" th:field="*{atendimentoId}">
+                            <input type="text"
+                                   class="form-control"
+                                   readonly
+                                   th:value="${'#' + atendimentoSelecionado.id + ' - ' + atendimentoSelecionado.paciente.nomeExibicao + ' - ' + atendimentoSelecionado.unidade.nome}">
+                        </th:block>
+                        <select th:if="${modoEdicao or !atendimentoTravado or atendimentoSelecionado == null}"
+                                class="form-control"
+                                th:field="*{atendimentoId}">
+                            <option value="">Selecione</option>
+                            <option th:each="item : ${atendimentos}"
+                                    th:value="${item.id}"
+                                    th:text="${'#' + item.id + ' - ' + item.paciente.nomeExibicao + ' - ' + item.unidade.nome}"></option>
+                        </select>
+                        <small class="text-danger" th:errors="*{atendimentoId}"></small>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-md-4">
+                        <label>Tipo de desfecho<span class="required-mark">*</span></label>
+                        <select class="form-control" th:field="*{tipoDesfechoId}">
+                            <option value="">Selecione</option>
+                            <option th:each="item : ${tiposDesfecho}" th:value="${item.id}" th:text="${item.descricao}"></option>
+                        </select>
+                        <small class="text-danger" th:errors="*{tipoDesfechoId}"></small>
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label>Motivo do desfecho<span class="required-mark">*</span></label>
+                        <select class="form-control" th:field="*{motivoDesfechoId}">
+                            <option value="">Selecione</option>
+                            <option th:each="item : ${motivosDesfecho}"
+                                    th:value="${item.id}"
+                                    th:attr="data-descricao=${item.descricao}"
+                                    th:text="${item.descricao}"></option>
+                        </select>
+                        <small class="text-danger" th:errors="*{motivoDesfechoId}"></small>
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label>Data/Hora<span class="required-mark">*</span></label>
+                        <input type="datetime-local" class="form-control" th:field="*{dataHora}">
+                        <small class="text-danger" th:errors="*{dataHora}"></small>
+                    </div>
+                </div>
+                <div class="form-row" id="destinoRedeRow" style="display: none;">
+                    <div class="form-group col-md-12">
+                        <label>Destino na rede<span class="required-mark">*</span></label>
+                        <select class="form-control" th:field="*{destinoRedeId}">
+                            <option value="">Selecione</option>
+                            <option th:each="item : ${destinosRede}"
+                                    th:value="${item.id}"
+                                    th:text="${item.descricao}"></option>
+                        </select>
+                        <small class="form-text text-muted">Obrigatorio quando motivo for ORIENTADO_REDE.</small>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-md-12">
+                        <label>Observacao</label>
+                        <textarea class="form-control" rows="3" th:field="*{observacao}"></textarea>
+                        <small class="text-danger" th:errors="*{observacao}"></small>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-sm">Salvar</button>
+                <a th:href="@{/ui/desfechos}" class="btn btn-secondary btn-sm">Voltar</a>
+            </form>
+            <script>
+                document.addEventListener('DOMContentLoaded', function () {
+                    const motivoSelect = document.getElementById('motivoDesfechoId');
+                    const destinoRow = document.getElementById('destinoRedeRow');
+                    const destinoSelect = document.getElementById('destinoRedeId');
+
+                    if (!motivoSelect || !destinoRow || !destinoSelect) {
+                        return;
+                    }
+
+                    const isOrientadoRede = () => {
+                        const option = motivoSelect.options[motivoSelect.selectedIndex];
+                        if (!option) {
+                            return false;
+                        }
+                        const descricao = (option.dataset.descricao || option.text || '').trim().toUpperCase();
+                        return descricao === 'ORIENTADO_REDE';
+                    };
+
+                    const refreshDestinoVisibility = () => {
+                        if (isOrientadoRede()) {
+                            destinoRow.style.display = '';
+                            return;
+                        }
+                        destinoRow.style.display = 'none';
+                        destinoSelect.value = '';
+                    };
+
+                    motivoSelect.addEventListener('change', refreshDestinoVisibility);
+                    refreshDestinoVisibility();
+                });
+            </script>
+        </div>
+    </div>
+</th:block>
+</html>

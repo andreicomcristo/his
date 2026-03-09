@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(${modoEdicao} ? 'Administracao - Editar AVC - Sinal de alerta' : 'Administracao - Novo AVC - Sinal de alerta', ~{::content})}">
+<th:block th:fragment="content">
+    <div class="main-card mb-3 card">
+        <div class="card-body">
+            <h5 class="card-title" th:text="${modoEdicao} ? 'Editar sinal de alerta de AVC' : 'Novo sinal de alerta de AVC'">Sinal de alerta de AVC</h5>
+            <form method="post"
+                  th:object="${form}"
+                  th:action="${modoEdicao} ? @{'/ui/admin/avc-sinais-alerta/' + ${itemId}} : @{/ui/admin/avc-sinais-alerta}">
+                <div class="form-row">
+                    <div class="form-group col-md-8">
+                        <label>Descricao<span class="required-mark">*</span></label>
+                        <input type="text" class="form-control" th:field="*{descricao}" placeholder="Ex.: FRAQUEZA OU DORMENCIA SUBITA EM UM LADO DO CORPO">
+                        <small class="text-danger" th:errors="*{descricao}"></small>
+                    </div>
+                    <div class="form-group col-md-2">
+                        <label>Ordem<span class="required-mark">*</span></label>
+                        <input type="number" min="0" max="9999" class="form-control" th:field="*{ordemExibicao}">
+                        <small class="text-danger" th:errors="*{ordemExibicao}"></small>
+                    </div>
+                    <div class="form-group col-md-2 d-flex align-items-center">
+                        <div class="form-check mt-4">
+                            <input type="checkbox" class="form-check-input" th:field="*{ativo}">
+                            <label class="form-check-label" for="ativo">Ativo</label>
+                        </div>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-sm">Salvar</button>
+                <a th:href="@{/ui/admin/avc-sinais-alerta}" class="btn btn-secondary btn-sm">Voltar</a>
+            </form>
+        </div>
+    </div>
+</th:block>
+</html>

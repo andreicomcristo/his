@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, shrink-to-fit=no">
+    <title>HIS | Escolher Unidade</title>
+    <link rel="icon" type="image/x-icon" th:href="@{/kero/assets/images/favicon.ico}">
+    <link rel="stylesheet" th:href="@{/kero/assets/css/base.min.css}">
+    <link rel="stylesheet" th:href="@{/css/app-shell.css}">
+    <style>
+        .unidade-select-page {
+            min-height: 100vh;
+            padding: 32px 18px;
+            background: linear-gradient(180deg, #f6f7fb 0%, #eceff5 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .unidade-select-panel {
+            width: 100%;
+            max-width: 1120px;
+            background: #fff;
+            border: 1px solid #e5e9f2;
+            border-radius: 14px;
+            box-shadow: 0 16px 36px rgba(22, 30, 51, 0.1);
+            overflow: hidden;
+        }
+
+        .unidade-select-header {
+            padding: 26px 28px 18px;
+            border-bottom: 1px solid #edf0f6;
+        }
+
+        .unidade-select-header-row {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 14px;
+        }
+
+        .unidade-select-header-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        .unidade-select-title {
+            margin: 0;
+            color: #2f3542;
+            font-size: 30px;
+            font-weight: 700;
+        }
+
+        .unidade-select-subtitle {
+            margin: 8px 0 0;
+            color: #6b7280;
+            font-size: 15px;
+        }
+
+        .unidade-select-body {
+            padding: 24px 28px 30px;
+        }
+
+        .unidade-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+        }
+
+        .unidade-card {
+            border: 1px solid #e7ebf2;
+            border-radius: 12px;
+            padding: 16px 16px 14px;
+            background: #fff;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .unidade-card.atual {
+            border-color: #c8d8ff;
+            background: #f6f9ff;
+        }
+
+        .unidade-nome {
+            margin: 0;
+            color: #2f3542;
+            font-size: 20px;
+            font-weight: 700;
+            line-height: 1.25;
+        }
+
+        .unidade-meta {
+            color: #5f6775;
+            font-size: 14px;
+            margin: 0;
+            line-height: 1.4;
+        }
+
+        .unidade-badge-atual {
+            display: inline-flex;
+            align-items: center;
+            align-self: flex-start;
+            padding: 4px 10px;
+            border-radius: 999px;
+            background: #e0eaff;
+            color: #2a55aa;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+        }
+
+        .unidade-card .btn {
+            margin-top: auto;
+            width: 100%;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+<main class="unidade-select-page">
+    <section class="unidade-select-panel">
+        <header class="unidade-select-header">
+            <div class="unidade-select-header-row">
+                <div>
+                    <h1 class="unidade-select-title">Escolha a unidade de trabalho</h1>
+                    <p class="unidade-select-subtitle">Selecione a unidade para iniciar seu fluxo de atendimento.</p>
+                </div>
+                <div class="unidade-select-header-actions" th:if="${unidadeAtualId != null}">
+                    <a th:href="@{/ui/home}" class="btn btn-outline-secondary btn-sm">
+                        <i class="fa fa-arrow-left mr-1"></i> Voltar
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <div class="unidade-select-body">
+            <div class="alert alert-danger" th:if="${errorMessage}" th:text="${errorMessage}"></div>
+
+            <div class="unidade-grid">
+                <article class="unidade-card"
+                         th:classappend="${unidadeAtualId != null and unidadeAtualId == u.id} ? ' atual'"
+                         th:each="u : ${unidades}">
+                    <span class="unidade-badge-atual"
+                          th:if="${unidadeAtualId != null and unidadeAtualId == u.id}">UNIDADE ATUAL</span>
+                    <h2 class="unidade-nome" th:text="${u.nome}">Unidade</h2>
+                    <p class="unidade-meta">
+                        <strong>Tipo:</strong> <span th:text="${u.tipoEstabelecimento}">Tipo</span>
+                    </p>
+                    <p class="unidade-meta">
+                        <strong>CNES:</strong> <span th:text="${u.cnes}">0000000</span>
+                    </p>
+                    <form th:action="@{/ui/escolher-unidade}" method="post">
+                        <input type="hidden" name="unidadeId" th:value="${u.id}">
+                        <button type="submit"
+                                class="btn btn-primary"
+                                th:disabled="${unidadeAtualId != null and unidadeAtualId == u.id}"
+                                th:text="${unidadeAtualId != null and unidadeAtualId == u.id} ? 'Já selecionada' : 'Entrar nesta unidade'">
+                            Entrar nesta unidade
+                        </button>
+                    </form>
+                </article>
+            </div>
+        </div>
+    </section>
+</main>
+</body>
+</html>

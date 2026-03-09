@@ -1,0 +1,1239 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:replace="~{layout/base :: layout('HIS | Novo Atendimento por Classificacao', ~{::section})}">
+    <section>
+        <style>
+            .required-mark {
+                color: #d92550;
+                margin-left: 2px;
+                font-weight: 700;
+            }
+
+            .wizard-shell {
+                display: grid;
+                gap: 20px;
+            }
+
+            .wizard-stepper {
+                display: grid;
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+                gap: 16px;
+                align-items: start;
+            }
+
+            .wizard-step {
+                position: relative;
+                text-align: center;
+                color: #7a7f87;
+            }
+
+            .wizard-step::after {
+                content: "";
+                position: absolute;
+                top: 22px;
+                left: calc(50% + 26px);
+                right: calc(-50% + 26px);
+                height: 4px;
+                background: #d8dbe2;
+                z-index: 0;
+            }
+
+            .wizard-step:last-child::after {
+                display: none;
+            }
+
+            .wizard-step.is-done::after,
+            .wizard-step.is-active::after {
+                background: #f2c200;
+            }
+
+            .wizard-step-dot {
+                position: relative;
+                z-index: 1;
+                width: 44px;
+                height: 44px;
+                margin: 0 auto 10px;
+                border-radius: 999px;
+                border: 3px solid #d8dbe2;
+                background: #fff;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: 700;
+            }
+
+            .wizard-step.is-done .wizard-step-dot {
+                border-color: #1fb600;
+                background: #1fb600;
+                color: #fff;
+            }
+
+            .wizard-step.is-active .wizard-step-dot {
+                border-color: #f2c200;
+                background: #f2c200;
+                color: #4b5563;
+            }
+
+            .wizard-step-title {
+                font-size: 0.95rem;
+                font-weight: 700;
+                color: #4b5563;
+            }
+
+            .wizard-step-subtitle {
+                font-size: 0.8rem;
+                color: #8a9098;
+            }
+
+            .wizard-pane {
+                border: 1px solid #d8dbe2;
+                border-radius: 8px;
+                background: #fff;
+                overflow: hidden;
+            }
+
+            .wizard-pane-header {
+                padding: 14px 18px;
+                border-top: 4px solid #2c84b8;
+                background: #f7f7f8;
+                font-size: 1.1rem;
+                font-weight: 600;
+                color: #374151;
+            }
+
+            .wizard-pane-body {
+                padding: 18px;
+            }
+
+            .wizard-choice-grid {
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 16px;
+            }
+
+            .wizard-choice-card {
+                border: 1px solid #d8dbe2;
+                border-radius: 8px;
+                padding: 18px;
+                background: #fbfbfc;
+            }
+
+            .wizard-choice-title {
+                font-size: 1.05rem;
+                font-weight: 700;
+                margin-bottom: 8px;
+                color: #374151;
+            }
+
+            .wizard-choice-text {
+                color: #6b7280;
+                min-height: 44px;
+                margin-bottom: 12px;
+            }
+
+            .patient-summary-card {
+                border: 1px solid #d8dbe2;
+                border-radius: 8px;
+                overflow: hidden;
+                background: #fff;
+                margin-bottom: 18px;
+            }
+
+            .patient-summary-header {
+                padding: 12px 16px;
+                border-top: 4px solid #d96245;
+                background: #f7f7f8;
+                font-size: 1rem;
+                font-weight: 600;
+                color: #374151;
+            }
+
+            .patient-summary-body {
+                padding: 16px;
+            }
+
+            .patient-summary-grid {
+                display: grid;
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+                gap: 14px 20px;
+            }
+
+            .patient-summary-item.wide {
+                grid-column: span 2;
+            }
+
+            .patient-summary-label {
+                margin-right: 4px;
+                font-weight: 700;
+                color: #b14b42;
+            }
+
+            .patient-summary-value {
+                color: #4b5563;
+                word-break: break-word;
+            }
+
+            .pain-scale {
+                border: 1px solid #d8dbe2;
+                border-radius: 8px;
+                background: #fff;
+                padding: 0 16px 14px;
+                min-height: 260px;
+                box-shadow: 0 6px 14px rgba(17, 24, 39, 0.08);
+            }
+
+            .pain-scale-gradient {
+                height: 8px;
+                margin: 0 -16px 12px;
+                border-radius: 8px 8px 0 0;
+                background: linear-gradient(90deg, #11a63a 0%, #c2d313 40%, #f39c12 70%, #e53935 100%);
+            }
+
+            .pain-scale-grid {
+                display: grid;
+                grid-template-columns: repeat(11, minmax(0, 1fr));
+                gap: 6px;
+                margin-bottom: 10px;
+            }
+
+            .pain-scale-item {
+                text-align: center;
+                position: relative;
+                padding: 4px 2px 2px;
+                border-radius: 6px;
+                cursor: pointer;
+            }
+
+            .pain-scale-item.split::after {
+                content: "";
+                position: absolute;
+                top: 2px;
+                right: -4px;
+                width: 1px;
+                height: 42px;
+                background: #cfd6de;
+            }
+
+            .pain-scale-value {
+                display: block;
+                font-weight: 700;
+                font-size: 1.35rem;
+                color: #2f3541;
+                line-height: 1;
+            }
+
+            .pain-scale-dot {
+                width: 20px;
+                height: 20px;
+                margin: 8px auto 0;
+                border-radius: 999px;
+                border: 2px solid #c7cdd5;
+                background: #fff;
+                transition: all 0.15s ease;
+            }
+
+            .pain-scale-item.is-selected .pain-scale-dot {
+                border-color: #2b82c9;
+                box-shadow: inset 0 0 0 5px #2b82c9;
+            }
+
+            .pain-scale-item input {
+                display: none;
+            }
+
+            .pain-scale-levels {
+                display: flex;
+                justify-content: space-around;
+                gap: 8px;
+                margin-top: 8px;
+                color: #364151;
+                font-weight: 700;
+            }
+
+            .pain-scale-level {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                font-size: 1.05rem;
+            }
+
+            .pain-scale-icon {
+                font-size: 1.4rem;
+                line-height: 1;
+            }
+
+            .pain-scale-level.leve {
+                color: #1f8a36;
+            }
+
+            .pain-scale-level.moderada {
+                color: #cf7f0f;
+            }
+
+            .pain-scale-level.intensa {
+                color: #c72e2a;
+            }
+
+            .glasgow-panel {
+                border: 1px solid #d8dbe2;
+                border-radius: 8px;
+                background: #fff;
+                padding: 12px 12px 10px;
+                min-height: 260px;
+                box-shadow: 0 6px 14px rgba(17, 24, 39, 0.08);
+            }
+
+            .glasgow-total-display {
+                text-align: center;
+                font-weight: 800;
+                font-size: 3rem;
+                color: #1f8a36;
+                line-height: 1;
+                margin-top: 8px;
+            }
+
+            @media (max-width: 991.98px) {
+                .wizard-stepper,
+                .wizard-choice-grid,
+                .patient-summary-grid {
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                }
+
+                .patient-summary-item.wide {
+                    grid-column: span 2;
+                }
+            }
+
+            @media (max-width: 575.98px) {
+                .wizard-stepper,
+                .wizard-choice-grid,
+                .patient-summary-grid {
+                    grid-template-columns: 1fr;
+                }
+
+                .wizard-step::after {
+                    display: none;
+                }
+
+                .patient-summary-item.wide {
+                    grid-column: span 1;
+                }
+            }
+        </style>
+
+        <div class="wizard-shell">
+            <div class="wizard-stepper">
+                <div class="wizard-step"
+                     th:classappend="${wizard.currentStep > 1} ? ' is-done' : (${wizard.currentStep == 1} ? ' is-active' : '')">
+                    <div class="wizard-step-dot" th:text="${wizard.currentStep > 1 ? '✓' : '1'}">1</div>
+                    <div class="wizard-step-title">Tipo de paciente</div>
+                    <div class="wizard-step-subtitle">Identificado ou nao</div>
+                </div>
+                <div class="wizard-step"
+                     th:classappend="${wizard.currentStep > 2} ? ' is-done' : (${wizard.currentStep == 2} ? ' is-active' : '')">
+                    <div class="wizard-step-dot" th:text="${wizard.currentStep > 2 ? '✓' : '2'}">2</div>
+                    <div class="wizard-step-title">Paciente</div>
+                    <div class="wizard-step-subtitle">Busca ou cadastro</div>
+                </div>
+                <div class="wizard-step"
+                     th:classappend="${wizard.currentStep > 3} ? ' is-done' : (${wizard.currentStep == 3} ? ' is-active' : '')">
+                    <div class="wizard-step-dot" th:text="${wizard.currentStep > 3 ? '✓' : '3'}">3</div>
+                    <div class="wizard-step-title">Atendimento</div>
+                    <div class="wizard-step-subtitle">Confirmacao</div>
+                </div>
+                <div class="wizard-step"
+                     th:classappend="${wizard.currentStep == 4} ? ' is-active' : ''">
+                    <div class="wizard-step-dot">4</div>
+                    <div class="wizard-step-title">Classificacao</div>
+                    <div class="wizard-step-subtitle">Triagem inicial</div>
+                </div>
+            </div>
+
+            <div class="alert alert-info py-2" th:if="${horaChegadaCapturada != null}">
+                Hora de chegada capturada:
+                <strong th:text="${#temporals.format(horaChegadaCapturada, 'dd/MM/yyyy HH:mm:ss')}">--</strong>
+            </div>
+
+            <div class="alert alert-danger" th:if="${wizardErrors['global']}" th:text="${wizardErrors['global']}"></div>
+
+            <div class="wizard-pane" th:if="${wizard.currentStep == 1}">
+                <div class="wizard-pane-header">1. Selecione o tipo de paciente</div>
+                <div class="wizard-pane-body">
+                    <div class="alert alert-danger" th:if="${wizardErrors['tipoPaciente']}" th:text="${wizardErrors['tipoPaciente']}"></div>
+                    <div class="wizard-choice-grid">
+                        <form class="wizard-choice-card" th:action="@{/ui/triagem/novo/tipo-paciente}" method="post">
+                            <div class="wizard-choice-title">Paciente identificado</div>
+                            <div class="wizard-choice-text">Paciente com CPF e cadastro existente, ou que sera cadastrado agora.</div>
+                            <input type="hidden" name="tipoPaciente" value="IDENTIFICADO">
+                            <button type="submit" class="btn btn-primary btn-sm">Continuar com paciente identificado</button>
+                        </form>
+                        <form class="wizard-choice-card" th:action="@{/ui/triagem/novo/tipo-paciente}" method="post">
+                            <div class="wizard-choice-title">Paciente nao identificado</div>
+                            <div class="wizard-choice-text">Paciente temporario, sem identificacao definida na chegada.</div>
+                            <input type="hidden" name="tipoPaciente" value="NAO_IDENTIFICADO">
+                            <button type="submit" class="btn btn-outline-primary btn-sm">Continuar com nao identificado</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="wizard-pane" th:if="${wizard.currentStep == 2}" th:object="${wizard}">
+                <div class="wizard-pane-header">2. Paciente</div>
+                <div class="wizard-pane-body">
+                    <div th:if="${wizard.pacienteIdentificado}">
+                        <form th:action="@{/ui/triagem/novo/paciente/buscar-cpf}" method="post" class="mb-4">
+                            <div class="form-row">
+                                <div class="form-group col-md-4">
+                                    <label>CPF do paciente</label>
+                                    <input class="form-control js-mask-cpf" type="text" name="cpfBusca" th:value="*{cpfBusca}" inputmode="numeric" maxlength="14">
+                                    <small class="text-danger" th:if="${wizardErrors['cpfBusca']}" th:text="${wizardErrors['cpfBusca']}"></small>
+                                </div>
+                                <div class="form-group col-md-4 d-flex align-items-end">
+                                    <button type="submit" class="btn btn-primary btn-sm">Buscar por CPF</button>
+                                </div>
+                            </div>
+                        </form>
+
+                        <div class="patient-summary-card" th:if="${wizard.pacienteSelecionadoId != null}">
+                            <div class="patient-summary-header">Paciente localizado</div>
+                            <div class="patient-summary-body">
+                                <div class="patient-summary-grid">
+                                    <div class="patient-summary-item wide"><span class="patient-summary-label">Paciente:</span><span class="patient-summary-value" th:text="${patientSummary['nome']}"></span></div>
+                                    <div class="patient-summary-item wide"><span class="patient-summary-label">Mae:</span><span class="patient-summary-value" th:text="${patientSummary['nomeMae']}"></span></div>
+                                    <div class="patient-summary-item wide"><span class="patient-summary-label">Pai:</span><span class="patient-summary-value" th:text="${patientSummary['nomePai']}"></span></div>
+                                    <div class="patient-summary-item"><span class="patient-summary-label">CPF:</span><span class="patient-summary-value" th:text="${patientSummary['cpf']}"></span></div>
+                                    <div class="patient-summary-item"><span class="patient-summary-label">Cartao SUS:</span><span class="patient-summary-value" th:text="${patientSummary['cns']}"></span></div>
+                                    <div class="patient-summary-item"><span class="patient-summary-label">Nascimento:</span><span class="patient-summary-value" th:text="${patientSummary['dataNascimento']}"></span></div>
+                                    <div class="patient-summary-item"><span class="patient-summary-label">Contato:</span><span class="patient-summary-value" th:text="${patientSummary['telefone']}"></span></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div th:if="${wizard.cadastrarNovoPaciente}">
+                            <div class="alert alert-warning">CPF nao encontrado. Preencha os dados principais do paciente. O CADSUS sera consultado automaticamente ao sair do CPF.</div>
+                            <form th:action="@{/ui/triagem/novo/paciente/continuar}" method="post">
+                                <div class="form-row">
+                                    <div class="form-group col-md-6">
+                                        <label>Nome do paciente</label>
+                                        <input id="nome" class="form-control" type="text" th:field="*{novoPacienteNome}">
+                                        <small class="text-danger" th:if="${wizardErrors['novoPacienteNome']}" th:text="${wizardErrors['novoPacienteNome']}"></small>
+                                    </div>
+                                    <div class="form-group col-md-3">
+                                        <label>CPF</label>
+                                        <input id="cpf" class="form-control js-mask-cpf" type="text" th:field="*{novoPacienteCpf}" inputmode="numeric" maxlength="14">
+                                        <small class="text-muted d-block" id="cpfFeedback"></small>
+                                        <small class="text-danger" th:if="${wizardErrors['novoPacienteCpf']}" th:text="${wizardErrors['novoPacienteCpf']}"></small>
+                                    </div>
+                                    <div class="form-group col-md-3">
+                                        <label>Cartao SUS</label>
+                                        <input id="cns" class="form-control" type="text" th:field="*{novoPacienteCns}">
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group col-md-3">
+                                        <label>Data de nascimento</label>
+                                        <input id="dataNascimento" class="form-control" type="date" th:field="*{novoPacienteDataNascimento}">
+                                    </div>
+                                    <div class="form-group col-md-2">
+                                        <label>Sexo</label>
+                                        <select id="sexo" class="form-control" th:field="*{novoPacienteSexo}">
+                                            <option th:each="item : ${sexos}" th:value="${item.codigo}" th:text="${item.descricao}"></option>
+                                        </select>
+                                        <small class="text-danger" th:if="${wizardErrors['novoPacienteSexo']}" th:text="${wizardErrors['novoPacienteSexo']}"></small>
+                                    </div>
+                                    <div class="form-group col-md-3">
+                                        <label>Telefone</label>
+                                        <input class="form-control js-mask-phone" type="text" th:field="*{novoPacienteTelefone}" inputmode="numeric" maxlength="15">
+                                    </div>
+                                    <div class="form-group col-md-4">
+                                        <label>Nome da mae</label>
+                                        <input id="nomeMae" class="form-control" type="text" th:field="*{novoPacienteNomeMae}">
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-primary btn-sm">Continuar</button>
+                                <a th:href="@{/ui/triagem/novo(step=1)}" class="btn btn-secondary btn-sm">Voltar</a>
+                            </form>
+                        </div>
+
+                        <form th:if="${wizard.pacienteSelecionadoId != null}" th:action="@{/ui/triagem/novo/paciente/continuar}" method="post">
+                            <button type="submit" class="btn btn-primary btn-sm">Continuar com este paciente</button>
+                            <a th:href="@{/ui/triagem/novo(restart=true)}" class="btn btn-secondary btn-sm">Reiniciar fluxo</a>
+                        </form>
+                    </div>
+
+                    <div th:if="${wizard.pacienteIdentificado == false}">
+                        <form th:action="@{/ui/triagem/novo/paciente/continuar}" method="post">
+                            <div class="alert alert-warning">Fluxo de paciente nao identificado: sera criado um paciente temporario ao final.</div>
+                            <div class="form-row">
+                                <div class="form-group col-md-3">
+                                    <label>Sexo temporario</label>
+                                    <select class="form-control" th:field="*{sexoTemporario}">
+                                        <option th:each="item : ${sexos}" th:value="${item.codigo}" th:text="${item.descricao}"></option>
+                                    </select>
+                                    <small class="text-danger" th:if="${wizardErrors['sexoTemporario']}" th:text="${wizardErrors['sexoTemporario']}"></small>
+                                </div>
+                                <div class="form-group col-md-3">
+                                    <label>Idade aparente</label>
+                                    <input class="form-control" type="number" min="0" max="150" th:field="*{idadeAparenteTemporario}">
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-sm">Continuar</button>
+                            <a th:href="@{/ui/triagem/novo(step=1)}" class="btn btn-secondary btn-sm">Voltar</a>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="wizard-pane" th:if="${wizard.currentStep == 3}" th:object="${wizard}">
+                <div class="wizard-pane-header">3. Dados do atendimento</div>
+                <div class="wizard-pane-body">
+                    <div class="patient-summary-card" th:if="${!#maps.isEmpty(patientSummary)}">
+                        <div class="patient-summary-header" th:text="${patientSummary['tipo']}">Paciente</div>
+                        <div class="patient-summary-body">
+                            <div class="patient-summary-grid">
+                                <div class="patient-summary-item wide"><span class="patient-summary-label">Paciente:</span><span class="patient-summary-value" th:text="${patientSummary['nome']}"></span></div>
+                                <div class="patient-summary-item wide" th:if="${patientSummary['nomeMae'] != null}"><span class="patient-summary-label">Mae:</span><span class="patient-summary-value" th:text="${patientSummary['nomeMae']}"></span></div>
+                                <div class="patient-summary-item wide" th:if="${patientSummary['nomePai'] != null}"><span class="patient-summary-label">Pai:</span><span class="patient-summary-value" th:text="${patientSummary['nomePai']}"></span></div>
+                                <div class="patient-summary-item" th:if="${patientSummary['cpf'] != null}"><span class="patient-summary-label">CPF:</span><span class="patient-summary-value" th:text="${patientSummary['cpf']}"></span></div>
+                                <div class="patient-summary-item" th:if="${patientSummary['cns'] != null}"><span class="patient-summary-label">Cartao SUS:</span><span class="patient-summary-value" th:text="${patientSummary['cns']}"></span></div>
+                                <div class="patient-summary-item" th:if="${patientSummary['dataNascimento'] != null}"><span class="patient-summary-label">Nascimento:</span><span class="patient-summary-value" th:text="${patientSummary['dataNascimento']}"></span></div>
+                                <div class="patient-summary-item" th:if="${patientSummary['telefone'] != null}"><span class="patient-summary-label">Contato:</span><span class="patient-summary-value" th:text="${patientSummary['telefone']}"></span></div>
+                                <div class="patient-summary-item" th:if="${patientSummary['sexo'] != null}"><span class="patient-summary-label">Sexo:</span><span class="patient-summary-value" th:text="${patientSummary['sexo']}"></span></div>
+                                <div class="patient-summary-item" th:if="${patientSummary['idadeAparente'] != null}"><span class="patient-summary-label">Idade aparente:</span><span class="patient-summary-value" th:text="${patientSummary['idadeAparente']}"></span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form th:action="@{/ui/triagem/novo/atendimento/continuar}" method="post">
+                        <div class="form-row">
+                            <div class="form-group col-md-4">
+                                <label>Tipo de atendimento</label>
+                                <select class="form-control form-select chat-input" th:field="*{tipoAtendimento}">
+                                    <option th:each="t : ${tiposAtendimento}" th:value="${t}" th:text="${t}"></option>
+                                </select>
+                                <small class="text-danger" th:if="${wizardErrors['tipoAtendimento']}" th:text="${wizardErrors['tipoAtendimento']}"></small>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-sm">Continuar para classificacao</button>
+                        <a th:href="@{/ui/triagem/novo(step=2)}" class="btn btn-secondary btn-sm">Voltar</a>
+                    </form>
+                </div>
+            </div>
+
+            <div class="wizard-pane" th:if="${wizard.currentStep == 4}" th:object="${wizard}">
+                <div class="wizard-pane-header">4. Classificacao de risco</div>
+                <div class="wizard-pane-body">
+                    <div class="patient-summary-card" th:if="${!#maps.isEmpty(patientSummary)}">
+                        <div class="patient-summary-header">Resumo do paciente</div>
+                        <div class="patient-summary-body">
+                            <div class="patient-summary-grid">
+                                <div class="patient-summary-item wide"><span class="patient-summary-label">Paciente:</span><span class="patient-summary-value" th:text="${patientSummary['nome']}"></span></div>
+                                <div class="patient-summary-item" th:if="${patientSummary['cpf'] != null}"><span class="patient-summary-label">CPF:</span><span class="patient-summary-value" th:text="${patientSummary['cpf']}"></span></div>
+                                <div class="patient-summary-item" th:if="${patientSummary['tipo'] != null}"><span class="patient-summary-label">Tipo:</span><span class="patient-summary-value" th:text="${patientSummary['tipo']}"></span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form th:action="@{/ui/triagem/novo/finalizar}" method="post">
+                        <div class="card mb-3">
+                            <div class="card-header"><strong>Queixa e observacoes</strong></div>
+                            <div class="card-body">
+                                <div class="form-row">
+                                    <div class="form-group col-md-6">
+                                        <label>Queixa principal<span class="required-mark">*</span></label>
+                                        <textarea class="form-control" rows="3" th:field="*{triagemForm.queixaPrincipal}"></textarea>
+                                        <small class="text-danger" th:if="${wizardErrors['triagemForm.queixaPrincipal']}" th:text="${wizardErrors['triagemForm.queixaPrincipal']}"></small>
+                                    </div>
+                                    <div class="form-group col-md-6">
+                                        <label>Medicacoes de uso continuo</label>
+                                        <textarea class="form-control" rows="3" th:field="*{triagemForm.medicacoesUsoContinuo}"></textarea>
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group col-md-6">
+                                        <label>Discriminador</label>
+                                        <textarea class="form-control" rows="2" th:field="*{triagemForm.discriminador}"></textarea>
+                                    </div>
+                                    <div class="form-group col-md-6">
+                                        <label>Observacoes complementares</label>
+                                        <textarea class="form-control" rows="2" th:field="*{triagemForm.observacao}"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card mb-3">
+                            <div class="card-header"><strong>Sinais vitais</strong></div>
+                            <div class="card-body">
+                                <div class="form-row">
+                                    <div class="form-group col-md-3">
+                                        <label>Pressao arterial</label>
+                                        <input class="form-control" type="text" th:field="*{triagemForm.pressaoArterial}" placeholder="120x80">
+                                    </div>
+                                    <div class="form-group col-md-2">
+                                        <label>Temperatura</label>
+                                        <input class="form-control" type="number" step="0.1" th:field="*{triagemForm.temperatura}">
+                                    </div>
+                                    <div class="form-group col-md-2">
+                                        <label>FC</label>
+                                        <input class="form-control" type="number" th:field="*{triagemForm.frequenciaCardiaca}">
+                                    </div>
+                                    <div class="form-group col-md-2">
+                                        <label>Sat O2</label>
+                                        <input class="form-control" type="number" th:field="*{triagemForm.saturacaoO2}">
+                                    </div>
+                                    <div class="form-group col-md-2">
+                                        <label>FR</label>
+                                        <input class="form-control" type="number" th:field="*{triagemForm.frequenciaRespiratoria}">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card mb-3">
+                            <div class="card-header"><strong>Oxigenacao</strong></div>
+                            <div class="card-body">
+                                <div class="form-row">
+                                    <div class="form-group col-md-3">
+                                        <label>Sat O2 c/ terapia</label>
+                                        <input class="form-control" type="number" th:field="*{triagemForm.saturacaoO2ComTerapiaO2}">
+                                    </div>
+                                    <div class="form-group col-md-3">
+                                        <label>Sat O2 AA</label>
+                                        <input class="form-control" type="number" th:field="*{triagemForm.saturacaoO2Aa}">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card mb-3">
+                            <div class="card-header"><strong>Glicemia e antropometria</strong></div>
+                            <div class="card-body">
+                                <div class="form-row">
+                                    <div class="form-group col-md-3">
+                                        <label>Glicemia capilar</label>
+                                        <input class="form-control" type="number" step="0.1" th:field="*{triagemForm.glicemiaCapilar}">
+                                    </div>
+                                    <div class="form-group col-md-3">
+                                        <label>HGT</label>
+                                        <input class="form-control" type="number" th:field="*{triagemForm.hgt}">
+                                    </div>
+                                    <div class="form-group col-md-3">
+                                        <label>Peso (kg)</label>
+                                        <input class="form-control" type="number" step="0.1" th:field="*{triagemForm.pesoKg}">
+                                    </div>
+                                    <div class="form-group col-md-3">
+                                        <label>Altura (cm)</label>
+                                        <input class="form-control" type="number" step="0.1" th:field="*{triagemForm.alturaCm}">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card mb-3">
+                            <div class="card-header"><strong>Perfusao capilar</strong></div>
+                            <div class="card-body">
+                                <div class="form-row">
+                                    <div class="form-group col-md-3">
+                                        <label>Perfusao capilar (seg)</label>
+                                        <input class="form-control" type="number" th:field="*{triagemForm.perfusaoCapilarPerifericaSeg}">
+                                    </div>
+                                    <div class="form-group col-md-3">
+                                        <label>Preenchimento capilar (seg)</label>
+                                        <input class="form-control" type="number" th:field="*{triagemForm.preenchimentoCapilarCentralSeg}">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card mb-3">
+                            <div class="card-header"><strong>Escala de dor e Escala de Glasgow</strong></div>
+                            <div class="card-body">
+                                <div class="form-row">
+                                    <div class="form-group col-md-6">
+                                        <label>Escala de dor<span class="required-mark">*</span></label>
+                                        <select class="form-control d-none" id="wizardReguaDorId" th:field="*{triagemForm.reguaDorId}">
+                                            <option value="">Selecione</option>
+                                            <option th:each="item : ${reguasDor}" th:value="${item.id}" th:text="${item.valor + ' - ' + item.descricao}"></option>
+                                        </select>
+                                        <div class="pain-scale" id="painScaleWizard">
+                                            <div class="pain-scale-gradient"></div>
+                                            <div class="pain-scale-grid">
+                                                <label class="pain-scale-item"
+                                                       th:each="item : ${reguasDor}"
+                                                       th:classappend="${item.valor == 0 or item.valor == 4 or item.valor == 7} ? ' split' : ''">
+                                                    <input type="radio" class="js-wizard-regua-dor-radio" name="painScaleWizardRadio" th:value="${item.id}">
+                                                    <span class="pain-scale-value" th:text="${item.valor < 10 ? '0' + item.valor : item.valor}">00</span>
+                                                    <span class="pain-scale-dot"></span>
+                                                </label>
+                                            </div>
+                                            <div class="pain-scale-levels">
+                                                <span class="pain-scale-level leve"><span class="pain-scale-icon">🙂</span>Leve</span>
+                                                <span class="pain-scale-level moderada"><span class="pain-scale-icon">😐</span>Moderada</span>
+                                                <span class="pain-scale-level intensa"><span class="pain-scale-icon">☹️</span>Intensa</span>
+                                            </div>
+                                        </div>
+                                        <small class="text-danger" th:if="${wizardErrors['triagemForm.reguaDorId']}" th:text="${wizardErrors['triagemForm.reguaDorId']}"></small>
+                                    </div>
+                                    <div class="form-group col-md-6">
+                                        <label>Escala de Glasgow</label>
+                                        <div class="glasgow-panel">
+                                            <div class="form-row">
+                                                <div class="form-group col-md-6">
+                                                    <label>Abertura ocular</label>
+                                                    <select class="form-control js-wizard-glasgow-input" id="wizardGlasgowAberturaOcularId" th:field="*{triagemForm.glasgowAberturaOcularId}">
+                                                        <option value="">Selecione</option>
+                                                        <option th:each="item : ${glasgowAberturaOcular}"
+                                                                th:value="${item.id}"
+                                                                th:data-pontos="${item.pontos}"
+                                                                th:text="${item.pontos + ' - ' + item.descricao}"></option>
+                                                    </select>
+                                                    <small class="text-danger" th:if="${wizardErrors['triagemForm.glasgowAberturaOcularId']}" th:text="${wizardErrors['triagemForm.glasgowAberturaOcularId']}"></small>
+                                                </div>
+                                                <div class="form-group col-md-6">
+                                                    <label>Resposta verbal</label>
+                                                    <select class="form-control js-wizard-glasgow-input" id="wizardGlasgowRespostaVerbalId" th:field="*{triagemForm.glasgowRespostaVerbalId}">
+                                                        <option value="">Selecione</option>
+                                                        <option th:each="item : ${glasgowRespostaVerbal}"
+                                                                th:value="${item.id}"
+                                                                th:data-pontos="${item.pontos}"
+                                                                th:text="${item.pontos + ' - ' + item.descricao}"></option>
+                                                    </select>
+                                                    <small class="text-danger" th:if="${wizardErrors['triagemForm.glasgowRespostaVerbalId']}" th:text="${wizardErrors['triagemForm.glasgowRespostaVerbalId']}"></small>
+                                                </div>
+                                            </div>
+                                            <div class="form-row">
+                                                <div class="form-group col-md-6">
+                                                    <label>Resposta motora</label>
+                                                    <select class="form-control js-wizard-glasgow-input" id="wizardGlasgowRespostaMotoraId" th:field="*{triagemForm.glasgowRespostaMotoraId}">
+                                                        <option value="">Selecione</option>
+                                                        <option th:each="item : ${glasgowRespostaMotora}"
+                                                                th:value="${item.id}"
+                                                                th:data-pontos="${item.pontos}"
+                                                                th:text="${item.pontos + ' - ' + item.descricao}"></option>
+                                                    </select>
+                                                    <small class="text-danger" th:if="${wizardErrors['triagemForm.glasgowRespostaMotoraId']}" th:text="${wizardErrors['triagemForm.glasgowRespostaMotoraId']}"></small>
+                                                </div>
+                                                <div class="form-group col-md-6">
+                                                    <label>Pupilar (opcional)</label>
+                                                    <select class="form-control js-wizard-glasgow-input" id="wizardGlasgowRespostaPupilarId" th:field="*{triagemForm.glasgowRespostaPupilarId}">
+                                                        <option value="">Selecione</option>
+                                                        <option th:each="item : ${glasgowRespostaPupilar}"
+                                                                th:value="${item.id}"
+                                                                th:data-pontos="${item.pontos}"
+                                                                th:text="${item.pontos + ' - ' + item.descricao}"></option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="form-row">
+                                                <div class="form-group col-md-12 mb-0">
+                                                    <input class="form-control d-none" type="number" id="wizardGlasgowTotal" th:field="*{triagemForm.glasgowTotal}" readonly>
+                                                    <div class="glasgow-total-display" id="wizardGlasgowTotalDisplay">--</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card mb-3">
+                            <div class="card-header"><strong>Alergias</strong></div>
+                            <div class="card-body">
+                                <div class="form-row align-items-end">
+                                    <div class="form-group col-md-4">
+                                        <label>Alergia - substancia</label>
+                                        <select class="form-control" id="wizardAlergiaSubstanciaInput">
+                                            <option value="">Selecione</option>
+                                            <option th:each="item : ${alergiaSubstancias}" th:value="${item.id}" th:text="${item.descricao}"></option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group col-md-3">
+                                        <label>Alergia - severidade</label>
+                                        <select class="form-control" id="wizardAlergiaSeveridadeInput">
+                                            <option value="">Selecione</option>
+                                            <option th:each="item : ${alergiaSeveridades}" th:value="${item.id}" th:text="${item.descricao}"></option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group col-md-4">
+                                        <label>Alergia - detalhe</label>
+                                        <input class="form-control" type="text" id="wizardAlergiaDescricaoInput" placeholder="Ex.: DIPIRONA, CAMARAO, VACINA INFLUENZA">
+                                    </div>
+                                    <div class="form-group col-md-1">
+                                        <button class="btn btn-outline-primary btn-sm" type="button" id="btnWizardInserirAlergia">Inserir</button>
+                                    </div>
+                                </div>
+                                <div class="mb-2">
+                                    <button class="btn btn-outline-secondary btn-sm" type="button" id="btnWizardNaoRelataAlergia">Nao relata alergia</button>
+                                </div>
+                                <small class="text-danger d-block mb-2" th:if="${wizardErrors['triagemForm.alergias']}" th:text="${wizardErrors['triagemForm.alergias']}"></small>
+                                <table class="table table-sm table-bordered mb-0">
+                                    <thead>
+                                    <tr>
+                                        <th>Substancia</th>
+                                        <th>Severidade</th>
+                                        <th>Detalhe</th>
+                                        <th style="width: 90px;">Acao</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody id="wizardAlergiasBody">
+                                    <tr th:each="item,iter : *{triagemForm.alergias}" class="js-wizard-alergia-row"
+                                        th:attr="data-substancia-id=${item.substanciaId},data-severidade-id=${item.severidadeId},data-descricao=${item.descricao}">
+                                        <td th:text="${alergiaSubstanciaMap[item.substanciaId]}">-</td>
+                                        <td th:text="${item.severidadeId != null ? alergiaSeveridadeMap[item.severidadeId] : '-'}">-</td>
+                                        <td th:text="${item.descricao}">-</td>
+                                        <td>
+                                            <button class="btn btn-outline-danger btn-sm js-wizard-remove-alergia" type="button">Remover</button>
+                                            <input type="hidden" th:name="${'triagemForm.alergias[' + iter.index + '].substanciaId'}" th:value="${item.substanciaId}">
+                                            <input type="hidden" th:name="${'triagemForm.alergias[' + iter.index + '].severidadeId'}" th:value="${item.severidadeId}">
+                                            <input type="hidden" th:name="${'triagemForm.alergias[' + iter.index + '].descricao'}" th:value="${item.descricao}">
+                                        </td>
+                                    </tr>
+                                    <tr id="wizardAlergiasEmptyRow">
+                                        <td colspan="4" class="text-muted text-center">Nenhuma alergia adicionada.</td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="card mb-3">
+                            <div class="card-header"><strong>Comorbidades</strong></div>
+                            <div class="card-body">
+                                <div class="form-row align-items-end">
+                                    <div class="form-group col-md-11">
+                                        <label>Comorbidade</label>
+                                        <select class="form-control" id="wizardComorbidadeInput">
+                                            <option value="">Selecione</option>
+                                            <option th:each="item : ${comorbidades}" th:value="${item.id}" th:text="${item.descricao}"></option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group col-md-1">
+                                        <button class="btn btn-outline-primary btn-sm" type="button" id="btnWizardInserirComorbidade">Inserir</button>
+                                    </div>
+                                </div>
+                                <div class="mb-2">
+                                    <button class="btn btn-outline-secondary btn-sm" type="button" id="btnWizardNaoRelataComorbidade">Nao relata comorbidade</button>
+                                </div>
+                                <table class="table table-sm table-bordered mb-0">
+                                    <thead>
+                                    <tr>
+                                        <th>Comorbidade</th>
+                                        <th style="width: 90px;">Acao</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody id="wizardComorbidadesBody">
+                                    <tr th:each="id,iter : *{triagemForm.comorbidadeIds}" class="js-wizard-comorbidade-row" th:attr="data-id=${id}">
+                                        <td th:text="${comorbidadeMap[id]}">-</td>
+                                        <td>
+                                            <button class="btn btn-outline-danger btn-sm js-wizard-remove-comorbidade" type="button">Remover</button>
+                                            <input type="hidden" th:name="${'triagemForm.comorbidadeIds[' + iter.index + ']'}" th:value="${id}">
+                                        </td>
+                                    </tr>
+                                    <tr id="wizardComorbidadesEmptyRow">
+                                        <td colspan="2" class="text-muted text-center">Nenhuma comorbidade adicionada.</td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="card mb-3">
+                            <div class="card-header"><strong>AVC - Sinais de alerta</strong></div>
+                            <div class="card-body p-0">
+                                <table class="table table-sm mb-0">
+                                    <thead>
+                                    <tr>
+                                        <th class="pl-3">Questao</th>
+                                        <th class="text-center" style="width: 120px;">Acoes</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <tr th:each="item : ${avcSinaisAlerta}">
+                                        <td class="pl-3" th:text="${item.descricao}">-</td>
+                                        <td class="text-center">
+                                            <input type="checkbox"
+                                                   class="form-check-input position-static"
+                                                   th:field="*{triagemForm.avcSinalAlertaIds}"
+                                                   th:value="${item.id}">
+                                        </td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="card mb-3">
+                            <div class="card-header"><strong>Classificacao de risco</strong></div>
+                            <div class="card-body">
+                                <div class="form-row">
+                                    <div class="form-group col-md-4">
+                                        <label>Cor de classificacao<span class="required-mark">*</span></label>
+                                        <select class="form-control" th:field="*{triagemForm.classificacaoCorId}">
+                                            <option value="">Selecione</option>
+                                            <option th:each="item : ${classificacaoCores}"
+                                                    th:value="${item.id}"
+                                                    th:text="${item.descricao}"></option>
+                                        </select>
+                                        <small class="text-danger"
+                                               th:if="${wizardErrors['triagemForm.classificacaoCorId']}"
+                                               th:text="${wizardErrors['triagemForm.classificacaoCorId']}"></small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-sm">Finalizar atendimento e classificacao</button>
+                        <a th:href="@{/ui/triagem/novo(step=3)}" class="btn btn-secondary btn-sm">Voltar</a>
+                        <a th:href="@{/ui/triagem/novo(restart=true)}" class="btn btn-outline-secondary btn-sm">Reiniciar fluxo</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                function onlyDigits(value) {
+                    return (value || '').replace(/\D/g, '');
+                }
+
+                function maskCpf(value) {
+                    var digits = onlyDigits(value).slice(0, 11);
+                    if (digits.length > 9) {
+                        return digits.replace(/(\d{3})(\d{3})(\d{3})(\d{0,2})/, '$1.$2.$3-$4').replace(/-$/, '');
+                    }
+                    if (digits.length > 6) {
+                        return digits.replace(/(\d{3})(\d{3})(\d{0,3})/, '$1.$2.$3').replace(/\.$/, '');
+                    }
+                    if (digits.length > 3) {
+                        return digits.replace(/(\d{3})(\d{0,3})/, '$1.$2').replace(/\.$/, '');
+                    }
+                    return digits;
+                }
+
+                function maskPhone(value) {
+                    var digits = onlyDigits(value).slice(0, 11);
+                    if (digits.length > 10) {
+                        return digits.replace(/(\d{2})(\d{5})(\d{0,4})/, '($1) $2-$3').replace(/-$/, '');
+                    }
+                    if (digits.length > 6) {
+                        return digits.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3').replace(/-$/, '');
+                    }
+                    if (digits.length > 2) {
+                        return digits.replace(/(\d{2})(\d{0,5})/, '($1) $2');
+                    }
+                    return digits;
+                }
+
+                function bindMask(selector, formatter) {
+                    document.querySelectorAll(selector).forEach(function (element) {
+                        var apply = function () {
+                            element.value = formatter(element.value);
+                        };
+                        element.addEventListener('input', apply);
+                        apply();
+                    });
+                }
+
+                bindMask('.js-mask-cpf', maskCpf);
+                bindMask('.js-mask-phone', maskPhone);
+
+                var cpfInput = document.getElementById('cpf');
+                var cnsInput = document.getElementById('cns');
+                var nomeInput = document.getElementById('nome');
+                var nomeMaeInput = document.getElementById('nomeMae');
+                var sexoInput = document.getElementById('sexo');
+                var dataNascimentoInput = document.getElementById('dataNascimento');
+                var cpfFeedback = document.getElementById('cpfFeedback');
+
+                function setCpfFeedback(message, isError) {
+                    if (!cpfFeedback) {
+                        return;
+                    }
+                    cpfFeedback.textContent = message || '';
+                    cpfFeedback.classList.toggle('text-danger', !!isError);
+                    cpfFeedback.classList.toggle('text-muted', !isError);
+                }
+
+                function applyCpfData(data) {
+                    if (cnsInput && data.cns) { cnsInput.value = data.cns; }
+                    if (nomeInput && data.nome) { nomeInput.value = data.nome; }
+                    if (nomeMaeInput && data.nomeMae) { nomeMaeInput.value = data.nomeMae; }
+                    if (sexoInput && data.sexo) { sexoInput.value = data.sexo; }
+                    if (dataNascimentoInput && data.dataNascimento) { dataNascimentoInput.value = data.dataNascimento; }
+                }
+
+                function lookupCpf() {
+                    if (!cpfInput) {
+                        return;
+                    }
+                    var cpf = onlyDigits(cpfInput.value);
+                    if (!cpf) {
+                        setCpfFeedback('', false);
+                        return;
+                    }
+                    if (cpf.length !== 11) {
+                        setCpfFeedback('CPF invalido. Informe 11 digitos.', true);
+                        return;
+                    }
+                    setCpfFeedback('Consultando CADSUS...', false);
+                    fetch('/ui/pacientes/cpf/' + cpf + '/cadsus')
+                        .then(function (response) {
+                            return response.json().then(function (data) {
+                                return { ok: response.ok, data: data };
+                            });
+                        })
+                        .then(function (result) {
+                            if (!result.ok) {
+                                setCpfFeedback(result.data.message || 'Nao foi possivel consultar o CADSUS.', true);
+                                return;
+                            }
+                            applyCpfData(result.data);
+                            setCpfFeedback('Cadastro preenchido a partir do CADSUS.', false);
+                        })
+                        .catch(function () {
+                            setCpfFeedback('Falha ao consultar CADSUS.', true);
+                        });
+                }
+
+                if (cpfInput) {
+                    cpfInput.addEventListener('blur', lookupCpf);
+                }
+
+                var wizardAlergias = [];
+                var wizardComorbidades = [];
+                var wizardAlergiasBody = document.getElementById('wizardAlergiasBody');
+                var wizardComorbidadesBody = document.getElementById('wizardComorbidadesBody');
+                var wizardAlergiaEmpty = document.getElementById('wizardAlergiasEmptyRow');
+                var wizardComorbidadeEmpty = document.getElementById('wizardComorbidadesEmptyRow');
+                var wizardSubstanciaInput = document.getElementById('wizardAlergiaSubstanciaInput');
+                var wizardSeveridadeInput = document.getElementById('wizardAlergiaSeveridadeInput');
+                var wizardDescricaoInput = document.getElementById('wizardAlergiaDescricaoInput');
+                var wizardComorbidadeInput = document.getElementById('wizardComorbidadeInput');
+                var wizardReguaDorSelect = document.getElementById('wizardReguaDorId');
+                var wizardReguaDorRadios = Array.from(document.querySelectorAll('.js-wizard-regua-dor-radio'));
+                var wizardGlasgowInputs = Array.from(document.querySelectorAll('.js-wizard-glasgow-input'));
+                var wizardGlasgowTotal = document.getElementById('wizardGlasgowTotal');
+                var wizardGlasgowTotalDisplay = document.getElementById('wizardGlasgowTotalDisplay');
+
+                function wizardSelectedPontos(select) {
+                    if (!select || !select.value) return 0;
+                    var option = select.options[select.selectedIndex];
+                    var pontos = option ? Number(option.getAttribute('data-pontos')) : 0;
+                    return Number.isNaN(pontos) ? 0 : pontos;
+                }
+
+                function recomputeWizardGlasgow() {
+                    if (!wizardGlasgowTotal) return;
+                    var ocular = wizardSelectedPontos(document.getElementById('wizardGlasgowAberturaOcularId'));
+                    var verbal = wizardSelectedPontos(document.getElementById('wizardGlasgowRespostaVerbalId'));
+                    var motora = wizardSelectedPontos(document.getElementById('wizardGlasgowRespostaMotoraId'));
+                    var pupilar = wizardSelectedPontos(document.getElementById('wizardGlasgowRespostaPupilarId'));
+                    if (!ocular && !verbal && !motora && !pupilar) {
+                        wizardGlasgowTotal.value = '';
+                        if (wizardGlasgowTotalDisplay) {
+                            wizardGlasgowTotalDisplay.textContent = '--';
+                        }
+                        return;
+                    }
+                    var total = ocular + verbal + motora - pupilar;
+                    wizardGlasgowTotal.value = total >= 0 ? String(total) : '';
+                    if (wizardGlasgowTotalDisplay) {
+                        wizardGlasgowTotalDisplay.textContent = total >= 0 ? String(total) : '--';
+                    }
+                }
+
+                function syncWizardPainScaleFromSelect() {
+                    var selected = wizardReguaDorSelect ? wizardReguaDorSelect.value : '';
+                    wizardReguaDorRadios.forEach(function (radio) {
+                        var checked = selected && radio.value === selected;
+                        radio.checked = checked;
+                        var item = radio.closest('.pain-scale-item');
+                        if (item) {
+                            item.classList.toggle('is-selected', checked);
+                        }
+                    });
+                }
+
+                function wizardOptionText(select, value) {
+                    if (!value) return '-';
+                    var option = select.querySelector('option[value="' + value + '"]');
+                    return option ? option.textContent : value;
+                }
+
+                function wizardNormalize(text) {
+                    if (!text) return null;
+                    var t = text.trim();
+                    return t.length ? t : null;
+                }
+
+                function wizardNormalizeKey(text) {
+                    return (text || '')
+                        .normalize('NFD')
+                        .replace(/[\u0300-\u036f]/g, '')
+                        .toUpperCase()
+                        .trim();
+                }
+
+                function wizardFindOptionByText(select, expectedText) {
+                    var expected = wizardNormalizeKey(expectedText);
+                    for (var i = 0; i < select.options.length; i++) {
+                        var option = select.options[i];
+                        if (!option.value) continue;
+                        if (wizardNormalizeKey(option.textContent).indexOf(expected) >= 0) {
+                            return option;
+                        }
+                    }
+                    return null;
+                }
+
+                function renderWizardAlergias() {
+                    Array.from(wizardAlergiasBody.querySelectorAll('.js-wizard-alergia-row')).forEach(function (row) { row.remove(); });
+                    wizardAlergias.forEach(function (item, index) {
+                        var tr = document.createElement('tr');
+                        tr.className = 'js-wizard-alergia-row';
+                        tr.innerHTML =
+                            '<td>' + wizardOptionText(wizardSubstanciaInput, item.substanciaId) + '</td>' +
+                            '<td>' + (item.severidadeId ? wizardOptionText(wizardSeveridadeInput, item.severidadeId) : '-') + '</td>' +
+                            '<td>' + (item.descricao || '-') + '</td>' +
+                            '<td>' +
+                            '<button class="btn btn-outline-danger btn-sm js-wizard-remove-alergia" type="button" data-index="' + index + '">Remover</button>' +
+                            '<input type="hidden" name="triagemForm.alergias[' + index + '].substanciaId" value="' + item.substanciaId + '">' +
+                            '<input type="hidden" name="triagemForm.alergias[' + index + '].severidadeId" value="' + (item.severidadeId || '') + '">' +
+                            '<input type="hidden" name="triagemForm.alergias[' + index + '].descricao" value="' + (item.descricao || '') + '">' +
+                            '</td>';
+                        wizardAlergiasBody.insertBefore(tr, wizardAlergiaEmpty);
+                    });
+                    wizardAlergiaEmpty.style.display = wizardAlergias.length ? 'none' : '';
+                }
+
+                function renderWizardComorbidades() {
+                    Array.from(wizardComorbidadesBody.querySelectorAll('.js-wizard-comorbidade-row')).forEach(function (row) { row.remove(); });
+                    wizardComorbidades.forEach(function (id, index) {
+                        var tr = document.createElement('tr');
+                        tr.className = 'js-wizard-comorbidade-row';
+                        tr.innerHTML =
+                            '<td>' + wizardOptionText(wizardComorbidadeInput, id) + '</td>' +
+                            '<td>' +
+                            '<button class="btn btn-outline-danger btn-sm js-wizard-remove-comorbidade" type="button" data-index="' + index + '">Remover</button>' +
+                            '<input type="hidden" name="triagemForm.comorbidadeIds[' + index + ']" value="' + id + '">' +
+                            '</td>';
+                        wizardComorbidadesBody.insertBefore(tr, wizardComorbidadeEmpty);
+                    });
+                    wizardComorbidadeEmpty.style.display = wizardComorbidades.length ? 'none' : '';
+                }
+
+                if (wizardAlergiasBody && wizardComorbidadesBody) {
+                    Array.from(wizardAlergiasBody.querySelectorAll('.js-wizard-alergia-row')).forEach(function (row) {
+                        wizardAlergias.push({
+                            substanciaId: row.getAttribute('data-substancia-id') || '',
+                            severidadeId: row.getAttribute('data-severidade-id') || '',
+                            descricao: row.getAttribute('data-descricao') || ''
+                        });
+                    });
+                    Array.from(wizardComorbidadesBody.querySelectorAll('.js-wizard-comorbidade-row')).forEach(function (row) {
+                        var id = row.getAttribute('data-id');
+                        if (id) wizardComorbidades.push(id);
+                    });
+                    renderWizardAlergias();
+                    renderWizardComorbidades();
+
+                    document.getElementById('btnWizardInserirAlergia').addEventListener('click', function () {
+                        var substanciaId = wizardSubstanciaInput.value;
+                        if (!substanciaId) return;
+                        var noRelataOption = wizardFindOptionByText(wizardSubstanciaInput, 'NAO RELATA ALERGIA');
+                        if (noRelataOption) {
+                            wizardAlergias = wizardAlergias.filter(function (item) {
+                                return item.substanciaId !== noRelataOption.value;
+                            });
+                        }
+                        wizardAlergias.push({
+                            substanciaId: substanciaId,
+                            severidadeId: wizardSeveridadeInput.value || '',
+                            descricao: wizardNormalize(wizardDescricaoInput.value) || ''
+                        });
+                        wizardSeveridadeInput.value = '';
+                        wizardDescricaoInput.value = '';
+                        renderWizardAlergias();
+                    });
+
+                    document.getElementById('btnWizardInserirComorbidade').addEventListener('click', function () {
+                        var id = wizardComorbidadeInput.value;
+                        if (!id) return;
+                        var noRelataOption = wizardFindOptionByText(wizardComorbidadeInput, 'NAO RELATA');
+                        if (noRelataOption) {
+                            wizardComorbidades = wizardComorbidades.filter(function (item) { return item !== noRelataOption.value; });
+                        }
+                        if (wizardComorbidades.indexOf(id) >= 0) return;
+                        wizardComorbidades.push(id);
+                        wizardComorbidadeInput.value = '';
+                        renderWizardComorbidades();
+                    });
+
+                    document.getElementById('btnWizardNaoRelataAlergia').addEventListener('click', function () {
+                        var option = wizardFindOptionByText(wizardSubstanciaInput, 'NAO RELATA ALERGIA');
+                        if (!option) {
+                            window.alert('Substancia "NAO RELATA ALERGIA" nao encontrada no cadastro.');
+                            return;
+                        }
+                        wizardAlergias = [{
+                            substanciaId: option.value,
+                            severidadeId: '',
+                            descricao: ''
+                        }];
+                        wizardSeveridadeInput.value = '';
+                        wizardDescricaoInput.value = '';
+                        renderWizardAlergias();
+                    });
+
+                    document.getElementById('btnWizardNaoRelataComorbidade').addEventListener('click', function () {
+                        var option = wizardFindOptionByText(wizardComorbidadeInput, 'NAO RELATA');
+                        if (!option) {
+                            window.alert('Comorbidade de "NAO RELATA" nao encontrada no cadastro.');
+                            return;
+                        }
+                        wizardComorbidades = [option.value];
+                        renderWizardComorbidades();
+                    });
+
+                    wizardAlergiasBody.addEventListener('click', function (event) {
+                        var btn = event.target.closest('.js-wizard-remove-alergia');
+                        if (!btn) return;
+                        var index = Number(btn.getAttribute('data-index'));
+                        if (!Number.isNaN(index)) {
+                            wizardAlergias.splice(index, 1);
+                            renderWizardAlergias();
+                        }
+                    });
+
+                    wizardComorbidadesBody.addEventListener('click', function (event) {
+                        var btn = event.target.closest('.js-wizard-remove-comorbidade');
+                        if (!btn) return;
+                        var index = Number(btn.getAttribute('data-index'));
+                        if (!Number.isNaN(index)) {
+                            wizardComorbidades.splice(index, 1);
+                            renderWizardComorbidades();
+                        }
+                    });
+                }
+
+                wizardGlasgowInputs.forEach(function (input) {
+                    input.addEventListener('change', recomputeWizardGlasgow);
+                });
+                recomputeWizardGlasgow();
+                wizardReguaDorRadios.forEach(function (radio) {
+                    radio.addEventListener('change', function () {
+                        if (!wizardReguaDorSelect || !radio.checked) return;
+                        wizardReguaDorSelect.value = radio.value;
+                        syncWizardPainScaleFromSelect();
+                    });
+                });
+                if (wizardReguaDorSelect) {
+                    wizardReguaDorSelect.addEventListener('change', syncWizardPainScaleFromSelect);
+                }
+                syncWizardPainScaleFromSelect();
+            });
+        </script>
+    </section>
+</th:block>
+</body>
+</html>

@@ -1,0 +1,58 @@
+{\rtf1\ansi\deff0
+{\fonttbl{\f0 Arial;}{\f1 Courier;}}
+\fs24
+\b Guia Resumido Keycloak no HIS\b0\par
+\par
+\b 1. Subir com Docker\b0\par
+No Windows:\par
+\f1 docker run --name keycloak-his ^\par
+  -p 8081:8080 ^\par
+  -e KC_BOOTSTRAP_ADMIN_USERNAME=admin ^\par
+  -e KC_BOOTSTRAP_ADMIN_PASSWORD=admin ^\par
+  quay.io/keycloak/keycloak:26.1.0 start-dev\f0\par
+\par
+No macOS/Linux:\par
+\f1 docker run --name keycloak-his \par
+  -p 8081:8080 \par
+  -e KC_BOOTSTRAP_ADMIN_USERNAME=admin \par
+  -e KC_BOOTSTRAP_ADMIN_PASSWORD=admin \par
+  quay.io/keycloak/keycloak:26.1.0 start-dev\f0\par
+\par
+Acesso:\par
+\f1 http://localhost:8081\f0\par
+Login inicial:\par
+\f1 admin / admin\f0\par
+\par
+\b 2. Configuracao no Keycloak\b0\par
+Usar o realm master e criar o client his-web com:\par
+\f1 Client authentication: ON\par
+Standard flow: ON\par
+Service accounts roles: ON\par
+Valid redirect URIs: http://localhost:8080/login/oauth2/code/keycloak\par
+Opcional: http://localhost:8080/*\par
+Web origins: http://localhost:8080\f0\par
+\par
+Na service account do client, adicionar:\par
+\f1 realm-management -> manage-users\par
+realm-management -> view-users\par
+realm-management -> query-users (opcional)\f0\par
+\par
+\b 3. O que precisa configurar no HIS\b0\par
+\f1 KEYCLOAK_ISSUER_URI=http://localhost:8081/realms/master\par
+KEYCLOAK_CLIENT_ID=his-web\par
+KEYCLOAK_CLIENT_SECRET=SEU_CLIENT_SECRET\par
+HIS_KEYCLOAK_ADMIN_ENABLED=true\par
+HIS_KEYCLOAK_ADMIN_SERVER_URL=http://localhost:8081\par
+HIS_KEYCLOAK_ADMIN_REALM=master\par
+HIS_KEYCLOAK_ADMIN_CLIENT_ID=his-web\par
+HIS_KEYCLOAK_ADMIN_CLIENT_SECRET=SEU_CLIENT_SECRET\f0\par
+\par
+\b 4. Checklist rapido\b0\par
+1. Subir Keycloak com Docker.\par
+2. Entrar com admin/admin.\par
+3. Criar client his-web.\par
+4. Configurar redirect URI.\par
+5. Copiar secret.\par
+6. Subir o HIS.\par
+7. Testar login.\par
+}

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:replace="~{layout/base :: layout('HIS | Classificacao de Risco', ~{::section})}">
+    <section>
+        <style>
+            .nivel-risco-badge {
+                display: inline-block;
+                min-width: 110px;
+                padding: 8px 14px;
+                border-radius: 8px;
+                text-align: center;
+                font-size: 14px;
+                font-weight: 700;
+                color: #fff;
+            }
+
+            .fila-main {
+                display: block;
+                font-size: 15px;
+                font-weight: 700;
+                color: #2f3542;
+                margin-bottom: 6px;
+                line-height: 1.35;
+            }
+
+            .fila-line {
+                display: block;
+                font-size: 14px;
+                color: #444b57;
+                margin-bottom: 4px;
+                line-height: 1.35;
+            }
+
+            .fila-status-pill {
+                display: inline-block;
+                padding: 7px 12px;
+                border-radius: 8px;
+                background: #eef0f3;
+                color: #2f3542;
+                font-size: 13px;
+                font-weight: 700;
+            }
+
+            .filtro-label {
+                font-weight: 700;
+            }
+        </style>
+        <div class="main-card card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="card-title mb-0">Classificacao de risco</h5>
+                    <div class="d-flex gap-2">
+                        <a th:if="${canCriarPorClassificacao}" th:href="@{/ui/triagem/novo}" class="btn btn-primary btn-sm mr-2">Novo atendimento</a>
+                        <a th:href="@{/ui/atendimentos}" class="btn btn-outline-secondary btn-sm">Ver atendimentos</a>
+                    </div>
+                </div>
+
+                <div class="alert alert-success" th:if="${successMessage}" th:text="${successMessage}"></div>
+                <div class="alert alert-danger" th:if="${errorMessage}" th:text="${errorMessage}"></div>
+
+                <form th:action="@{/ui/triagem}" method="get" class="mb-3">
+                    <div class="form-row">
+                        <div class="form-group col-md-3">
+                            <label for="nome" class="filtro-label">Nome</label>
+                            <input id="nome" name="nome" type="text" class="form-control" th:value="${nome}">
+                        </div>
+                        <div class="form-group col-md-2">
+                            <label for="cpf" class="filtro-label">CPF</label>
+                            <input id="cpf" name="cpf" type="text" class="form-control" th:value="${cpf}">
+                        </div>
+                        <div class="form-group col-md-2">
+                            <label for="tipoAtendimento" class="filtro-label">Tipo de atendimento</label>
+                            <select id="tipoAtendimento" name="tipoAtendimento" class="form-control">
+                                <option value="">TODOS</option>
+                                <option th:each="item : ${tiposAtendimento}"
+                                        th:value="${item.name()}"
+                                        th:selected="${tipoAtendimentoSelecionado == item}"
+                                        th:text="${item.name()}"></option>
+                            </select>
+                        </div>
+                        <div class="form-group col-md-2">
+                            <label for="statusId" class="filtro-label">Status</label>
+                            <select id="statusId" name="statusId" class="form-control">
+                                <option value="">TODOS</option>
+                                <option th:each="item : ${statusAtendimentoOptions}"
+                                        th:value="${item.id}"
+                                        th:selected="${statusSelecionadoId == item.id}"
+                                        th:text="${item.descricao}"></option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-3">
+                            <label for="dataInicio" class="filtro-label">Data inicio</label>
+                            <input id="dataInicio" name="dataInicio" type="date" class="form-control" th:value="${dataInicio}">
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label for="dataFim" class="filtro-label">Data fim</label>
+                            <input id="dataFim" name="dataFim" type="date" class="form-control" th:value="${dataFim}">
+                        </div>
+                        <div class="form-group col-md-2 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary btn-block">Filtrar</button>
+                        </div>
+                        <div class="form-group col-md-2 d-flex align-items-end">
+                            <a th:href="@{/ui/triagem}" class="btn btn-outline-secondary btn-block">Limpar</a>
+                        </div>
+                    </div>
+                </form>
+
+                <table class="table table-bordered table-hover table-sm">
+                    <thead>
+                    <tr>
+                        <th>Chegada</th>
+                        <th>Paciente</th>
+                        <th>Tipo</th>
+                        <th>Status</th>
+                        <th>Risco</th>
+                        <th>Acoes</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:if="${#lists.isEmpty(atendimentos)}">
+                        <td colspan="6" class="text-center">Nenhum atendimento disponivel para classificacao</td>
+                    </tr>
+                    <tr th:each="a : ${atendimentos}">
+                        <td>
+                            <span class="fila-main" th:text="${#temporals.format(a.dataHoraChegada, 'dd/MM/yyyy - HH:mm')}"></span>
+                            <span class="fila-line" th:text="${a.unidade.nome + '.' + #temporals.format(a.dataHoraChegada, 'yyyy') + '.' + a.id}"></span>
+                        </td>
+                        <td>
+                            <span class="fila-main" th:text="${a.paciente.nomeExibicao}"></span>
+                            <span class="fila-line" th:if="${a.paciente.cpf != null}" th:text="${'CPF: ' + a.paciente.cpf}"></span>
+                            <span class="fila-line" th:if="${a.paciente.cns != null}" th:text="${'Cartão SUS: ' + a.paciente.cns}"></span>
+                            <span class="badge badge-warning" th:if="${a.paciente.temporario}">TEMPORARIO</span>
+                        </td>
+                        <td th:text="${a.tipoAtendimento}"></td>
+                        <td>
+                            <span class="fila-status-pill"
+                                  th:style="${a.status != null and a.status.cor != null ? 'background:' + a.status.cor + '; color:#fff;' : ''}"
+                                  th:text="${a.status != null ? a.status.descricao : '-'}"></span>
+                        </td>
+                        <td>
+                            <span th:if="${ultimaClassificacaoMap[a.id] != null and ultimaClassificacaoMap[a.id].classificacaoCor != null}"
+                                  class="nivel-risco-badge"
+                                  th:style="${ultimaClassificacaoMap[a.id].classificacaoCor.cor != null ? 'background:' + ultimaClassificacaoMap[a.id].classificacaoCor.cor + '; color:#fff;' : 'background:#6c757d; color:#fff;'}"
+                                  th:text="${ultimaClassificacaoMap[a.id].classificacaoCor.descricao}"></span>
+                            <span th:if="${ultimaClassificacaoMap[a.id] == null or ultimaClassificacaoMap[a.id].classificacaoCor == null}"
+                                  class="text-muted">Sem classificacao</span>
+                        </td>
+                        <td>
+                            <a class="btn btn-outline-primary btn-sm"
+                               th:href="@{/ui/triagem/{id}(id=${a.id})}"
+                               th:text="${ultimaClassificacaoMap[a.id] != null ? 'Reclassificar' : 'Classificar'}">Classificar</a>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+</th:block>
+</body>
+</html>

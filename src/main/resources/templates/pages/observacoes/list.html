@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout('Observacao', ~{::content})}">
+<th:block th:fragment="content">
+    <div class="main-card mb-3 card">
+        <div class="card-body">
+            <style>
+                .filtro-label {
+                    font-weight: 700;
+                }
+            </style>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="card-title mb-0">Observacao</h5>
+                <a class="btn btn-primary btn-sm" th:href="@{/ui/observacoes/novo}">Nova observacao</a>
+            </div>
+            <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+            <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
+            <form th:action="@{/ui/observacoes}" method="get" class="mb-3">
+                <div class="form-row">
+                    <div class="form-group col-md-3">
+                        <label for="nome" class="filtro-label">Nome</label>
+                        <input id="nome" name="nome" type="text" class="form-control" th:value="${nome}">
+                    </div>
+                    <div class="form-group col-md-2">
+                        <label for="cpf" class="filtro-label">CPF</label>
+                        <input id="cpf" name="cpf" type="text" class="form-control" th:value="${cpf}">
+                    </div>
+                    <div class="form-group col-md-2">
+                        <label for="tipoAtendimento" class="filtro-label">Tipo de atendimento</label>
+                        <select id="tipoAtendimento" name="tipoAtendimento" class="form-control">
+                            <option value="">TODOS</option>
+                            <option th:each="item : ${tiposAtendimento}"
+                                    th:value="${item.name()}"
+                                    th:selected="${tipoAtendimentoSelecionado == item}"
+                                    th:text="${item.name()}"></option>
+                        </select>
+                    </div>
+                    <div class="form-group col-md-2">
+                        <label for="statusId" class="filtro-label">Status</label>
+                        <select id="statusId" name="statusId" class="form-control">
+                            <option value="">TODOS</option>
+                            <option th:each="item : ${statusAtendimentoOptions}"
+                                    th:value="${item.id}"
+                                    th:selected="${statusSelecionadoId == item.id}"
+                                    th:text="${item.descricao}"></option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-md-3">
+                        <label for="dataInicio" class="filtro-label">Data inicio</label>
+                        <input id="dataInicio" name="dataInicio" type="date" class="form-control" th:value="${dataInicio}">
+                    </div>
+                    <div class="form-group col-md-3">
+                        <label for="dataFim" class="filtro-label">Data fim</label>
+                        <input id="dataFim" name="dataFim" type="date" class="form-control" th:value="${dataFim}">
+                    </div>
+                    <div class="form-group col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary btn-block">Filtrar</button>
+                    </div>
+                    <div class="form-group col-md-2 d-flex align-items-end">
+                        <a th:href="@{/ui/observacoes}" class="btn btn-outline-secondary btn-block">Limpar</a>
+                    </div>
+                </div>
+            </form>
+            <table class="table table-sm table-striped">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Atendimento</th>
+                    <th>Paciente</th>
+                    <th>Unidade</th>
+                    <th>Inicio</th>
+                    <th>Fim</th>
+                    <th>Leito atual</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="item : ${items}">
+                    <td th:text="${item.id}"></td>
+                    <td th:text="${item.atendimento.id}"></td>
+                    <td th:text="${item.atendimento.paciente.nomeExibicao}"></td>
+                    <td th:text="${item.atendimento.unidade.nome}"></td>
+                    <td th:text="${#temporals.format(item.dataHoraInicio, 'dd/MM/yyyy HH:mm')}"></td>
+                    <td th:text="${item.dataHoraFim != null ? #temporals.format(item.dataHoraFim, 'dd/MM/yyyy HH:mm') : '-'}"></td>
+                    <td th:text="${leitosMap[item.id]}"></td>
+                    <td class="text-right">
+                        <a class="btn btn-sm btn-outline-primary" th:href="@{'/ui/observacoes/' + ${item.id} + '/editar'}">Editar</a>
+                        <form th:if="${item.dataHoraCancelamento == null and item.dataHoraFim == null}"
+                              method="post"
+                              class="d-inline"
+                              th:action="@{'/ui/observacoes/' + ${item.id} + '/cancelar'}"
+                              onsubmit="return solicitarMotivoCancelamento(this, 'Cancelar observacao?');">
+                            <input type="hidden" name="motivoCancelamento">
+                            <button type="submit" class="btn btn-sm btn-outline-warning">Cancelar</button>
+                        </form>
+                        <form method="post" class="d-inline" th:action="@{'/ui/observacoes/' + ${item.id} + '/excluir'}">
+                            <button type="submit" class="btn btn-sm btn-outline-danger"
+                                    onclick="return confirm('Excluir observacao?');">Excluir</button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <script>
+        function solicitarMotivoCancelamento(form, mensagem) {
+            const motivo = window.prompt(mensagem + "\nInforme o motivo do cancelamento:");
+            if (motivo === null) {
+                return false;
+            }
+            if (!motivo.trim()) {
+                alert("Motivo do cancelamento e obrigatorio.");
+                return false;
+            }
+            form.querySelector('input[name="motivoCancelamento"]').value = motivo.trim();
+            return true;
+        }
+    </script>
+</th:block>
+</html>

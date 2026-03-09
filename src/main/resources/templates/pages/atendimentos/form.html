@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:replace="~{layout/base :: layout('HIS | Novo Atendimento', ~{::section})}">
+    <section>
+        <style>
+            .patient-summary-card {
+                border: 1px solid #d8dbe2;
+                border-radius: 8px;
+                overflow: hidden;
+                background: #fff;
+            }
+
+            .patient-summary-header {
+                padding: 12px 16px;
+                border-top: 4px solid #d96245;
+                background: #f7f7f8;
+                font-size: 1.1rem;
+                font-weight: 600;
+                color: #374151;
+            }
+
+            .patient-summary-body {
+                padding: 16px;
+            }
+
+            .patient-summary-grid {
+                display: grid;
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+                gap: 14px 24px;
+            }
+
+            .patient-summary-item {
+                min-width: 0;
+            }
+
+            .patient-summary-item.label-wide {
+                grid-column: span 2;
+            }
+
+            .patient-summary-label {
+                margin-right: 4px;
+                font-weight: 700;
+                color: #b14b42;
+            }
+
+            .patient-summary-value {
+                color: #4b5563;
+                word-break: break-word;
+            }
+
+            @media (max-width: 991.98px) {
+                .patient-summary-grid {
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                }
+
+                .patient-summary-item.label-wide {
+                    grid-column: span 2;
+                }
+            }
+
+            @media (max-width: 575.98px) {
+                .patient-summary-grid {
+                    grid-template-columns: 1fr;
+                }
+
+                .patient-summary-item.label-wide {
+                    grid-column: span 1;
+                }
+            }
+        </style>
+        <div class="main-card card">
+            <div class="card-body">
+                <h5 class="card-title">Novo atendimento</h5>
+
+                <form th:action="@{/ui/atendimentos}" method="post" th:object="${form}">
+                    <input type="hidden" th:field="*{chegadaToken}">
+                    <div th:if="${#fields.hasGlobalErrors()}" class="alert alert-danger">
+                        <div th:each="e : ${#fields.globalErrors()}" th:text="${e}"></div>
+                    </div>
+
+                    <div class="alert alert-info py-2" th:if="${horaChegadaCapturada != null}">
+                        Hora de chegada capturada:
+                        <strong th:text="${#temporals.format(horaChegadaCapturada, 'dd/MM/yyyy HH:mm:ss')}">--</strong>
+                    </div>
+
+                    <div id="patientSummaryCard" class="patient-summary-card mb-4" th:classappend="${form.pacienteId == null} ? ' d-none'">
+                        <div class="patient-summary-header">Dados do paciente</div>
+                        <div class="patient-summary-body">
+                            <div class="patient-summary-grid">
+                                <div class="patient-summary-item label-wide">
+                                    <span class="patient-summary-label">Paciente:</span><span class="patient-summary-value" data-patient-field="nome">-</span>
+                                </div>
+                                <div class="patient-summary-item label-wide">
+                                    <span class="patient-summary-label">Mae:</span><span class="patient-summary-value" data-patient-field="nomeMae">-</span>
+                                </div>
+                                <div class="patient-summary-item label-wide">
+                                    <span class="patient-summary-label">Pai:</span><span class="patient-summary-value" data-patient-field="nomePai">-</span>
+                                </div>
+                                <div class="patient-summary-item">
+                                    <span class="patient-summary-label">CPF:</span><span class="patient-summary-value" data-patient-field="cpf">-</span>
+                                </div>
+                                <div class="patient-summary-item">
+                                    <span class="patient-summary-label">Cartao SUS:</span><span class="patient-summary-value" data-patient-field="cns">-</span>
+                                </div>
+                                <div class="patient-summary-item">
+                                    <span class="patient-summary-label">Data de nascimento:</span><span class="patient-summary-value" data-patient-field="dataNascimento">-</span>
+                                </div>
+                                <div class="patient-summary-item">
+                                    <span class="patient-summary-label">Contato:</span><span class="patient-summary-value" data-patient-field="telefone">-</span>
+                                </div>
+                                <div class="patient-summary-item">
+                                    <span class="patient-summary-label">CEP:</span><span class="patient-summary-value" data-patient-field="cep">-</span>
+                                </div>
+                                <div class="patient-summary-item label-wide">
+                                    <span class="patient-summary-label">Logradouro:</span><span class="patient-summary-value" data-patient-field="logradouro">-</span>
+                                </div>
+                                <div class="patient-summary-item">
+                                    <span class="patient-summary-label">Cidade:</span><span class="patient-summary-value" data-patient-field="cidade">-</span>
+                                </div>
+                                <div class="patient-summary-item">
+                                    <span class="patient-summary-label">Bairro:</span><span class="patient-summary-value" data-patient-field="bairro">-</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group col-md-7">
+                            <label>Paciente</label>
+                            <select id="pacienteId" class="form-control" th:field="*{pacienteId}">
+                                <option value="">Selecione...</option>
+                                <option th:each="p : ${pacientes}"
+                                        th:value="${p.id}"
+                                        th:data-nome="${p.nome}"
+                                        th:data-nome-mae="${p.nomeMae}"
+                                        th:data-nome-pai="${p.nomePai}"
+                                        th:data-cpf="${p.cpf}"
+                                        th:data-cns="${p.cns}"
+                                        th:data-data-nascimento="${p.dataNascimento != null ? #temporals.format(p.dataNascimento, 'dd/MM/yyyy') : ''}"
+                                        th:data-telefone="${p.telefone}"
+                                        th:data-cep="${p.cep}"
+                                        th:data-logradouro="${p.logradouro}"
+                                        th:data-cidade="${p.cidade != null ? p.cidade.nome : ''}"
+                                        th:data-bairro="${p.bairro}"
+                                        th:text="${p.nome + ' (#' + p.id + ')'}"></option>
+                            </select>
+                            <small class="text-muted">Selecione um paciente identificado para vincular ao atendimento.</small>
+                            <small class="text-danger" th:errors="*{pacienteId}"></small>
+                        </div>
+                        <div class="form-group col-md-5">
+                            <label>Tipo de atendimento</label>
+                            <select class="form-control" th:field="*{tipoAtendimento}">
+                                <option th:each="t : ${tiposAtendimento}" th:value="${t}" th:text="${t}"></option>
+                            </select>
+                            <small class="text-danger" th:errors="*{tipoAtendimento}"></small>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-primary btn-sm" type="submit">Criar atendimento</button>
+                    <a th:href="@{/ui/atendimentos}" class="btn btn-secondary btn-sm">Voltar</a>
+                </form>
+            </div>
+        </div>
+        <script th:inline="javascript">
+            document.addEventListener('DOMContentLoaded', function () {
+                var select = document.getElementById('pacienteId');
+                var card = document.getElementById('patientSummaryCard');
+                if (!select || !card) {
+                    return;
+                }
+
+                function textOrDash(value) {
+                    return value && value.trim() ? value.trim() : '-';
+                }
+
+                function updateSummary() {
+                    var option = select.options[select.selectedIndex];
+                    if (!option || !option.value) {
+                        card.classList.add('d-none');
+                        card.querySelectorAll('[data-patient-field]').forEach(function (field) {
+                            field.textContent = '-';
+                        });
+                        return;
+                    }
+
+                    card.classList.remove('d-none');
+                    card.querySelector('[data-patient-field="nome"]').textContent = textOrDash(option.dataset.nome);
+                    card.querySelector('[data-patient-field="nomeMae"]').textContent = textOrDash(option.dataset.nomeMae);
+                    card.querySelector('[data-patient-field="nomePai"]').textContent = textOrDash(option.dataset.nomePai);
+                    card.querySelector('[data-patient-field="cpf"]').textContent = textOrDash(option.dataset.cpf);
+                    card.querySelector('[data-patient-field="cns"]').textContent = textOrDash(option.dataset.cns);
+                    card.querySelector('[data-patient-field="dataNascimento"]').textContent = textOrDash(option.dataset.dataNascimento);
+                    card.querySelector('[data-patient-field="telefone"]').textContent = textOrDash(option.dataset.telefone);
+                    card.querySelector('[data-patient-field="cep"]').textContent = textOrDash(option.dataset.cep);
+                    card.querySelector('[data-patient-field="logradouro"]').textContent = textOrDash(option.dataset.logradouro);
+                    card.querySelector('[data-patient-field="cidade"]').textContent = textOrDash(option.dataset.cidade);
+                    card.querySelector('[data-patient-field="bairro"]').textContent = textOrDash(option.dataset.bairro);
+                }
+
+                select.addEventListener('change', updateSummary);
+                updateSummary();
+            });
+        </script>
+    </section>
+</th:block>
+</body>
+</html>

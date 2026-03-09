@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
+      th:fragment="layout(pageTitle, pageContent)">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, shrink-to-fit=no">
+    <title th:text="${pageTitle}">HIS</title>
+    <link rel="icon" type="image/x-icon" th:href="@{/kero/assets/images/favicon.ico}">
+    <link rel="stylesheet" th:href="@{/kero/assets/css/base.min.css}">
+    <link rel="stylesheet" th:href="@{/css/app-shell.css}">
+    <style>
+        .required-mark {
+            color: #d92550;
+            margin-left: 2px;
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body>
+<div class="app-container app-theme-gray">
+    <div class="app-main">
+        <div class="app-sidebar-wrapper">
+            <aside th:replace="~{fragments/sidebar :: sidebar}"></aside>
+        </div>
+        <div class="app-sidebar-overlay d-none animated fadeIn"></div>
+        <div class="app-main__outer">
+            <div class="app-main__inner">
+                <header th:replace="~{fragments/header :: header(${pageTitle})}"></header>
+                <div class="app-inner-layout app-inner-layout-page">
+                    <div class="app-inner-layout__wrapper">
+                        <div class="app-inner-layout__content pt-1">
+                            <div class="tab-content">
+                                <div class="container-fluid">
+                                    <div class="row">
+                                        <div class="col-md-12">
+                                            <main th:replace="${pageContent}"></main>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <footer th:replace="~{fragments/footer :: footer}"></footer>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/metismenu"></script>
+<script th:src="@{/kero/assets/js/scripts-init/app.js}"></script>
+<script th:src="@{/kero/assets/js/sidebar-activation.js}"></script>
+
+</body>
+</html>

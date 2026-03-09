@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(${modoEdicao} ? 'Administracao - Editar Leito' : 'Administracao - Novo Leito', ~{::content})}">
+<th:block th:fragment="content">
+    <div class="main-card mb-3 card">
+        <div class="card-body">
+            <h5 class="card-title" th:text="${modoEdicao} ? 'Editar leito' : 'Novo leito'">Leito</h5>
+            <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
+            <form th:object="${form}" method="post"
+                  th:action="${modoEdicao} ? @{'/ui/admin/leitos/' + ${itemId}} : @{/ui/admin/leitos}">
+                <div class="form-row">
+                    <div class="form-group col-md-4">
+                        <label>Unidade<span class="required-mark">*</span></label>
+                        <select class="form-control" th:field="*{unidadeId}">
+                            <option value="">Selecione</option>
+                            <option th:each="unidade : ${unidades}"
+                                    th:value="${unidade.id}"
+                                    th:text="${unidade.nome}"></option>
+                        </select>
+                        <small class="text-danger" th:errors="*{unidadeId}"></small>
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label>Area<span class="required-mark">*</span></label>
+                        <select class="form-control" th:field="*{areaId}">
+                            <option value="">Selecione</option>
+                            <option th:each="area : ${areas}"
+                                    th:value="${area.id}"
+                                    th:attr="data-unidade-id=${area.unidade.id}"
+                                    th:text="${area.nome + ' - ' + area.unidade.nome}"></option>
+                        </select>
+                        <small class="text-danger" th:errors="*{areaId}"></small>
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label>Codigo<span class="required-mark">*</span></label>
+                        <input type="text" class="form-control" th:field="*{codigo}">
+                        <small class="text-danger" th:errors="*{codigo}"></small>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group col-md-3">
+                        <label>Tipo de leito<span class="required-mark">*</span></label>
+                        <select class="form-control" th:field="*{tipoLeitoId}">
+                            <option value="">Selecione</option>
+                            <option th:each="item : ${tiposLeito}"
+                                    th:value="${item.id}"
+                                    th:text="${item.descricao}"></option>
+                        </select>
+                        <small class="text-danger" th:errors="*{tipoLeitoId}"></small>
+                    </div>
+                    <div class="form-group col-md-3">
+                        <label>Perfil de leito</label>
+                        <select class="form-control" th:field="*{perfilLeitoId}">
+                            <option value="">Selecione</option>
+                            <option th:each="item : ${perfisLeito}"
+                                    th:value="${item.id}"
+                                    th:text="${item.descricao}"></option>
+                        </select>
+                        <small class="text-danger" th:errors="*{perfilLeitoId}"></small>
+                    </div>
+                    <div class="form-group col-md-3">
+                        <label>Natureza operacional<span class="required-mark">*</span></label>
+                        <select class="form-control" th:field="*{naturezaOperacionalId}">
+                            <option value="">Selecione</option>
+                            <option th:each="item : ${naturezasOperacionais}"
+                                    th:value="${item.id}"
+                                    th:text="${item.descricao}"></option>
+                        </select>
+                        <small class="text-danger" th:errors="*{naturezaOperacionalId}"></small>
+                    </div>
+                    <div class="form-group col-md-3">
+                        <label>Descricao</label>
+                        <input type="text" class="form-control" th:field="*{descricao}">
+                        <small class="text-danger" th:errors="*{descricao}"></small>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group col-md-12">
+                        <label>Modalidades do leito<span class="required-mark">*</span></label>
+                        <div class="d-flex flex-wrap">
+                            <div class="form-check mr-4 mb-2" th:each="item : ${modalidadesLeito}">
+                                <input class="form-check-input"
+                                       type="checkbox"
+                                       th:field="*{modalidadeIds}"
+                                       th:value="${item.id}"
+                                       th:id="${'modalidade_' + item.id}">
+                                <label class="form-check-label" th:for="${'modalidade_' + item.id}">
+                                    <span th:text="${item.codigo}">MODALIDADE</span>
+                                </label>
+                            </div>
+                        </div>
+                        <small class="form-text text-muted">Selecione se o leito recebe observacao, internacao ou ambos.</small>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group col-md-2 d-flex align-items-center">
+                        <div class="form-check mt-2">
+                            <input type="checkbox" class="form-check-input" th:field="*{recebePs}">
+                            <label class="form-check-label" for="recebePs">Recebe PS</label>
+                        </div>
+                    </div>
+                    <div class="form-group col-md-3 d-flex align-items-center">
+                        <div class="form-check mt-2">
+                            <input type="checkbox" class="form-check-input" th:field="*{permiteDestinoDefinitivo}">
+                            <label class="form-check-label" for="permiteDestinoDefinitivo">Permite destino definitivo</label>
+                        </div>
+                    </div>
+                    <div class="form-group col-md-2 d-flex align-items-center">
+                        <div class="form-check mt-2">
+                            <input type="checkbox" class="form-check-input" th:field="*{assistencial}">
+                            <label class="form-check-label" for="assistencial">Assistencial</label>
+                        </div>
+                    </div>
+                    <div class="form-group col-md-2 d-flex align-items-center">
+                        <div class="form-check mt-2">
+                            <input type="checkbox" class="form-check-input" th:field="*{ativo}">
+                            <label class="form-check-label" for="ativo">Ativo</label>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-sm">Salvar</button>
+                <a class="btn btn-secondary btn-sm" th:href="@{/ui/admin/leitos}">Voltar</a>
+            </form>
+            <script>
+                document.addEventListener('DOMContentLoaded', function () {
+                    const unidadeSelect = document.getElementById('unidadeId');
+                    const areaSelect = document.getElementById('areaId');
+                    if (!unidadeSelect || !areaSelect) {
+                        return;
+                    }
+
+                    const areaOptions = Array.from(areaSelect.querySelectorAll('option[data-unidade-id]'));
+                    const areaPlaceholder = areaSelect.querySelector('option[value=""]');
+
+                    const refreshAreas = () => {
+                        const unidadeId = unidadeSelect.value;
+                        const currentArea = areaSelect.value;
+                        let currentStillValid = false;
+
+                        areaOptions.forEach(function (option) {
+                            const visible = unidadeId && option.dataset.unidadeId === unidadeId;
+                            option.hidden = !visible;
+                            option.disabled = !visible;
+                            if (visible && option.value === currentArea) {
+                                currentStillValid = true;
+                            }
+                        });
+
+                        if (!currentStillValid) {
+                            areaSelect.value = '';
+                        }
+
+                        if (areaPlaceholder) {
+                            areaPlaceholder.hidden = false;
+                            areaPlaceholder.disabled = false;
+                        }
+                    };
+
+                    unidadeSelect.addEventListener('change', refreshAreas);
+                    refreshAreas();
+                });
+            </script>
+        </div>
+    </div>
+</th:block>
+</html>

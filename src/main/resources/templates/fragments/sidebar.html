@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="sidebar" class="app-sidebar sidebar-shadow">
+    <div class="app-header__logo">
+        <a th:href="@{/ui/home}" class="logo-src" title="HIS"></a>
+        <button type="button" class="hamburger hamburger--elastic mobile-toggle-nav">
+            <span class="hamburger-box">
+                <span class="hamburger-inner"></span>
+            </span>
+        </button>
+    </div>
+    <div class="scrollbar-sidebar scrollbar-container" style="max-height: calc(100vh - 80px); overflow-y: auto; overflow-x: hidden;">
+        <div class="app-sidebar__inner">
+            <ul class="vertical-nav-menu">
+                <li class="app-sidebar__heading">Menu</li>
+                <li class="mm-active">
+                    <a th:href="@{/ui/home}">
+                        <i class="metismenu-icon pe-7s-home"></i>
+                        Home
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                        <i class="metismenu-icon pe-7s-user"></i>
+                        Paciente
+                        <i class="metismenu-state-icon pe-7s-angle-down caret-left"></i>
+                    </a>
+                    <ul>
+                        <li>
+                            <a th:href="@{/ui/pacientes}">Lista de pacientes</a>
+                        </li>
+                    </ul>
+                </li>
+                <li th:if="${canRecepcaoExecutar or canRegistrarEntrada or canTriagemExecutar or canPacienteIdentificar}">
+                    <a href="#">
+                        <i class="metismenu-icon pe-7s-note2"></i>
+                        Atendimento
+                        <i class="metismenu-state-icon pe-7s-angle-down caret-left"></i>
+                    </a>
+                    <ul>
+                        <li th:if="${canRecepcaoExecutar or canRegistrarEntrada}">
+                            <a href="#">
+                                Recepcao
+                                <i class="metismenu-state-icon pe-7s-angle-down caret-left"></i>
+                            </a>
+                            <ul>
+                                <li th:if="${canAtendimentoAcessar}">
+                                    <a th:href="@{/ui/atendimentos}">Lista de atendimentos</a>
+                                </li>
+                                <li th:if="${canRegistrarEntrada and currentFluxoTriagemPrimeiro}">
+                                    <a th:href="@{/ui/atendimentos/pendentes-entrada}">Pendentes de entrada</a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li th:if="${canTriagemExecutar}">
+                            <a href="#">
+                                Classificacao
+                                <i class="metismenu-state-icon pe-7s-angle-down caret-left"></i>
+                            </a>
+                            <ul>
+                                <li>
+                                    <a th:href="@{/ui/triagem}">Lista de classificacao</a>
+                                </li>
+                                <li th:if="${currentFluxoRecepcaoPrimeiro}">
+                                    <a th:href="@{/ui/atendimentos/pendentes-classificacao}">Pendentes de classificacao</a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li th:if="${canPacienteIdentificar}">
+                            <a th:href="@{/ui/atendimentos/nao-identificados}">Nao identificados</a>
+                        </li>
+                    </ul>
+                </li>
+                <li th:if="${canRecepcaoExecutar}">
+                    <a th:href="@{/ui/transferencias-externas/recebidas}">
+                        <i class="metismenu-icon pe-7s-repeat"></i>
+                        Transferencias recebidas
+                    </a>
+                </li>
+                <li th:if="${canRecepcaoExecutar or canBurocrataExecutar}">
+                    <a href="#">
+                        <i class="metismenu-icon pe-7s-network"></i>
+                        Permanencia
+                        <i class="metismenu-state-icon pe-7s-angle-down caret-left"></i>
+                    </a>
+                    <ul>
+                        <li>
+                            <a th:href="@{/ui/leitos/mapa}">Mapa de leitos</a>
+                        </li>
+                        <li>
+                            <a th:href="@{/ui/observacoes}">Observacao</a>
+                        </li>
+                        <li>
+                            <a th:href="@{/ui/internacoes}">Internacao</a>
+                        </li>
+                    </ul>
+                </li>
+                <li th:if="${canAtendimentoAcessar}">
+                    <a href="#">
+                        <i class="metismenu-icon pe-7s-graph1"></i>
+                        Indicadores
+                        <i class="metismenu-state-icon pe-7s-angle-down caret-left"></i>
+                    </a>
+                    <ul>
+                        <li>
+                            <a href="#">
+                                Lean
+                                <i class="metismenu-state-icon pe-7s-angle-down caret-left"></i>
+                            </a>
+                            <ul>
+                                <li>
+                                    <a th:href="@{/ui/indicadores/lean/taxa-ocupacao}">Taxa de ocupacao</a>
+                                </li>
+                                <li>
+                                    <a th:href="@{/ui/indicadores/lean/porta-triagem}">Porta e triagem</a>
+                                </li>
+                                <li>
+                                    <a th:href="@{/ui/indicadores/lean/consulta}">Consulta</a>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                </li>
+                <li>
+                    <a th:href="@{/ui/desfechos}">
+                        <i class="metismenu-icon pe-7s-check"></i>
+                        Desfecho
+                    </a>
+                </li>
+                <li class="app-sidebar__heading" th:if="${canAdmin}">Administracao</li>
+                <li th:if="${canAdmin}">
+                    <a th:href="@{/ui/admin/unidades}">
+                        <i class="metismenu-icon pe-7s-home"></i>
+                        Unidades
+                    </a>
+                </li>
+                <li th:if="${canAdmin}">
+                    <a th:href="@{/ui/admin/usuarios}">
+                        <i class="metismenu-icon pe-7s-users"></i>
+                        Usuarios
+                    </a>
+                </li>
+                <li th:if="${canAdmin}">
+                    <a th:href="@{/ui/admin/perfis}">
+                        <i class="metismenu-icon pe-7s-lock"></i>
+                        Perfis e permissoes
+                    </a>
+                </li>
+                <li th:if="${canAdmin}">
+                    <a href="#">
+                        <i class="metismenu-icon pe-7s-tools"></i>
+                        Configuracoes
+                        <i class="metismenu-state-icon pe-7s-angle-down caret-left"></i>
+                    </a>
+                    <ul>
+                        <li>
+                            <a href="#">
+                                Territorio
+                                <i class="metismenu-state-icon pe-7s-angle-down caret-left"></i>
+                            </a>
+                            <ul>
+                                <li>
+                                    <a th:href="@{/ui/admin/unidades-federativas}">UF</a>
+                                </li>
+                                <li>
+                                    <a th:href="@{/ui/admin/cidades}">Cidade</a>
+                                </li>
+                                <li>
+                                    <a th:href="@{/ui/admin/bairros}">Bairro</a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <a href="#">
+                                Estrutura
+                                <i class="metismenu-state-icon pe-7s-angle-down caret-left"></i>
+                            </a>
+                            <ul>
+                                <li>
+                                    <a th:href="@{/ui/admin/areas}">Area</a>
+                                </li>
+                                <li>
+                                    <a th:href="@{/ui/admin/leitos}">Leito</a>
+                                </li>
+                                <li>
+                                    <a th:href="@{/ui/admin/naturezas-operacionais-leito}">Natureza operacional</a>
+                                </li>
+                                <li>
+                                    <a th:href="@{/ui/admin/capacidades-area}">Capacidade de area</a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <a href="#">
+                                Recepcao
+                                <i class="metismenu-state-icon pe-7s-angle-down caret-left"></i>
+                            </a>
+                            <ul>
+                                <li>
+                                    <a th:href="@{/ui/admin/formas-chegada}">Forma de chegada</a>
+                                </li>
+                                <li>
+                                    <a th:href="@{/ui/admin/motivos-entrada}">Motivo da entrada</a>
+                                </li>
+                                <li>
+                                    <a th:href="@{/ui/admin/graus-parentesco}">Grau de parentesco</a>
+                                </li>
+                                <li>
+                                    <a th:href="@{/ui/admin/situacoes-ocupacionais}">Situacao ocupacional</a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <a href="#">
+                                Paciente
+                                <i class="metismenu-state-icon pe-7s-angle-down caret-left"></i>
+                            </a>
+                            <ul>
+                                <li>
+                                    <a th:href="@{/ui/admin/sexos}">Sexo</a>
+                                </li>
+                                <li>
+                                    <a th:href="@{/ui/admin/paciente-catalogos/raca-cor}">Raca/Cor</a>
+                                </li>
+                                <li>
+                                    <a th:href="@{/ui/admin/paciente-catalogos/etnia-indigena}">Etnia indigena</a>
+                                </li>
+                                <li>
+                                    <a th:href="@{/ui/admin/paciente-catalogos/nacionalidade}">Nacionalidade</a>
+                                </li>
+                                <li>
+                                    <a th:href="@{/ui/admin/paciente-catalogos/naturalidade}">Naturalidade</a>
+                                </li>
+                                <li>
+                                    <a th:href="@{/ui/admin/paciente-catalogos/estado-civil}">Estado civil</a>
+                                </li>
+                                <li>
+                                    <a th:href="@{/ui/admin/paciente-catalogos/escolaridade}">Escolaridade</a>
+                                </li>
+                                <li>
+                                    <a th:href="@{/ui/admin/paciente-catalogos/tipo-sanguineo}">Tipo sanguineo</a>
+                                </li>
+                                <li>
+                                    <a th:href="@{/ui/admin/paciente-catalogos/orientacao-sexual}">Orientacao sexual</a>
+                                </li>
+                                <li>
+                                    <a th:href="@{/ui/admin/paciente-catalogos/identidade-genero}">Identidade de genero</a>
+                                </li>
+                                <li>
+                                    <a th:href="@{/ui/admin/paciente-catalogos/deficiencia}">Deficiencia</a>
+                                </li>
+                                <li>
+                                    <a th:href="@{/ui/admin/paciente-catalogos/profissao}">Profissao</a>
+                                </li>
+                                <li>
+                                    <a th:href="@{/ui/admin/paciente-catalogos/procedencia}">Procedencia</a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <a href="#">
+                                Classificacao
+                                <i class="metismenu-state-icon pe-7s-angle-down caret-left"></i>
+                            </a>
+                            <ul>
+                                <li>
+                                    <a th:href="@{/ui/admin/alergias-substancias}">Alergia - substancia</a>
+                                </li>
+                                <li>
+                                    <a th:href="@{/ui/admin/alergias-severidades}">Alergia - severidade</a>
+                                </li>
+                                <li>
+                                    <a th:href="@{/ui/admin/comorbidades}">Comorbidade</a>
+                                </li>
+                                <li>
+                                    <a th:href="@{/ui/admin/avc-sinais-alerta}">AVC - sinais de alerta</a>
+                                </li>
+                                <li>
+                                    <a th:href="@{/ui/admin/reguas-dor}">Escala de dor</a>
+                                </li>
+                                <li>
+                                    <a th:href="@{/ui/admin/classificacao-cores}">Classificacao - cores</a>
+                                </li>
+                                <li>
+                                    <a href="#">
+                                        Escala de Glasgow
+                                        <i class="metismenu-state-icon pe-7s-angle-down caret-left"></i>
+                                    </a>
+                                    <ul>
+                                        <li>
+                                            <a th:href="@{/ui/admin/glasgow-abertura-ocular}">Abertura ocular</a>
+                                        </li>
+                                        <li>
+                                            <a th:href="@{/ui/admin/glasgow-resposta-verbal}">Resposta verbal</a>
+                                        </li>
+                                        <li>
+                                            <a th:href="@{/ui/admin/glasgow-resposta-motora}">Resposta motora</a>
+                                        </li>
+                                        <li>
+                                            <a th:href="@{/ui/admin/glasgow-resposta-pupilar}">Resposta pupilar</a>
+                                        </li>
+                                    </ul>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <a href="#">
+                                Fluxo
+                                <i class="metismenu-state-icon pe-7s-angle-down caret-left"></i>
+                            </a>
+                            <ul>
+                                <li>
+                                    <a th:href="@{/ui/admin/unidades}">Fluxo por unidade</a>
+                                </li>
+                                <li>
+                                    <a th:href="@{/ui/admin/tipos-desfecho}">Tipo de desfecho</a>
+                                </li>
+                                <li>
+                                    <a th:href="@{/ui/admin/motivos-desfecho}">Motivo de desfecho</a>
+                                </li>
+                                <li>
+                                    <a th:href="@{/ui/admin/destinos-rede}">Destino de rede</a>
+                                </li>
+                                <li>
+                                    <a th:href="@{/ui/admin/status-atendimento}">Status de atendimento</a>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+</body>
+</html>

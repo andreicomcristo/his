@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:replace="~{layout/base :: layout('HIS | Entrada Pendente', ~{::section})}">
+    <section>
+        <style>
+            .required-mark {
+                color: #d92550;
+                margin-left: 2px;
+                font-weight: 700;
+            }
+
+            .pending-shell {
+                display: grid;
+                gap: 20px;
+            }
+
+            .pending-stepper {
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 16px;
+                align-items: start;
+            }
+
+            .pending-step {
+                position: relative;
+                text-align: center;
+                color: #7a7f87;
+            }
+
+            .pending-step::after {
+                content: "";
+                position: absolute;
+                top: 22px;
+                left: calc(50% + 26px);
+                right: calc(-50% + 26px);
+                height: 4px;
+                background: #d8dbe2;
+                z-index: 0;
+            }
+
+            .pending-step:last-child::after {
+                display: none;
+            }
+
+            .pending-step.is-done::after,
+            .pending-step.is-active::after {
+                background: #f2c200;
+            }
+
+            .pending-step-dot {
+                position: relative;
+                z-index: 1;
+                width: 44px;
+                height: 44px;
+                margin: 0 auto 10px;
+                border-radius: 999px;
+                border: 3px solid #d8dbe2;
+                background: #fff;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: 700;
+            }
+
+            .pending-step.is-done .pending-step-dot {
+                border-color: #1fb600;
+                background: #1fb600;
+                color: #fff;
+            }
+
+            .pending-step.is-active .pending-step-dot {
+                border-color: #f2c200;
+                background: #f2c200;
+                color: #4b5563;
+            }
+
+            .pending-step-title {
+                font-size: 0.95rem;
+                font-weight: 700;
+                color: #4b5563;
+            }
+
+            .pending-step-subtitle {
+                font-size: 0.8rem;
+                color: #8a9098;
+            }
+
+            .wizard-pane {
+                border: 1px solid #d8dbe2;
+                border-radius: 8px;
+                background: #fff;
+                overflow: hidden;
+            }
+
+            .wizard-pane-header {
+                padding: 14px 18px;
+                border-top: 4px solid #2c84b8;
+                background: #f7f7f8;
+                font-size: 1.1rem;
+                font-weight: 600;
+                color: #374151;
+            }
+
+            .wizard-pane-body {
+                padding: 18px;
+            }
+
+            .entry-block {
+                border: 1px solid #d8dbe2;
+                border-radius: 6px;
+                overflow: hidden;
+                background: #fff;
+                margin-bottom: 24px;
+            }
+
+            .entry-block-header {
+                background: #f7f7f8;
+                padding: 14px 18px;
+                font-size: 1.15rem;
+                font-weight: 600;
+                color: #374151;
+                border-bottom: 1px solid #e5e7eb;
+            }
+
+            .entry-block-body {
+                padding: 18px;
+            }
+
+            .summary-grid {
+                display: grid;
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+                gap: 14px 18px;
+            }
+
+            .summary-item-wide {
+                grid-column: span 2;
+            }
+
+            .summary-label {
+                margin-right: 4px;
+                font-weight: 700;
+                color: #b14b42;
+            }
+
+            .summary-value {
+                color: #4b5563;
+                word-break: break-word;
+            }
+
+            @media (max-width: 991.98px) {
+                .summary-grid {
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                }
+
+                .summary-item-wide {
+                    grid-column: span 2;
+                }
+            }
+
+            @media (max-width: 575.98px) {
+                .pending-stepper,
+                .summary-grid {
+                    grid-template-columns: 1fr;
+                }
+
+                .pending-step::after {
+                    display: none;
+                }
+
+                .summary-item-wide {
+                    grid-column: span 1;
+                }
+            }
+        </style>
+
+        <div class="pending-shell">
+            <div class="pending-stepper">
+                <div class="pending-step"
+                     th:classappend="${currentStep > 1} ? ' is-done' : (${currentStep == 1} ? ' is-active' : '')">
+                    <div class="pending-step-dot" th:text="${currentStep > 1 ? '✓' : '1'}">1</div>
+                    <div class="pending-step-title">Paciente</div>
+                    <div class="pending-step-subtitle">Completar cadastro</div>
+                </div>
+                <div class="pending-step"
+                     th:classappend="${currentStep == 2} ? ' is-active' : ''">
+                    <div class="pending-step-dot">2</div>
+                    <div class="pending-step-title">Entrada</div>
+                    <div class="pending-step-subtitle">Ficha de BE</div>
+                </div>
+            </div>
+
+            <div class="alert alert-success" th:if="${successMessage}" th:text="${successMessage}"></div>
+            <div class="alert alert-danger" th:if="${errorMessage}" th:text="${errorMessage}"></div>
+
+            <div class="entry-block">
+                <div class="entry-block-header">Resumo do atendimento</div>
+                <div class="entry-block-body">
+                    <div class="summary-grid">
+                        <div class="summary-item-wide">
+                            <span class="summary-label">Paciente:</span>
+                            <span class="summary-value" th:text="${atendimento.paciente.nomeExibicao}"></span>
+                        </div>
+                        <div>
+                            <span class="summary-label">CPF:</span>
+                            <span class="summary-value" th:text="${atendimento.paciente.cpf ?: '-'}"></span>
+                        </div>
+                        <div>
+                            <span class="summary-label">Tipo:</span>
+                            <span class="summary-value" th:text="${atendimento.tipoAtendimento}"></span>
+                        </div>
+                        <div>
+                            <span class="summary-label">Chegada:</span>
+                            <span class="summary-value" th:text="${#temporals.format(atendimento.dataHoraChegada, 'dd/MM/yyyy HH:mm')}"></span>
+                        </div>
+                        <div>
+                            <span class="summary-label">Status:</span>
+                            <span class="summary-value" th:text="${atendimento.status != null ? atendimento.status.descricao : '-'}"></span>
+                        </div>
+                        <div class="summary-item-wide" th:if="${classificacao != null}">
+                            <span class="summary-label">Classificação:</span>
+                            <span class="summary-value"
+                                  th:text="${classificacao.classificacaoCor != null ? classificacao.classificacaoCor.descricao + ' - ' : ''} + ${classificacao.queixaPrincipal ?: 'SEM QUEIXA REGISTRADA'}"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="wizard-pane" th:if="${currentStep == 1}">
+                <div class="wizard-pane-header">1. Dados do paciente</div>
+                <div class="wizard-pane-body">
+                    <form th:action="@{/ui/entradas/pendente/{atendimentoId}/paciente(atendimentoId=${atendimento.id})}"
+                          method="post"
+                          th:object="${pendenteForm}">
+                        <input type="hidden" th:field="*{pacienteForm.temporario}">
+
+                        <div class="form-row">
+                            <div class="form-group col-md-4">
+                                <label>CPF<span class="required-mark">*</span></label>
+                                <input id="cpf" type="text" class="form-control js-mask-cpf" th:field="*{pacienteForm.cpf}" inputmode="numeric" maxlength="14">
+                                <small class="text-muted d-block" id="cpfFeedback"></small>
+                                <small class="text-danger" th:errors="*{pacienteForm.cpf}"></small>
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label>Cartao SUS</label>
+                                <input id="cns" type="text" class="form-control" th:field="*{pacienteForm.cns}">
+                                <small class="text-danger" th:errors="*{pacienteForm.cns}"></small>
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label>RG</label>
+                                <input id="rg" type="text" class="form-control" th:field="*{pacienteForm.rg}">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group col-md-12">
+                                <label>Nome (Civil)<span class="required-mark">*</span></label>
+                                <input id="nome" type="text" class="form-control" th:field="*{pacienteForm.nome}">
+                                <small class="text-danger" th:errors="*{pacienteForm.nome}"></small>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group col-md-12">
+                                <label>Nome (Social)</label>
+                                <input type="text" class="form-control" th:field="*{pacienteForm.nomeSocial}">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group col-md-3">
+                                <label>Data de Nascimento<span class="required-mark">*</span></label>
+                                <input id="dataNascimento" type="date" class="form-control" th:field="*{pacienteForm.dataNascimento}">
+                                <small class="text-danger" th:errors="*{pacienteForm.dataNascimento}"></small>
+                            </div>
+                            <div class="form-group col-md-3" th:if="*{pacienteForm.temporario}">
+                                <label>Idade aproximada (anos)</label>
+                                <input type="number" min="0" max="150" class="form-control" th:field="*{pacienteForm.idadeAparente}">
+                                <small class="text-danger" th:errors="*{pacienteForm.idadeAparente}"></small>
+                            </div>
+                            <div class="form-group" th:classappend="*{pacienteForm.temporario} ? 'col-md-3' : 'col-md-6'">
+                                <label>Sexo<span class="required-mark">*</span></label>
+                                <select id="sexo" class="form-control" th:field="*{pacienteForm.sexo}">
+                                    <option value="">Selecione</option>
+                                    <option th:each="item : ${sexos}" th:value="${item.codigo}" th:text="${item.descricao}"></option>
+                                </select>
+                                <small class="text-danger" th:errors="*{pacienteForm.sexo}"></small>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group col-md-4">
+                                <label>Orientacao Sexual</label>
+                                <select class="form-control" th:field="*{pacienteForm.orientacaoSexualId}">
+                                    <option value="">Selecione</option>
+                                    <option th:each="item : ${orientacoesSexuais}" th:value="${item.id}" th:text="${item.descricao}"></option>
+                                </select>
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label>Identidade de Genero</label>
+                                <select class="form-control" th:field="*{pacienteForm.identidadeGeneroId}">
+                                    <option value="">Selecione</option>
+                                    <option th:each="item : ${identidadesGenero}" th:value="${item.id}" th:text="${item.descricao}"></option>
+                                </select>
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label>Pessoa com Deficiencia</label>
+                                <select class="form-control" th:field="*{pacienteForm.deficienciaId}">
+                                    <option value="">Selecione</option>
+                                    <option th:each="item : ${deficiencias}" th:value="${item.id}" th:text="${item.descricao}"></option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label>Nome da Mae</label>
+                                <input id="nomeMae" type="text" class="form-control" th:field="*{pacienteForm.nomeMae}">
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label>Nome do Pai</label>
+                                <input type="text" class="form-control" th:field="*{pacienteForm.nomePai}">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group col-md-4">
+                                <label>Raça ou Cor</label>
+                                <select id="racaCorId" class="form-control" th:field="*{pacienteForm.racaCorId}">
+                                    <option value="">Selecione</option>
+                                    <option th:each="item : ${racasCor}" th:value="${item.id}" th:text="${item.descricao}"></option>
+                                </select>
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label>Etnia Indigena</label>
+                                <select class="form-control" th:field="*{pacienteForm.etniaIndigenaId}">
+                                    <option value="">Selecione</option>
+                                    <option th:each="item : ${etniasIndigenas}" th:value="${item.id}" th:text="${item.descricao}"></option>
+                                </select>
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label>Tipo Sanguineo</label>
+                                <select class="form-control" th:field="*{pacienteForm.tipoSanguineoId}">
+                                    <option value="">Selecione</option>
+                                    <option th:each="item : ${tiposSanguineos}" th:value="${item.id}" th:text="${item.descricao}"></option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label>Nacionalidade</label>
+                                <select class="form-control" th:field="*{pacienteForm.nacionalidadeId}">
+                                    <option value="">Selecione</option>
+                                    <option th:each="item : ${nacionalidades}" th:value="${item.id}" th:text="${item.descricao}"></option>
+                                </select>
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label>Naturalidade</label>
+                                <select class="form-control" th:field="*{pacienteForm.naturalidadeId}">
+                                    <option value="">Selecione</option>
+                                    <option th:each="item : ${naturalidades}" th:value="${item.id}" th:text="${item.descricao}"></option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group col-md-8">
+                                <label>E-mail</label>
+                                <input id="email" type="email" class="form-control" th:field="*{pacienteForm.email}">
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label>Telefone</label>
+                                <input type="text" class="form-control js-mask-phone" th:field="*{pacienteForm.telefone}" inputmode="numeric" maxlength="15">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label>Escolaridade</label>
+                                <select class="form-control" th:field="*{pacienteForm.escolaridadeId}">
+                                    <option value="">Selecione</option>
+                                    <option th:each="item : ${escolaridades}" th:value="${item.id}" th:text="${item.descricao}"></option>
+                                </select>
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label>Estado Civil</label>
+                                <select class="form-control" th:field="*{pacienteForm.estadoCivilId}">
+                                    <option value="">Selecione</option>
+                                    <option th:each="item : ${estadosCivis}" th:value="${item.id}" th:text="${item.descricao}"></option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label>Profissao</label>
+                                <select class="form-control" th:field="*{pacienteForm.profissaoId}">
+                                    <option value="">Selecione</option>
+                                    <option th:each="item : ${profissoes}" th:value="${item.id}" th:text="${item.descricao}"></option>
+                                </select>
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label>Procedencia</label>
+                                <select class="form-control" th:field="*{pacienteForm.procedenciaId}">
+                                    <option value="">Selecione</option>
+                                    <option th:each="item : ${procedencias}" th:value="${item.id}" th:text="${item.descricao}"></option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group col-md-12">
+                                <label>Observacoes</label>
+                                <textarea class="form-control" rows="5" th:field="*{pacienteForm.observacoes}"></textarea>
+                            </div>
+                        </div>
+
+                        <h6 class="mt-3">Endereco</h6>
+                        <div class="form-row">
+                            <div class="form-group col-md-3">
+                                <label>CEP</label>
+                                <input id="cep" type="text" class="form-control js-mask-cep" th:field="*{pacienteForm.cep}" inputmode="numeric" maxlength="9">
+                                <small class="text-muted d-block" id="cepFeedback"></small>
+                            </div>
+                            <div class="form-group col-md-9">
+                                <label>Logradouro</label>
+                                <input id="logradouro" type="text" class="form-control" th:field="*{pacienteForm.logradouro}">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group col-md-3">
+                                <label>Numero</label>
+                                <input id="numero" type="text" class="form-control" th:field="*{pacienteForm.numero}">
+                            </div>
+                            <div class="form-group col-md-9">
+                                <label>Bairro</label>
+                                <input id="bairro" type="text" class="form-control" th:field="*{pacienteForm.bairro}">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group col-md-12">
+                                <label>Complemento</label>
+                                <input id="complemento" type="text" class="form-control" th:field="*{pacienteForm.complemento}">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label>UF</label>
+                                <select class="form-control" th:field="*{pacienteForm.unidadeFederativaId}" id="unidadeFederativaId">
+                                    <option value="">Selecione</option>
+                                    <option th:each="item : ${ufs}" th:value="${item.id}" th:text="${item.nome + ' - ' + item.sigla}"></option>
+                                </select>
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label>Cidade</label>
+                                <select class="form-control" th:field="*{pacienteForm.cidadeId}" id="cidadeId">
+                                    <option value="">Selecione</option>
+                                    <option th:each="item : ${cidades}" th:value="${item.id}" th:text="${item.nome}"></option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-sm">Continuar para entrada</button>
+                        <a th:href="@{/ui/atendimentos/pendentes-entrada}" class="btn btn-secondary btn-sm">Voltar</a>
+                    </form>
+                </div>
+            </div>
+
+            <div class="wizard-pane" th:if="${currentStep == 2}">
+                <div class="wizard-pane-header">2. Ficha de entrada</div>
+                <div class="wizard-pane-body">
+                    <form th:action="@{/ui/entradas/pendente/{atendimentoId}/entrada(atendimentoId=${atendimento.id})}"
+                          method="post"
+                          th:object="${pendenteForm}">
+                        <div class="entry-block">
+                            <div class="entry-block-header">Identificacao da entrada</div>
+                            <div class="entry-block-body">
+                                <div class="form-row">
+                                    <div class="form-group col-md-3">
+                                        <label>Area da entrada<span class="required-mark">*</span></label>
+                                        <select class="form-control" th:field="*{entradaForm.areaId}">
+                                            <option value="">Selecione</option>
+                                            <option th:each="area : ${areasEntrada}" th:value="${area.id}" th:text="${area.nome}"></option>
+                                        </select>
+                                        <small class="text-danger" th:errors="*{entradaForm.areaId}"></small>
+                                    </div>
+                                    <div class="form-group col-md-3">
+                                        <label>Forma de chegada<span class="required-mark">*</span></label>
+                                        <select class="form-control" th:field="*{entradaForm.formaChegadaId}">
+                                            <option value="">Selecione</option>
+                                            <option th:each="item : ${formasChegada}" th:value="${item.id}" th:text="${item.descricao}"></option>
+                                        </select>
+                                        <small class="text-danger" th:errors="*{entradaForm.formaChegadaId}"></small>
+                                    </div>
+                                    <div class="form-group col-md-3">
+                                        <label>Motivo da entrada</label>
+                                        <select class="form-control" th:field="*{entradaForm.motivoEntradaId}">
+                                            <option value="">Selecione</option>
+                                            <option th:each="item : ${motivosEntrada}" th:value="${item.id}" th:text="${item.descricao}"></option>
+                                        </select>
+                                        <small class="text-danger" th:errors="*{entradaForm.motivoEntradaId}"></small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="entry-block">
+                            <div class="entry-block-header">Procedencia</div>
+                            <div class="entry-block-body">
+                                <div class="form-row">
+                                    <div class="form-group col-md-3">
+                                        <label>Tipo de Procedencia<span class="required-mark">*</span></label>
+                                        <select class="form-control" th:field="*{entradaForm.tipoProcedenciaId}" id="tipoProcedenciaId">
+                                            <option value="">Selecione</option>
+                                            <option th:each="item : ${tiposProcedenciaEntrada}" th:value="${item.id}" th:text="${item.descricao}"></option>
+                                        </select>
+                                        <small class="text-danger" th:errors="*{entradaForm.tipoProcedenciaId}"></small>
+                                    </div>
+                                    <div class="form-group col-md-3" id="procedenciaGroup">
+                                        <label>Procedencia (Local onde estava)<span class="required-mark">*</span></label>
+                                        <select class="form-control" th:field="*{entradaForm.procedenciaId}" id="procedenciaId">
+                                            <option value="">Selecione</option>
+                                            <option th:each="item : ${procedenciasEntrada}" th:value="${item.id}" th:text="${item.descricao}" th:attr="data-tipo-id=${item.tipoProcedenciaId}"></option>
+                                        </select>
+                                        <small class="text-danger" th:errors="*{entradaForm.procedenciaId}"></small>
+                                    </div>
+                                    <div class="form-group col-md-3" id="bairroGroup" style="display:none;">
+                                        <label>Procedencia (Local onde estava)<span class="required-mark">*</span></label>
+                                        <select class="form-control" th:field="*{entradaForm.procedenciaBairroId}" id="procedenciaBairroId">
+                                            <option value="">Selecione</option>
+                                            <option th:each="item : ${bairrosEntrada}" th:value="${item.id}" th:text="${item.descricao}"></option>
+                                        </select>
+                                        <small class="text-danger" th:errors="*{entradaForm.procedenciaBairroId}"></small>
+                                    </div>
+                                    <div class="form-group col-md-6" id="cidadeGroup" style="display:none;">
+                                        <div class="form-row">
+                                            <div class="form-group col-md-6">
+                                                <label>UF</label>
+                                                <select class="form-control" th:field="*{entradaForm.procedenciaCidadeUfId}" id="procedenciaCidadeUfId">
+                                                    <option value="">Selecione</option>
+                                                    <option th:each="item : ${ufsEntrada}" th:value="${item.id}" th:text="${item.nome + ' - ' + item.sigla}"></option>
+                                                </select>
+                                            </div>
+                                            <div class="form-group col-md-6">
+                                                <label>Cidade<span class="required-mark">*</span></label>
+                                                <select class="form-control" th:field="*{entradaForm.procedenciaCidadeId}" id="procedenciaCidadeId">
+                                                    <option value="">Selecione</option>
+                                                    <option th:each="item : ${cidadesEntrada}" th:value="${item.id}" th:text="${item.descricao}" th:attr="data-uf-id=${item.relacionamentoId}"></option>
+                                                </select>
+                                                <small class="text-danger" th:errors="*{entradaForm.procedenciaCidadeId}"></small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group col-md-12">
+                                        <label>Procedencia (Observacao)</label>
+                                        <input class="form-control" type="text" th:field="*{entradaForm.procedenciaObservacao}">
+                                        <small class="text-danger" th:errors="*{entradaForm.procedenciaObservacao}"></small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="entry-block">
+                            <div class="entry-block-header">Situacao ocupacional e profissao</div>
+                            <div class="entry-block-body">
+                                <div class="form-row">
+                                    <div class="form-group col-md-4">
+                                        <label>Situacao ocupacional</label>
+                                        <select class="form-control" th:field="*{entradaForm.situacaoOcupacionalId}">
+                                            <option value="">Selecione</option>
+                                            <option th:each="item : ${situacoesOcupacionais}" th:value="${item.id}" th:text="${item.descricao}"></option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group col-md-4">
+                                        <label>Profissao</label>
+                                        <select class="form-control" th:field="*{entradaForm.profissaoId}">
+                                            <option value="">Selecione</option>
+                                            <option th:each="item : ${profissoes}" th:value="${item.id}" th:text="${item.descricao}"></option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group col-md-4">
+                                        <label>Tempo de servico</label>
+                                        <input class="form-control" type="text" th:field="*{entradaForm.tempoServico}">
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group col-md-12">
+                                        <label>Profissao (observacao)</label>
+                                        <input class="form-control" type="text" th:field="*{entradaForm.profissaoObservacao}">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="entry-block">
+                            <div class="entry-block-header">Comunicante</div>
+                            <div class="entry-block-body">
+                                <div class="form-row">
+                                    <div class="form-group col-md-3">
+                                        <label>Grau de parentesco</label>
+                                        <select class="form-control" th:field="*{entradaForm.grauParentescoId}">
+                                            <option value="">Selecione</option>
+                                            <option th:each="item : ${grausParentesco}" th:value="${item.id}" th:text="${item.descricao}"></option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group col-md-6">
+                                        <label>Nome do comunicante</label>
+                                        <input class="form-control" type="text" th:field="*{entradaForm.comunicante}">
+                                    </div>
+                                    <div class="form-group col-md-3">
+                                        <label>Telefone do comunicante</label>
+                                        <input class="form-control js-mask-phone" type="text" th:field="*{entradaForm.telefoneComunicante}" inputmode="numeric" maxlength="15">
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group col-md-12">
+                                        <label>Identificacao complementar do comunicante</label>
+                                        <textarea class="form-control" rows="2" th:field="*{entradaForm.informacaoAdChegada}"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="entry-block">
+                            <div class="entry-block-header">Informacoes complementares</div>
+                            <div class="entry-block-body">
+                                <div class="form-row">
+                                    <div class="form-group col-md-12">
+                                        <label>Observacoes</label>
+                                        <textarea class="form-control" rows="2" th:field="*{entradaForm.observacoes}"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-sm">Salvar entrada</button>
+                        <a th:href="@{/ui/entradas/pendente/{atendimentoId}(atendimentoId=${atendimento.id})}" class="btn btn-secondary btn-sm">Voltar</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <script th:inline="javascript">
+            document.addEventListener('DOMContentLoaded', function() {
+                const cpfInput = document.getElementById('cpf');
+                const cpfFeedback = document.getElementById('cpfFeedback');
+                const cnsInput = document.getElementById('cns');
+                const nomeInput = document.getElementById('nome');
+                const dataNascimentoInput = document.getElementById('dataNascimento');
+                const sexoSelect = document.getElementById('sexo');
+                const nomeMaeInput = document.getElementById('nomeMae');
+                const rgInput = document.getElementById('rg');
+                const emailInput = document.getElementById('email');
+                const racaCorSelect = document.getElementById('racaCorId');
+                const cepInput = document.getElementById('cep');
+                const cepFeedback = document.getElementById('cepFeedback');
+                const logradouroInput = document.getElementById('logradouro');
+                const bairroInput = document.getElementById('bairro');
+                const complementoInput = document.getElementById('complemento');
+                const numeroInput = document.getElementById('numero');
+                const ufSelect = document.getElementById('unidadeFederativaId');
+                const cidadeSelect = document.getElementById('cidadeId');
+
+                function resetCidades() {
+                    if (!cidadeSelect) {
+                        return;
+                    }
+                    cidadeSelect.innerHTML = '<option value="">Selecione</option>';
+                }
+
+                function carregarCidadesPorUf(ufId, cidadeIdSelecionada) {
+                    resetCidades();
+                    if (!ufId) {
+                        return;
+                    }
+                    fetch('/ui/pacientes/cidades-por-uf/' + ufId)
+                        .then(function (response) { return response.json(); })
+                        .then(function (items) {
+                            items.forEach(function (item) {
+                                var option = document.createElement('option');
+                                option.value = item.id;
+                                option.textContent = item.descricao;
+                                if (cidadeIdSelecionada && String(cidadeIdSelecionada) === String(item.id)) {
+                                    option.selected = true;
+                                }
+                                cidadeSelect.appendChild(option);
+                            });
+                        });
+                }
+
+                if (ufSelect && cidadeSelect) {
+                    ufSelect.addEventListener('change', function() {
+                        carregarCidadesPorUf(this.value, null);
+                    });
+                    if (ufSelect.value) {
+                        carregarCidadesPorUf(ufSelect.value, cidadeSelect.value);
+                    }
+                }
+
+                function setCpfFeedback(message, isError) {
+                    if (!cpfFeedback) {
+                        return;
+                    }
+                    cpfFeedback.textContent = message || '';
+                    cpfFeedback.classList.toggle('text-danger', !!isError);
+                    cpfFeedback.classList.toggle('text-muted', !isError);
+                }
+
+                function setCepFeedback(message, isError) {
+                    if (!cepFeedback) {
+                        return;
+                    }
+                    cepFeedback.textContent = message || '';
+                    cepFeedback.classList.toggle('text-danger', !!isError);
+                    cepFeedback.classList.toggle('text-muted', !isError);
+                }
+
+                if (cpfInput) {
+                    cpfInput.addEventListener('blur', async function() {
+                        const cpf = (this.value || '').replace(/\D/g, '');
+                        if (cpf.length !== 11) {
+                            return;
+                        }
+                        setCpfFeedback('Consultando CADSUS...', false);
+                        try {
+                            const response = await fetch(`/ui/pacientes/cpf/${cpf}/cadsus`);
+                            if (response.status === 404) {
+                                setCpfFeedback('CPF nao encontrado no CADSUS.', true);
+                                return;
+                            }
+                            if (!response.ok) {
+                                throw new Error('Falha na consulta CADSUS');
+                            }
+                            const data = await response.json();
+                            if (cnsInput && data.cns) cnsInput.value = data.cns;
+                            if (nomeInput && data.nome) nomeInput.value = data.nome;
+                            if (dataNascimentoInput && data.dataNascimento) dataNascimentoInput.value = data.dataNascimento;
+                            if (sexoSelect && data.sexo) sexoSelect.value = data.sexo;
+                            if (nomeMaeInput && data.nomeMae) nomeMaeInput.value = data.nomeMae;
+                            if (rgInput && data.rg) rgInput.value = data.rg;
+                            if (emailInput && data.email) emailInput.value = data.email;
+                            if (racaCorSelect && data.racaCorId) racaCorSelect.value = data.racaCorId;
+                            setCpfFeedback('Dados preenchidos a partir do CADSUS.', false);
+                        } catch (e) {
+                            setCpfFeedback('Nao foi possivel consultar o CADSUS agora.', true);
+                        }
+                    });
+                }
+
+                if (cepInput) {
+                    cepInput.addEventListener('blur', async function() {
+                        const cep = (this.value || '').replace(/\D/g, '');
+                        if (cep.length !== 8) {
+                            return;
+                        }
+                        setCepFeedback('Consultando CEP...', false);
+                        try {
+                            const response = await fetch(`/ui/pacientes/cep/${cep}`);
+                            if (!response.ok) {
+                                throw new Error('CEP nao encontrado');
+                            }
+                            const data = await response.json();
+                            if (logradouroInput && data.logradouro) logradouroInput.value = data.logradouro;
+                            if (bairroInput && data.bairro) bairroInput.value = data.bairro;
+                            if (complementoInput && data.complemento) complementoInput.value = data.complemento;
+                            if (ufSelect && data.ufId) {
+                                ufSelect.value = data.ufId;
+                                carregarCidadesPorUf(data.ufId, data.cidadeId || null);
+                            }
+                            if (cidadeSelect && data.cidadeId) cidadeSelect.value = data.cidadeId;
+                            setCepFeedback('Endereco preenchido pelo CEP.', false);
+                        } catch (e) {
+                            setCepFeedback('Nao foi possivel localizar o CEP.', true);
+                        }
+                    });
+                }
+
+                const tipoProcedenciaSelect = document.getElementById('tipoProcedenciaId');
+                const procedenciaGroup = document.getElementById('procedenciaGroup');
+                const bairroGroup = document.getElementById('bairroGroup');
+                const cidadeGroup = document.getElementById('cidadeGroup');
+                const procedenciaSelect = document.getElementById('procedenciaId');
+                const procedenciaCidadeUfSelect = document.getElementById('procedenciaCidadeUfId');
+                const procedenciaCidadeSelect = document.getElementById('procedenciaCidadeId');
+
+                function refreshProcedenciaView() {
+                    if (!tipoProcedenciaSelect) {
+                        return;
+                    }
+                    const selectedOption = tipoProcedenciaSelect.options[tipoProcedenciaSelect.selectedIndex];
+                    const tipoDescricao = ((selectedOption && selectedOption.textContent) || '').trim().toUpperCase();
+                    const isBairro = tipoDescricao === 'BAIRRO';
+                    const isCidade = tipoDescricao === 'CIDADE';
+                    if (procedenciaGroup) procedenciaGroup.style.display = (!isBairro && !isCidade) ? '' : 'none';
+                    if (bairroGroup) bairroGroup.style.display = isBairro ? '' : 'none';
+                    if (cidadeGroup) cidadeGroup.style.display = isCidade ? '' : 'none';
+
+                    if (procedenciaSelect) {
+                        const selectedTipoId = tipoProcedenciaSelect.value;
+                        Array.from(procedenciaSelect.options).forEach(option => {
+                            if (!option.value) {
+                                option.hidden = false;
+                                return;
+                            }
+                            option.hidden = selectedTipoId && option.dataset.tipoId !== selectedTipoId;
+                        });
+                    }
+                }
+
+                function refreshProcedenciaCidadeOptions() {
+                    if (!procedenciaCidadeSelect) {
+                        return;
+                    }
+                    const selectedUfId = procedenciaCidadeUfSelect ? procedenciaCidadeUfSelect.value : '';
+                    const currentValue = procedenciaCidadeSelect.value;
+                    const options = Array.from(procedenciaCidadeSelect.querySelectorAll('option'));
+                    procedenciaCidadeSelect.innerHTML = '';
+                    options.forEach(option => {
+                        if (!option.value || !selectedUfId || option.dataset.ufId === selectedUfId) {
+                            procedenciaCidadeSelect.appendChild(option);
+                        }
+                    });
+                    if (Array.from(procedenciaCidadeSelect.options).some(option => option.value === currentValue)) {
+                        procedenciaCidadeSelect.value = currentValue;
+                    }
+                }
+
+                if (tipoProcedenciaSelect) {
+                    tipoProcedenciaSelect.addEventListener('change', refreshProcedenciaView);
+                    refreshProcedenciaView();
+                }
+
+                if (procedenciaCidadeUfSelect) {
+                    procedenciaCidadeUfSelect.addEventListener('change', refreshProcedenciaCidadeOptions);
+                    refreshProcedenciaCidadeOptions();
+                }
+            });
+        </script>
+    </section>
+</th:block>
+</body>
+</html>

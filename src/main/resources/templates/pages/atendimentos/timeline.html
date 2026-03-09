@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:replace="~{layout/base :: layout('HIS | Timeline Atendimento', ~{::section})}">
+    <section>
+        <style>
+            .timeline-header-title { font-size: 1.15rem; font-weight: 700; margin: 0; color: #2f3542; }
+            .timeline-subtitle { color: #6c757d; font-size: .95rem; margin-top: .35rem; }
+            .timeline-meta { margin-top: .35rem; font-size: .9rem; color: #5f6b7a; }
+            .timeline-meta strong { color: #2f3542; font-weight: 700; }
+            .timeline-stage-badge { font-size: .78rem; border-radius: 20px; }
+            .timeline-empty { border: 1px dashed #d9dde4; border-radius: .4rem; padding: .9rem 1rem; color: #6c757d; }
+            .timeline-table thead th { white-space: nowrap; font-size: .82rem; text-transform: uppercase; }
+            .timeline-table tbody td { font-size: .9rem; vertical-align: middle; }
+            .timeline-etapa { font-weight: 700; color: #2f3542; }
+        </style>
+        <div class="main-card card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <h5 class="timeline-header-title">
+                            Timeline do atendimento #<span th:text="${atendimento.id}"></span>
+                        </h5>
+                        <div class="timeline-subtitle">
+                            Paciente: <strong th:text="${atendimento.paciente.nomeExibicao}"></strong>
+                        </div>
+                        <div class="timeline-meta">
+                            <strong>Tipo:</strong> <span th:text="${atendimento.tipoAtendimento}"></span>
+                            <span class="mx-2">|</span>
+                            <strong>Status:</strong> <span th:text="${atendimento.status != null ? atendimento.status.descricao : '-'}"></span>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <span class="badge badge-pill badge-light border timeline-stage-badge"
+                              th:text="${#lists.size(timeline)} + ' etapa(s)'">0 etapa(s)</span>
+                    </div>
+                </div>
+
+                <div class="table-responsive" th:if="${!#lists.isEmpty(timeline)}">
+                    <table class="table table-bordered table-striped mb-3 timeline-table">
+                        <thead class="thead-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Etapa</th>
+                            <th>Duração (min)</th>
+                            <th>Inicio</th>
+                            <th>Fim</th>
+                            <th>Usuario inicio</th>
+                            <th>Usuario fim</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="item, stat : ${timeline}">
+                            <td th:text="${stat.count}">1</td>
+                            <td class="timeline-etapa" th:text="${item.label}">ETAPA</td>
+                            <td th:text="${item.duracaoMinutos}">0</td>
+                            <td th:text="${#temporals.format(item.inicioEm, 'dd/MM/yyyy HH:mm:ss')}">00/00/0000 00:00:00</td>
+                            <td th:text="${item.fimEm != null ? #temporals.format(item.fimEm, 'dd/MM/yyyy HH:mm:ss') : 'EM ABERTO'}">EM ABERTO</td>
+                            <td th:text="${item.usuarioInicio != null ? item.usuarioInicio : '-'}">-</td>
+                            <td th:text="${item.usuarioFim != null ? item.usuarioFim : '-'}">-</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="timeline-empty mb-3" th:if="${#lists.isEmpty(timeline)}">
+                    Nenhum periodo registrado para este atendimento.
+                </div>
+
+                <a th:href="@{/ui/atendimentos}" class="btn btn-secondary btn-sm">Voltar</a>
+            </div>
+        </div>
+    </section>
+</th:block>
+</body>
+</html>

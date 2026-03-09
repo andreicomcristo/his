@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout('Administracao - Perfil', ~{::content})}">
+<th:block th:fragment="content">
+    <div class="main-card mb-3 card">
+        <div class="card-body">
+            <h5 class="card-title" th:text="${modoEdicao} ? 'Editar perfil' : 'Novo perfil'"></h5>
+
+            <form th:action="${modoEdicao} ? @{'/ui/admin/perfis/' + ${perfilId}} : @{/ui/admin/perfis}"
+                  method="post" th:object="${form}">
+
+                <div th:if="${#fields.hasGlobalErrors()}" class="alert alert-danger">
+                    <div th:each="e : ${#fields.globalErrors()}" th:text="${e}"></div>
+                </div>
+
+                <div class="form-group">
+                    <label>Nome<span class="required-mark">*</span></label>
+                    <input class="form-control" type="text" th:field="*{nome}">
+                    <small class="text-danger" th:errors="*{nome}"></small>
+                </div>
+
+                <button class="btn btn-primary btn-sm" type="submit">Salvar</button>
+                <a th:href="@{/ui/admin/perfis}" class="btn btn-outline-secondary btn-sm">Voltar</a>
+            </form>
+        </div>
+    </div>
+</th:block>
+</html>

@@ -1,0 +1,1135 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:replace="~{layout/base :: layout('HIS | Novo Atendimento', ~{::section})}">
+    <section>
+        <style>
+            .wizard-shell {
+                display: grid;
+                gap: 20px;
+            }
+
+            .wizard-stepper {
+                display: grid;
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+                gap: 16px;
+                align-items: start;
+            }
+
+            .wizard-step {
+                position: relative;
+                text-align: center;
+                color: #7a7f87;
+            }
+
+            .wizard-step::after {
+                content: "";
+                position: absolute;
+                top: 22px;
+                left: calc(50% + 26px);
+                right: calc(-50% + 26px);
+                height: 4px;
+                background: #d8dbe2;
+                z-index: 0;
+            }
+
+            .wizard-step:last-child::after {
+                display: none;
+            }
+
+            .wizard-step.is-done::after,
+            .wizard-step.is-active::after {
+                background: #f2c200;
+            }
+
+            .wizard-step-dot {
+                position: relative;
+                z-index: 1;
+                width: 44px;
+                height: 44px;
+                margin: 0 auto 10px;
+                border-radius: 999px;
+                border: 3px solid #d8dbe2;
+                background: #fff;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: 700;
+            }
+
+            .wizard-step.is-done .wizard-step-dot {
+                border-color: #1fb600;
+                background: #1fb600;
+                color: #fff;
+            }
+
+            .wizard-step.is-active .wizard-step-dot {
+                border-color: #f2c200;
+                background: #f2c200;
+                color: #4b5563;
+            }
+
+            .wizard-step-title {
+                font-size: 0.95rem;
+                font-weight: 700;
+                color: #4b5563;
+            }
+
+            .wizard-step-subtitle {
+                font-size: 0.8rem;
+                color: #8a9098;
+            }
+
+            .wizard-pane {
+                border: 1px solid #d8dbe2;
+                border-radius: 8px;
+                background: #fff;
+                overflow: hidden;
+            }
+
+            .wizard-pane-header {
+                padding: 14px 18px;
+                border-top: 4px solid #2c84b8;
+                background: #f7f7f8;
+                font-size: 1.1rem;
+                font-weight: 600;
+                color: #374151;
+            }
+
+            .wizard-pane-body {
+                padding: 18px;
+            }
+
+            .wizard-choice-grid {
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 16px;
+            }
+
+            .wizard-choice-card {
+                border: 1px solid #d8dbe2;
+                border-radius: 8px;
+                padding: 18px;
+                background: #fbfbfc;
+            }
+
+            .wizard-choice-title {
+                font-size: 1.05rem;
+                font-weight: 700;
+                margin-bottom: 8px;
+                color: #374151;
+            }
+
+            .wizard-choice-text {
+                color: #6b7280;
+                min-height: 44px;
+                margin-bottom: 12px;
+            }
+
+            .patient-summary-card {
+                border: 1px solid #d8dbe2;
+                border-radius: 8px;
+                overflow: hidden;
+                background: #fff;
+                margin-bottom: 18px;
+            }
+
+            .patient-summary-header {
+                padding: 12px 16px;
+                border-top: 4px solid #d96245;
+                background: #f7f7f8;
+                font-size: 1rem;
+                font-weight: 600;
+                color: #374151;
+            }
+
+            .patient-summary-body {
+                padding: 16px;
+            }
+
+            .patient-summary-grid {
+                display: grid;
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+                gap: 14px 20px;
+            }
+
+            .patient-summary-item.wide {
+                grid-column: span 2;
+            }
+
+            .patient-summary-label {
+                margin-right: 4px;
+                font-weight: 700;
+                color: #b14b42;
+            }
+
+            .patient-summary-value {
+                color: #4b5563;
+                word-break: break-word;
+            }
+
+            .entry-block {
+                border: 1px solid #d8dbe2;
+                border-radius: 6px;
+                overflow: hidden;
+                background: #fff;
+                margin-bottom: 24px;
+            }
+
+            .entry-block-header {
+                background: #f7f7f8;
+                padding: 14px 18px;
+                font-size: 1.15rem;
+                font-weight: 600;
+                color: #374151;
+                border-bottom: 1px solid #e5e7eb;
+            }
+
+            .entry-block-body {
+                padding: 18px;
+            }
+
+            @media (max-width: 991.98px) {
+                .wizard-stepper,
+                .wizard-choice-grid,
+                .patient-summary-grid {
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                }
+
+                .patient-summary-item.wide {
+                    grid-column: span 2;
+                }
+            }
+
+            @media (max-width: 575.98px) {
+                .wizard-stepper,
+                .wizard-choice-grid,
+                .patient-summary-grid {
+                    grid-template-columns: 1fr;
+                }
+
+                .wizard-step::after {
+                    display: none;
+                }
+
+                .patient-summary-item.wide {
+                    grid-column: span 1;
+                }
+            }
+        </style>
+
+        <div class="wizard-shell">
+            <div class="wizard-stepper">
+                <div class="wizard-step"
+                     th:classappend="${wizard.currentStep > 1} ? ' is-done' : (${wizard.currentStep == 1} ? ' is-active' : '')">
+                    <div class="wizard-step-dot" th:text="${wizard.currentStep > 1 ? '✓' : '1'}">1</div>
+                    <div class="wizard-step-title">Tipo de paciente</div>
+                    <div class="wizard-step-subtitle">Identificado ou nao</div>
+                </div>
+                <div class="wizard-step"
+                     th:classappend="${wizard.currentStep > 2} ? ' is-done' : (${wizard.currentStep == 2} ? ' is-active' : '')">
+                    <div class="wizard-step-dot" th:text="${wizard.currentStep > 2 ? '✓' : '2'}">2</div>
+                    <div class="wizard-step-title">Paciente</div>
+                    <div class="wizard-step-subtitle">Busca ou cadastro</div>
+                </div>
+                <div class="wizard-step"
+                     th:classappend="${wizard.currentStep > 3} ? ' is-done' : (${wizard.currentStep == 3} ? ' is-active' : '')">
+                    <div class="wizard-step-dot" th:text="${wizard.currentStep > 3 ? '✓' : '3'}">3</div>
+                    <div class="wizard-step-title">Atendimento</div>
+                    <div class="wizard-step-subtitle">Confirmacao</div>
+                </div>
+                <div class="wizard-step"
+                     th:classappend="${wizard.currentStep == 4} ? ' is-active' : ''">
+                    <div class="wizard-step-dot">4</div>
+                    <div class="wizard-step-title">Entrada</div>
+                    <div class="wizard-step-subtitle">Ficha de BE</div>
+                </div>
+            </div>
+
+            <div class="alert alert-info py-2" th:if="${horaChegadaCapturada != null}">
+                Hora de chegada capturada:
+                <strong th:text="${#temporals.format(horaChegadaCapturada, 'dd/MM/yyyy HH:mm:ss')}">--</strong>
+            </div>
+
+            <div class="alert alert-danger" th:if="${wizardErrors['global']}" th:text="${wizardErrors['global']}"></div>
+
+            <div class="wizard-pane" th:if="${wizard.currentStep == 1}">
+                <div class="wizard-pane-header">1. Selecione o tipo de paciente</div>
+                <div class="wizard-pane-body">
+                    <div class="alert alert-danger" th:if="${wizardErrors['tipoPaciente']}" th:text="${wizardErrors['tipoPaciente']}"></div>
+                    <div class="wizard-choice-grid">
+                        <form class="wizard-choice-card" th:action="@{/ui/atendimentos/novo/tipo-paciente}" method="post">
+                            <div class="wizard-choice-title">Paciente identificado</div>
+                            <div class="wizard-choice-text">Paciente com CPF e cadastro existente, ou que sera cadastrado agora.</div>
+                            <input type="hidden" name="tipoPaciente" value="IDENTIFICADO">
+                            <button type="submit" class="btn btn-primary btn-sm">Continuar com paciente identificado</button>
+                        </form>
+                        <form class="wizard-choice-card" th:action="@{/ui/atendimentos/novo/tipo-paciente}" method="post">
+                            <div class="wizard-choice-title">Paciente nao identificado</div>
+                            <div class="wizard-choice-text">Paciente temporario, sem identificacao definida na chegada.</div>
+                            <input type="hidden" name="tipoPaciente" value="NAO_IDENTIFICADO">
+                            <button type="submit" class="btn btn-outline-primary btn-sm">Continuar com nao identificado</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="wizard-pane" th:if="${wizard.currentStep == 2}" th:object="${wizard}">
+                <div class="wizard-pane-header">2. Paciente</div>
+                <div class="wizard-pane-body">
+                    <div th:if="${wizard.pacienteIdentificado}">
+                        <form th:action="@{/ui/atendimentos/novo/paciente/buscar-cpf}" method="post" class="mb-4">
+                            <div class="form-row">
+                                <div class="form-group col-md-4">
+                                    <label>CPF do paciente</label>
+                                    <input class="form-control" type="text" name="cpfBusca" th:value="*{cpfBusca}">
+                                    <small class="text-danger" th:if="${wizardErrors['cpfBusca']}" th:text="${wizardErrors['cpfBusca']}"></small>
+                                </div>
+                                <div class="form-group col-md-4 d-flex align-items-end">
+                                    <button type="submit" class="btn btn-primary btn-sm">Buscar por CPF</button>
+                                </div>
+                            </div>
+                        </form>
+
+                        <div class="patient-summary-card" th:if="${wizard.pacienteSelecionadoId != null}">
+                            <div class="patient-summary-header">Paciente localizado</div>
+                            <div class="patient-summary-body">
+                                <div class="patient-summary-grid">
+                                    <div class="patient-summary-item wide"><span class="patient-summary-label">Paciente:</span><span class="patient-summary-value" th:text="${patientSummary['nome']}"></span></div>
+                                    <div class="patient-summary-item wide"><span class="patient-summary-label">Mae:</span><span class="patient-summary-value" th:text="${patientSummary['nomeMae']}"></span></div>
+                                    <div class="patient-summary-item wide"><span class="patient-summary-label">Pai:</span><span class="patient-summary-value" th:text="${patientSummary['nomePai']}"></span></div>
+                                    <div class="patient-summary-item"><span class="patient-summary-label">CPF:</span><span class="patient-summary-value" th:text="${patientSummary['cpf']}"></span></div>
+                                    <div class="patient-summary-item"><span class="patient-summary-label">Cartao SUS:</span><span class="patient-summary-value" th:text="${patientSummary['cns']}"></span></div>
+                                    <div class="patient-summary-item"><span class="patient-summary-label">Nascimento:</span><span class="patient-summary-value" th:text="${patientSummary['dataNascimento']}"></span></div>
+                                    <div class="patient-summary-item"><span class="patient-summary-label">Contato:</span><span class="patient-summary-value" th:text="${patientSummary['telefone']}"></span></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div th:if="${wizard.cadastrarNovoPaciente}">
+                            <div class="alert alert-warning">CPF nao encontrado. Preencha o cadastro completo do paciente.</div>
+                            <form th:action="@{/ui/atendimentos/novo/paciente/continuar}" method="post">
+                                <input type="hidden" th:field="*{novoPacienteForm.temporario}">
+                                <div class="form-row">
+                                    <div class="form-group col-md-4">
+                                        <label>CPF</label>
+                                        <input type="text" id="cpf" class="form-control js-mask-cpf" th:field="*{novoPacienteForm.cpf}" inputmode="numeric" maxlength="14">
+                                        <small class="text-muted d-block" id="cpfFeedback"></small>
+                                        <small class="text-danger" th:if="${wizardErrors['novoPacienteForm.cpf']}" th:text="${wizardErrors['novoPacienteForm.cpf']}"></small>
+                                    </div>
+                                    <div class="form-group col-md-4">
+                                        <label>Cartao SUS</label>
+                                        <input type="text" id="cns" class="form-control" th:field="*{novoPacienteForm.cns}">
+                                    </div>
+                                    <div class="form-group col-md-4">
+                                        <label>RG</label>
+                                        <input type="text" id="rg" class="form-control" th:field="*{novoPacienteForm.rg}">
+                                    </div>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group col-md-12">
+                                        <label>Nome (Civil)</label>
+                                        <input type="text" id="nome" class="form-control" th:field="*{novoPacienteForm.nome}">
+                                        <small class="text-danger" th:if="${wizardErrors['novoPacienteForm.nome']}" th:text="${wizardErrors['novoPacienteForm.nome']}"></small>
+                                    </div>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group col-md-12">
+                                        <label>Nome (Social)</label>
+                                        <input type="text" class="form-control" th:field="*{novoPacienteForm.nomeSocial}">
+                                    </div>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group col-md-3">
+                                        <label>Data de nascimento</label>
+                                        <input type="date" id="dataNascimento" class="form-control" th:field="*{novoPacienteForm.dataNascimento}">
+                                    </div>
+                                    <div class="form-group col-md-3">
+                                        <label>Sexo</label>
+                                        <select id="sexo" class="form-control" th:field="*{novoPacienteForm.sexo}">
+                                            <option value="">Selecione</option>
+                                            <option th:each="item : ${sexos}" th:value="${item.codigo}" th:text="${item.descricao}"></option>
+                                        </select>
+                                        <small class="text-danger" th:if="${wizardErrors['novoPacienteForm.sexo']}" th:text="${wizardErrors['novoPacienteForm.sexo']}"></small>
+                                    </div>
+                                    <div class="form-group col-md-3">
+                                        <label>Telefone</label>
+                                        <input type="text" class="form-control js-mask-phone" th:field="*{novoPacienteForm.telefone}" inputmode="numeric" maxlength="15">
+                                    </div>
+                                    <div class="form-group col-md-3">
+                                        <label>E-mail</label>
+                                        <input type="email" id="email" class="form-control" th:field="*{novoPacienteForm.email}">
+                                    </div>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group col-md-6">
+                                        <label>Nome da mae</label>
+                                        <input type="text" id="nomeMae" class="form-control" th:field="*{novoPacienteForm.nomeMae}">
+                                    </div>
+                                    <div class="form-group col-md-6">
+                                        <label>Nome do pai</label>
+                                        <input type="text" id="nomePai" class="form-control" th:field="*{novoPacienteForm.nomePai}">
+                                    </div>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group col-md-4">
+                                        <label>Orientacao Sexual</label>
+                                        <select class="form-control" th:field="*{novoPacienteForm.orientacaoSexualId}">
+                                            <option value="">Selecione</option>
+                                            <option th:each="item : ${orientacoesSexuais}" th:value="${item.id}" th:text="${item.descricao}"></option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group col-md-4">
+                                        <label>Identidade de Genero</label>
+                                        <select class="form-control" th:field="*{novoPacienteForm.identidadeGeneroId}">
+                                            <option value="">Selecione</option>
+                                            <option th:each="item : ${identidadesGenero}" th:value="${item.id}" th:text="${item.descricao}"></option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group col-md-4">
+                                        <label>Pessoa com Deficiencia</label>
+                                        <select class="form-control" th:field="*{novoPacienteForm.deficienciaId}">
+                                            <option value="">Selecione</option>
+                                            <option th:each="item : ${deficiencias}" th:value="${item.id}" th:text="${item.descricao}"></option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group col-md-4">
+                                        <label>Raca ou Cor</label>
+                                        <select id="racaCorId" class="form-control" th:field="*{novoPacienteForm.racaCorId}">
+                                            <option value="">Selecione</option>
+                                            <option th:each="item : ${racasCor}" th:value="${item.id}" th:text="${item.descricao}"></option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group col-md-4">
+                                        <label>Etnia Indigena</label>
+                                        <select class="form-control" th:field="*{novoPacienteForm.etniaIndigenaId}">
+                                            <option value="">Selecione</option>
+                                            <option th:each="item : ${etniasIndigenas}" th:value="${item.id}" th:text="${item.descricao}"></option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group col-md-4">
+                                        <label>Tipo Sanguineo</label>
+                                        <select class="form-control" th:field="*{novoPacienteForm.tipoSanguineoId}">
+                                            <option value="">Selecione</option>
+                                            <option th:each="item : ${tiposSanguineos}" th:value="${item.id}" th:text="${item.descricao}"></option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group col-md-6">
+                                        <label>Nacionalidade</label>
+                                        <select class="form-control" th:field="*{novoPacienteForm.nacionalidadeId}">
+                                            <option value="">Selecione</option>
+                                            <option th:each="item : ${nacionalidades}" th:value="${item.id}" th:text="${item.descricao}"></option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group col-md-6">
+                                        <label>Naturalidade</label>
+                                        <select class="form-control" th:field="*{novoPacienteForm.naturalidadeId}">
+                                            <option value="">Selecione</option>
+                                            <option th:each="item : ${naturalidades}" th:value="${item.id}" th:text="${item.descricao}"></option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group col-md-6">
+                                        <label>Escolaridade</label>
+                                        <select class="form-control" th:field="*{novoPacienteForm.escolaridadeId}">
+                                            <option value="">Selecione</option>
+                                            <option th:each="item : ${escolaridades}" th:value="${item.id}" th:text="${item.descricao}"></option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group col-md-6">
+                                        <label>Estado Civil</label>
+                                        <select class="form-control" th:field="*{novoPacienteForm.estadoCivilId}">
+                                            <option value="">Selecione</option>
+                                            <option th:each="item : ${estadosCivis}" th:value="${item.id}" th:text="${item.descricao}"></option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group col-md-6">
+                                        <label>Profissao</label>
+                                        <select class="form-control" th:field="*{novoPacienteForm.profissaoId}">
+                                            <option value="">Selecione</option>
+                                            <option th:each="item : ${profissoes}" th:value="${item.id}" th:text="${item.descricao}"></option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group col-md-6">
+                                        <label>Procedencia</label>
+                                        <select class="form-control" th:field="*{novoPacienteForm.procedenciaId}">
+                                            <option value="">Selecione</option>
+                                            <option th:each="item : ${procedencias}" th:value="${item.id}" th:text="${item.descricao}"></option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group col-md-12">
+                                        <label>Observacoes</label>
+                                        <textarea class="form-control" rows="4" th:field="*{novoPacienteForm.observacoes}"></textarea>
+                                    </div>
+                                </div>
+
+                                <h6 class="mt-3">Endereco</h6>
+                                <div class="form-row">
+                                    <div class="form-group col-md-3">
+                                        <label>CEP</label>
+                                        <input type="text" id="cep" class="form-control js-mask-cep" th:field="*{novoPacienteForm.cep}" inputmode="numeric" maxlength="9">
+                                        <small class="text-muted d-block" id="cepFeedback"></small>
+                                    </div>
+                                    <div class="form-group col-md-9">
+                                        <label>Logradouro</label>
+                                        <input type="text" id="logradouro" class="form-control" th:field="*{novoPacienteForm.logradouro}">
+                                    </div>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group col-md-3">
+                                        <label>Numero</label>
+                                        <input type="text" id="numero" class="form-control" th:field="*{novoPacienteForm.numero}">
+                                    </div>
+                                    <div class="form-group col-md-9">
+                                        <label>Bairro</label>
+                                        <input type="text" id="bairro" class="form-control" th:field="*{novoPacienteForm.bairro}">
+                                    </div>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group col-md-12">
+                                        <label>Complemento</label>
+                                        <input type="text" id="complemento" class="form-control" th:field="*{novoPacienteForm.complemento}">
+                                    </div>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group col-md-6">
+                                        <label>UF</label>
+                                        <select id="unidadeFederativaId" class="form-control" th:field="*{novoPacienteForm.unidadeFederativaId}">
+                                            <option value="">Selecione</option>
+                                            <option th:each="item : ${ufs}" th:value="${item.id}" th:text="${item.nome + ' - ' + item.sigla}"></option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group col-md-6">
+                                        <label>Cidade</label>
+                                        <select id="cidadeId" class="form-control" th:field="*{novoPacienteForm.cidadeId}">
+                                            <option value="">Selecione</option>
+                                            <option th:each="item : ${cidades}" th:value="${item.id}" th:text="${item.nome}"></option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-primary btn-sm">Continuar</button>
+                                <a th:href="@{/ui/atendimentos/novo(step=1)}" class="btn btn-secondary btn-sm">Voltar</a>
+                            </form>
+                        </div>
+
+                        <form th:if="${wizard.pacienteSelecionadoId != null}" th:action="@{/ui/atendimentos/novo/paciente/continuar}" method="post">
+                            <button type="submit" class="btn btn-primary btn-sm">Continuar com este paciente</button>
+                            <a th:href="@{/ui/atendimentos/novo(restart=true)}" class="btn btn-secondary btn-sm">Reiniciar fluxo</a>
+                        </form>
+                    </div>
+
+                    <div th:if="${wizard.pacienteIdentificado == false}">
+                        <form th:action="@{/ui/atendimentos/novo/paciente/continuar}" method="post">
+                            <div class="alert alert-warning">Fluxo de paciente nao identificado: sera criado um paciente temporario ao final.</div>
+                            <div class="form-row">
+                                <div class="form-group col-md-3">
+                                    <label>Sexo temporario</label>
+                                    <select class="form-control" th:field="*{sexoTemporario}">
+                                        <option th:each="item : ${sexos}" th:value="${item.codigo}" th:text="${item.descricao}"></option>
+                                    </select>
+                                    <small class="text-danger" th:if="${wizardErrors['sexoTemporario']}" th:text="${wizardErrors['sexoTemporario']}"></small>
+                                </div>
+                                <div class="form-group col-md-3">
+                                    <label>Idade aparente</label>
+                                    <input class="form-control" type="number" min="0" max="150" th:field="*{idadeAparenteTemporario}">
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-sm">Continuar</button>
+                            <a th:href="@{/ui/atendimentos/novo(step=1)}" class="btn btn-secondary btn-sm">Voltar</a>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="wizard-pane" th:if="${wizard.currentStep == 3}" th:object="${wizard}">
+                <div class="wizard-pane-header">3. Dados do atendimento</div>
+                <div class="wizard-pane-body">
+                    <div class="patient-summary-card" th:if="${!#maps.isEmpty(patientSummary)}">
+                        <div class="patient-summary-header" th:text="${patientSummary['tipo']}">Paciente</div>
+                        <div class="patient-summary-body">
+                            <div class="patient-summary-grid">
+                                <div class="patient-summary-item wide"><span class="patient-summary-label">Paciente:</span><span class="patient-summary-value" th:text="${patientSummary['nome']}"></span></div>
+                                <div class="patient-summary-item wide" th:if="${patientSummary['nomeMae'] != null}"><span class="patient-summary-label">Mae:</span><span class="patient-summary-value" th:text="${patientSummary['nomeMae']}"></span></div>
+                                <div class="patient-summary-item wide" th:if="${patientSummary['nomePai'] != null}"><span class="patient-summary-label">Pai:</span><span class="patient-summary-value" th:text="${patientSummary['nomePai']}"></span></div>
+                                <div class="patient-summary-item" th:if="${patientSummary['cpf'] != null}"><span class="patient-summary-label">CPF:</span><span class="patient-summary-value" th:text="${patientSummary['cpf']}"></span></div>
+                                <div class="patient-summary-item" th:if="${patientSummary['cns'] != null}"><span class="patient-summary-label">Cartao SUS:</span><span class="patient-summary-value" th:text="${patientSummary['cns']}"></span></div>
+                                <div class="patient-summary-item" th:if="${patientSummary['dataNascimento'] != null}"><span class="patient-summary-label">Nascimento:</span><span class="patient-summary-value" th:text="${patientSummary['dataNascimento']}"></span></div>
+                                <div class="patient-summary-item" th:if="${patientSummary['telefone'] != null}"><span class="patient-summary-label">Contato:</span><span class="patient-summary-value" th:text="${patientSummary['telefone']}"></span></div>
+                                <div class="patient-summary-item" th:if="${patientSummary['sexo'] != null}"><span class="patient-summary-label">Sexo:</span><span class="patient-summary-value" th:text="${patientSummary['sexo']}"></span></div>
+                                <div class="patient-summary-item" th:if="${patientSummary['idadeAparente'] != null}"><span class="patient-summary-label">Idade aparente:</span><span class="patient-summary-value" th:text="${patientSummary['idadeAparente']}"></span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form th:action="@{/ui/atendimentos/novo/atendimento/continuar}" method="post">
+                        <div class="form-row">
+                            <div class="form-group col-md-4">
+                                <label>Tipo de atendimento<span class="required-mark">*</span></label>
+                                <select class="form-control form-select chat-input" th:field="*{tipoAtendimento}">
+                                    <option th:each="t : ${tiposAtendimento}" th:value="${t}" th:text="${t}"></option>
+                                </select>
+                                <small class="text-danger" th:if="${wizardErrors['tipoAtendimento']}" th:text="${wizardErrors['tipoAtendimento']}"></small>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-sm">Continuar para entrada</button>
+                        <a th:href="@{/ui/atendimentos/novo(step=2)}" class="btn btn-secondary btn-sm">Voltar</a>
+                    </form>
+                </div>
+            </div>
+
+            <div class="wizard-pane" th:if="${wizard.currentStep == 4}" th:object="${wizard}">
+                <div class="wizard-pane-header">4. Ficha de entrada</div>
+                <div class="wizard-pane-body">
+                    <div class="patient-summary-card" th:if="${!#maps.isEmpty(patientSummary)}">
+                        <div class="patient-summary-header">Resumo do paciente</div>
+                        <div class="patient-summary-body">
+                            <div class="patient-summary-grid">
+                                <div class="patient-summary-item wide"><span class="patient-summary-label">Paciente:</span><span class="patient-summary-value" th:text="${patientSummary['nome']}"></span></div>
+                                <div class="patient-summary-item" th:if="${patientSummary['cpf'] != null}"><span class="patient-summary-label">CPF:</span><span class="patient-summary-value" th:text="${patientSummary['cpf']}"></span></div>
+                                <div class="patient-summary-item" th:if="${patientSummary['tipo'] != null}"><span class="patient-summary-label">Tipo:</span><span class="patient-summary-value" th:text="${patientSummary['tipo']}"></span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form th:action="@{/ui/atendimentos/novo/finalizar}" method="post">
+                        <div class="entry-block">
+                            <div class="entry-block-header">Identificacao da entrada</div>
+                            <div class="entry-block-body">
+                                <div class="form-row">
+                                    <div class="form-group col-md-3">
+                                        <label>Area da entrada<span class="required-mark">*</span></label>
+                                        <select class="form-control" th:field="*{entradaForm.areaId}">
+                                            <option value="">Selecione</option>
+                                            <option th:each="area : ${areasEntrada}" th:value="${area.id}" th:text="${area.nome}"></option>
+                                        </select>
+                                        <small class="text-danger" th:if="${wizardErrors['entradaForm.areaId']}" th:text="${wizardErrors['entradaForm.areaId']}"></small>
+                                    </div>
+                                    <div class="form-group col-md-3">
+                                        <label>Forma de chegada<span class="required-mark">*</span></label>
+                                        <select class="form-control" th:field="*{entradaForm.formaChegadaId}">
+                                            <option value="">Selecione</option>
+                                            <option th:each="item : ${formasChegada}" th:value="${item.id}" th:text="${item.descricao}"></option>
+                                        </select>
+                                        <small class="text-danger" th:if="${wizardErrors['entradaForm.formaChegadaId']}" th:text="${wizardErrors['entradaForm.formaChegadaId']}"></small>
+                                    </div>
+                                    <div class="form-group col-md-3">
+                                        <label>Motivo da entrada</label>
+                                        <select class="form-control" th:field="*{entradaForm.motivoEntradaId}">
+                                            <option value="">Selecione</option>
+                                            <option th:each="item : ${motivosEntrada}" th:value="${item.id}" th:text="${item.descricao}"></option>
+                                        </select>
+                                        <small class="text-danger" th:if="${wizardErrors['entradaForm.motivoEntradaId']}" th:text="${wizardErrors['entradaForm.motivoEntradaId']}"></small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="entry-block">
+                            <div class="entry-block-header">Procedencia</div>
+                            <div class="entry-block-body">
+                                <div class="form-row">
+                                    <div class="form-group col-md-3">
+                                        <label>Tipo de Procedencia<span class="required-mark">*</span></label>
+                                        <select class="form-control" th:field="*{entradaForm.tipoProcedenciaId}" id="wizardTipoProcedenciaId">
+                                            <option value="">Selecione</option>
+                                            <option th:each="item : ${tiposProcedenciaEntrada}" th:value="${item.id}" th:text="${item.descricao}"></option>
+                                        </select>
+                                        <small class="text-danger" th:if="${wizardErrors['entradaForm.tipoProcedenciaId']}" th:text="${wizardErrors['entradaForm.tipoProcedenciaId']}"></small>
+                                    </div>
+                                    <div class="form-group col-md-3" id="wizardProcedenciaGroup">
+                                        <label>Procedencia (Local onde estava)<span class="required-mark">*</span></label>
+                                        <select class="form-control" th:field="*{entradaForm.procedenciaId}" id="wizardProcedenciaId">
+                                            <option value="">Selecione</option>
+                                            <option th:each="item : ${procedenciasEntrada}"
+                                                    th:value="${item.id}"
+                                                    th:text="${item.descricao}"
+                                                    th:attr="data-tipo-id=${item.tipoProcedenciaId}"></option>
+                                        </select>
+                                        <small class="text-danger" th:if="${wizardErrors['entradaForm.procedenciaId']}" th:text="${wizardErrors['entradaForm.procedenciaId']}"></small>
+                                    </div>
+                                    <div class="form-group col-md-3" id="wizardBairroGroup" style="display:none;">
+                                        <label>Procedencia (Local onde estava)<span class="required-mark">*</span></label>
+                                        <select class="form-control" th:field="*{entradaForm.procedenciaBairroId}" id="wizardProcedenciaBairroId">
+                                            <option value="">Selecione</option>
+                                            <option th:each="item : ${bairrosEntrada}" th:value="${item.id}" th:text="${item.descricao}"></option>
+                                        </select>
+                                        <small class="text-danger" th:if="${wizardErrors['entradaForm.procedenciaBairroId']}" th:text="${wizardErrors['entradaForm.procedenciaBairroId']}"></small>
+                                    </div>
+                                    <div class="form-group col-md-3" id="wizardCidadeGroup" style="display:none;">
+                                        <label>UF</label>
+                                        <select class="form-control mb-2" th:field="*{entradaForm.procedenciaCidadeUfId}" id="wizardProcedenciaCidadeUfId">
+                                            <option value="">Selecione</option>
+                                            <option th:each="item : ${ufsEntrada}" th:value="${item.id}" th:text="${item.nome + ' - ' + item.sigla}"></option>
+                                        </select>
+                                        <label>Cidade<span class="required-mark">*</span></label>
+                                        <select class="form-control" th:field="*{entradaForm.procedenciaCidadeId}" id="wizardProcedenciaCidadeId">
+                                            <option value="">Selecione</option>
+                                            <option th:each="item : ${cidadesEntrada}"
+                                                    th:value="${item.id}"
+                                                    th:text="${item.descricao}"
+                                                    th:attr="data-uf-id=${item.relacionamentoId}"></option>
+                                        </select>
+                                        <small class="text-danger" th:if="${wizardErrors['entradaForm.procedenciaCidadeId']}" th:text="${wizardErrors['entradaForm.procedenciaCidadeId']}"></small>
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group col-md-12">
+                                        <label>Procedencia (Observacao)</label>
+                                        <input class="form-control" type="text" th:field="*{entradaForm.procedenciaObservacao}">
+                                        <small class="text-danger" th:if="${wizardErrors['entradaForm.procedenciaObservacao']}" th:text="${wizardErrors['entradaForm.procedenciaObservacao']}"></small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="entry-block">
+                            <div class="entry-block-header">Situacao ocupacional e profissao</div>
+                            <div class="entry-block-body">
+                                <div class="form-row">
+                                    <div class="form-group col-md-4">
+                                        <label>Situacao ocupacional</label>
+                                        <select class="form-control" th:field="*{entradaForm.situacaoOcupacionalId}">
+                                            <option value="">Selecione</option>
+                                            <option th:each="item : ${situacoesOcupacionais}" th:value="${item.id}" th:text="${item.descricao}"></option>
+                                        </select>
+                                        <small class="text-danger" th:if="${wizardErrors['entradaForm.situacaoOcupacionalId']}" th:text="${wizardErrors['entradaForm.situacaoOcupacionalId']}"></small>
+                                    </div>
+                                    <div class="form-group col-md-4">
+                                        <label>Profissao</label>
+                                        <select class="form-control" th:field="*{entradaForm.profissaoId}">
+                                            <option value="">Selecione</option>
+                                            <option th:each="item : ${profissoes}" th:value="${item.id}" th:text="${item.descricao}"></option>
+                                        </select>
+                                        <small class="text-danger" th:if="${wizardErrors['entradaForm.profissaoId']}" th:text="${wizardErrors['entradaForm.profissaoId']}"></small>
+                                    </div>
+                                    <div class="form-group col-md-4">
+                                        <label>Tempo de servico</label>
+                                        <input class="form-control" type="text" th:field="*{entradaForm.tempoServico}">
+                                        <small class="text-danger" th:if="${wizardErrors['entradaForm.tempoServico']}" th:text="${wizardErrors['entradaForm.tempoServico']}"></small>
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group col-md-12">
+                                        <label>Profissao (observacao)</label>
+                                        <input class="form-control" type="text" th:field="*{entradaForm.profissaoObservacao}">
+                                        <small class="text-danger" th:if="${wizardErrors['entradaForm.profissaoObservacao']}" th:text="${wizardErrors['entradaForm.profissaoObservacao']}"></small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="entry-block">
+                            <div class="entry-block-header">Comunicante</div>
+                            <div class="entry-block-body">
+                                <div class="form-row">
+                                    <div class="form-group col-md-3">
+                                        <label>Grau de parentesco</label>
+                                        <select class="form-control" th:field="*{entradaForm.grauParentescoId}">
+                                            <option value="">Selecione</option>
+                                            <option th:each="item : ${grausParentesco}" th:value="${item.id}" th:text="${item.descricao}"></option>
+                                        </select>
+                                        <small class="text-danger" th:if="${wizardErrors['entradaForm.grauParentescoId']}" th:text="${wizardErrors['entradaForm.grauParentescoId']}"></small>
+                                    </div>
+                                    <div class="form-group col-md-6">
+                                        <label>Nome do comunicante</label>
+                                        <input class="form-control" type="text" th:field="*{entradaForm.comunicante}">
+                                        <small class="text-danger" th:if="${wizardErrors['entradaForm.comunicante']}" th:text="${wizardErrors['entradaForm.comunicante']}"></small>
+                                    </div>
+                                    <div class="form-group col-md-3">
+                                        <label>Telefone do comunicante</label>
+                                        <input class="form-control" type="text" th:field="*{entradaForm.telefoneComunicante}">
+                                        <small class="text-danger" th:if="${wizardErrors['entradaForm.telefoneComunicante']}" th:text="${wizardErrors['entradaForm.telefoneComunicante']}"></small>
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group col-md-12">
+                                        <label>Identificacao complementar do comunicante</label>
+                                        <textarea class="form-control" rows="2" th:field="*{entradaForm.informacaoAdChegada}"></textarea>
+                                        <small class="text-danger" th:if="${wizardErrors['entradaForm.informacaoAdChegada']}" th:text="${wizardErrors['entradaForm.informacaoAdChegada']}"></small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="entry-block">
+                            <div class="entry-block-header">Informacoes complementares</div>
+                            <div class="entry-block-body">
+                                <div class="form-row">
+                                    <div class="form-group col-md-12">
+                                        <label>Observacoes</label>
+                                        <textarea class="form-control" rows="2" th:field="*{entradaForm.observacoes}"></textarea>
+                                        <small class="text-danger" th:if="${wizardErrors['entradaForm.observacoes']}" th:text="${wizardErrors['entradaForm.observacoes']}"></small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-sm">Finalizar atendimento e entrada</button>
+                        <a th:href="@{/ui/atendimentos/novo(step=3)}" class="btn btn-secondary btn-sm">Voltar</a>
+                        <a th:href="@{/ui/atendimentos/novo(restart=true)}" class="btn btn-outline-secondary btn-sm">Reiniciar fluxo</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                function onlyDigits(value) {
+                    return (value || '').replace(/\D/g, '');
+                }
+
+                function maskCpf(value) {
+                    var digits = onlyDigits(value).slice(0, 11);
+                    if (digits.length > 9) {
+                        return digits.replace(/(\d{3})(\d{3})(\d{3})(\d{0,2})/, '$1.$2.$3-$4').replace(/-$/, '');
+                    }
+                    if (digits.length > 6) {
+                        return digits.replace(/(\d{3})(\d{3})(\d{0,3})/, '$1.$2.$3').replace(/\.$/, '');
+                    }
+                    if (digits.length > 3) {
+                        return digits.replace(/(\d{3})(\d{0,3})/, '$1.$2').replace(/\.$/, '');
+                    }
+                    return digits;
+                }
+
+                function maskCep(value) {
+                    var digits = onlyDigits(value).slice(0, 8);
+                    if (digits.length > 5) {
+                        return digits.replace(/(\d{5})(\d{0,3})/, '$1-$2').replace(/-$/, '');
+                    }
+                    return digits;
+                }
+
+                function maskPhone(value) {
+                    var digits = onlyDigits(value).slice(0, 11);
+                    if (digits.length > 10) {
+                        return digits.replace(/(\d{2})(\d{5})(\d{0,4})/, '($1) $2-$3').replace(/-$/, '');
+                    }
+                    if (digits.length > 6) {
+                        return digits.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3').replace(/-$/, '');
+                    }
+                    if (digits.length > 2) {
+                        return digits.replace(/(\d{2})(\d{0,5})/, '($1) $2');
+                    }
+                    return digits;
+                }
+
+                function bindMask(selector, formatter) {
+                    document.querySelectorAll(selector).forEach(function (element) {
+                        var apply = function () {
+                            element.value = formatter(element.value);
+                        };
+                        element.addEventListener('input', apply);
+                        apply();
+                    });
+                }
+
+                bindMask('.js-mask-cpf', maskCpf);
+                bindMask('.js-mask-cep', maskCep);
+                bindMask('.js-mask-phone', maskPhone);
+
+                function bindTipoProcedencia(tipoIdSelector, procedenciaSelector, bairroSelector, cidadeUfSelector, cidadeSelector, procedenciaGroupSelector, bairroGroupSelector, cidadeGroupSelector) {
+                    var tipoSelect = document.getElementById(tipoIdSelector);
+                    var procedenciaSelect = document.getElementById(procedenciaSelector);
+                    var bairroSelect = document.getElementById(bairroSelector);
+                    var cidadeUfSelect = document.getElementById(cidadeUfSelector);
+                    var cidadeSelect = document.getElementById(cidadeSelector);
+                    var procedenciaGroup = document.getElementById(procedenciaGroupSelector);
+                    var bairroGroup = document.getElementById(bairroGroupSelector);
+                    var cidadeGroup = document.getElementById(cidadeGroupSelector);
+                    var cidadesCache = cidadeSelect
+                        ? Array.from(cidadeSelect.options)
+                            .slice(1)
+                            .map(function (option) {
+                                return {
+                                    value: option.value,
+                                    label: option.textContent,
+                                    ufId: option.getAttribute('data-uf-id')
+                                };
+                            })
+                        : [];
+                    if (!tipoSelect) {
+                        return;
+                    }
+
+                    function refreshProcedencias() {
+                        if (!procedenciaSelect) {
+                            return;
+                        }
+                        var tipoId = tipoSelect.value;
+                        Array.from(procedenciaSelect.options).forEach(function (option, index) {
+                            if (index === 0) {
+                                option.hidden = false;
+                                return;
+                            }
+                            option.hidden = !!tipoId && option.getAttribute('data-tipo-id') !== tipoId;
+                        });
+                        if (procedenciaSelect.selectedOptions.length && procedenciaSelect.selectedOptions[0].hidden) {
+                            procedenciaSelect.value = '';
+                        }
+                    }
+
+                    function refreshCidades() {
+                        if (!cidadeUfSelect || !cidadeSelect) {
+                            return;
+                        }
+                        var ufId = cidadeUfSelect.value;
+                        var selectedCidadeId = cidadeSelect.value;
+                        cidadeSelect.innerHTML = '<option value="">Selecione</option>';
+                        cidadesCache.forEach(function (item) {
+                            if (ufId && item.ufId !== ufId) {
+                                return;
+                            }
+                            var option = document.createElement('option');
+                            option.value = item.value;
+                            option.textContent = item.label;
+                            if (selectedCidadeId && selectedCidadeId === item.value) {
+                                option.selected = true;
+                            }
+                            cidadeSelect.appendChild(option);
+                        });
+                    }
+
+                    function toggleFields() {
+                        var isBairro = tipoSelect.value === '2';
+                        var isCidade = tipoSelect.value === '3';
+                        if (procedenciaGroup) {
+                            procedenciaGroup.style.display = (isBairro || isCidade) ? 'none' : '';
+                        }
+                        if (bairroGroup) {
+                            bairroGroup.style.display = isBairro ? '' : 'none';
+                        }
+                        if (cidadeGroup) {
+                            cidadeGroup.style.display = isCidade ? '' : 'none';
+                        }
+                        if (isBairro && procedenciaSelect) {
+                            procedenciaSelect.value = '';
+                        }
+                        if (!isBairro && bairroSelect) {
+                            bairroSelect.value = '';
+                        }
+                        if (!isCidade && cidadeSelect) {
+                            cidadeSelect.value = '';
+                        }
+                        if (!isCidade && cidadeUfSelect) {
+                            cidadeUfSelect.value = '';
+                        }
+                        refreshProcedencias();
+                        refreshCidades();
+                    }
+
+                    toggleFields();
+                    tipoSelect.addEventListener('change', toggleFields);
+                    if (cidadeUfSelect) {
+                        refreshCidades();
+                        cidadeUfSelect.addEventListener('change', refreshCidades);
+                    }
+                }
+
+                bindTipoProcedencia('wizardTipoProcedenciaId', 'wizardProcedenciaId', 'wizardProcedenciaBairroId', 'wizardProcedenciaCidadeUfId', 'wizardProcedenciaCidadeId', 'wizardProcedenciaGroup', 'wizardBairroGroup', 'wizardCidadeGroup');
+
+                var ufSelect = document.getElementById('unidadeFederativaId');
+                var cidadeSelect = document.getElementById('cidadeId');
+                var cpfInput = document.getElementById('cpf');
+                var cepInput = document.getElementById('cep');
+                var cnsInput = document.getElementById('cns');
+                var rgInput = document.getElementById('rg');
+                var nomeInput = document.getElementById('nome');
+                var nomeMaeInput = document.getElementById('nomeMae');
+                var nomePaiInput = document.getElementById('nomePai');
+                var sexoInput = document.getElementById('sexo');
+                var racaCorInput = document.getElementById('racaCorId');
+                var dataNascimentoInput = document.getElementById('dataNascimento');
+                var emailInput = document.getElementById('email');
+                var numeroInput = document.getElementById('numero');
+                var logradouroInput = document.getElementById('logradouro');
+                var bairroInput = document.getElementById('bairro');
+                var complementoInput = document.getElementById('complemento');
+                var cpfFeedback = document.getElementById('cpfFeedback');
+                var cepFeedback = document.getElementById('cepFeedback');
+
+                function resetCidades() {
+                    if (!cidadeSelect) {
+                        return;
+                    }
+                    cidadeSelect.innerHTML = '<option value="">Selecione</option>';
+                }
+
+                function loadCidades(ufId, selectedCidadeId) {
+                    resetCidades();
+                    if (!ufId || !cidadeSelect) {
+                        return;
+                    }
+                    fetch('/ui/pacientes/cidades-por-uf/' + ufId)
+                        .then(function (response) { return response.json(); })
+                        .then(function (items) {
+                            items.forEach(function (item) {
+                                var option = document.createElement('option');
+                                option.value = item.id;
+                                option.textContent = item.descricao;
+                                if (selectedCidadeId && String(selectedCidadeId) === String(item.id)) {
+                                    option.selected = true;
+                                }
+                                cidadeSelect.appendChild(option);
+                            });
+                        });
+                }
+
+                function setCepFeedback(message, isError) {
+                    if (!cepFeedback) {
+                        return;
+                    }
+                    cepFeedback.textContent = message || '';
+                    cepFeedback.classList.toggle('text-danger', !!isError);
+                    cepFeedback.classList.toggle('text-muted', !isError);
+                }
+
+                function setCpfFeedback(message, isError) {
+                    if (!cpfFeedback) {
+                        return;
+                    }
+                    cpfFeedback.textContent = message || '';
+                    cpfFeedback.classList.toggle('text-danger', !!isError);
+                    cpfFeedback.classList.toggle('text-muted', !isError);
+                }
+
+                function applyCepData(data) {
+                    if (logradouroInput && data.logradouro) { logradouroInput.value = data.logradouro; }
+                    if (bairroInput && data.bairro) { bairroInput.value = data.bairro; }
+                    if (complementoInput && data.complemento) { complementoInput.value = data.complemento; }
+                    if (ufSelect && data.unidadeFederativaId) {
+                        ufSelect.value = String(data.unidadeFederativaId);
+                        loadCidades(data.unidadeFederativaId, data.cidadeId);
+                    }
+                }
+
+                function applyCpfData(data) {
+                    if (cnsInput && data.cns) { cnsInput.value = data.cns; }
+                    if (rgInput && data.rg) { rgInput.value = data.rg; }
+                    if (nomeInput && data.nome) { nomeInput.value = data.nome; }
+                    if (nomeMaeInput && data.nomeMae) { nomeMaeInput.value = data.nomeMae; }
+                    if (nomePaiInput && data.nomePai) { nomePaiInput.value = data.nomePai; }
+                    if (sexoInput && data.sexo) { sexoInput.value = data.sexo; }
+                    if (racaCorInput && data.racaCorId) { racaCorInput.value = String(data.racaCorId); }
+                    if (dataNascimentoInput && data.dataNascimento) { dataNascimentoInput.value = data.dataNascimento; }
+                    if (emailInput && data.email) { emailInput.value = data.email.replace(/^mailto:/i, ''); }
+                    if (cepInput && data.cep) { cepInput.value = maskCep(data.cep); }
+                    if (logradouroInput && data.logradouro) { logradouroInput.value = data.logradouro; }
+                    if (numeroInput && data.numero) { numeroInput.value = data.numero; }
+                    if (complementoInput && data.complemento) { complementoInput.value = data.complemento; }
+                    if (bairroInput && data.bairro) { bairroInput.value = data.bairro; }
+                    if (ufSelect && data.unidadeFederativaId) {
+                        ufSelect.value = String(data.unidadeFederativaId);
+                        loadCidades(data.unidadeFederativaId, data.cidadeId);
+                    }
+                }
+
+                function lookupCep() {
+                    if (!cepInput) {
+                        return;
+                    }
+                    var cep = onlyDigits(cepInput.value);
+                    if (!cep) {
+                        setCepFeedback('', false);
+                        return;
+                    }
+                    if (cep.length !== 8) {
+                        setCepFeedback('CEP invalido. Informe 8 digitos.', true);
+                        return;
+                    }
+                    setCepFeedback('Consultando CEP...', false);
+                    fetch('/ui/pacientes/cep/' + cep)
+                        .then(function (response) {
+                            return response.json().then(function (data) {
+                                return { ok: response.ok, data: data };
+                            });
+                        })
+                        .then(function (result) {
+                            if (!result.ok) {
+                                setCepFeedback(result.data.message || 'Nao foi possivel consultar o CEP.', true);
+                                return;
+                            }
+                            applyCepData(result.data);
+                            setCepFeedback('Endereco preenchido a partir do CEP.', false);
+                        })
+                        .catch(function () {
+                            setCepFeedback('Falha ao consultar CEP.', true);
+                        });
+                }
+
+                function lookupCpf() {
+                    if (!cpfInput) {
+                        return;
+                    }
+                    var cpf = onlyDigits(cpfInput.value);
+                    if (!cpf) {
+                        setCpfFeedback('', false);
+                        return;
+                    }
+                    if (cpf.length !== 11) {
+                        setCpfFeedback('CPF invalido. Informe 11 digitos.', true);
+                        return;
+                    }
+                    setCpfFeedback('Consultando CADSUS...', false);
+                    fetch('/ui/pacientes/cpf/' + cpf + '/cadsus')
+                        .then(function (response) {
+                            return response.json().then(function (data) {
+                                return { ok: response.ok, data: data };
+                            });
+                        })
+                        .then(function (result) {
+                            if (!result.ok) {
+                                setCpfFeedback(result.data.message || 'Nao foi possivel consultar o CADSUS.', true);
+                                return;
+                            }
+                            applyCpfData(result.data);
+                            setCpfFeedback('Cadastro preenchido a partir do CADSUS.', false);
+                        })
+                        .catch(function () {
+                            setCpfFeedback('Falha ao consultar CADSUS.', true);
+                        });
+                }
+
+                if (ufSelect && cidadeSelect) {
+                    var selectedCidadeId = cidadeSelect.value;
+                    if (ufSelect.value) {
+                        loadCidades(ufSelect.value, selectedCidadeId);
+                    }
+                    ufSelect.addEventListener('change', function () {
+                        loadCidades(this.value, null);
+                    });
+                }
+
+                if (cepInput) {
+                    cepInput.addEventListener('blur', lookupCep);
+                }
+                if (cpfInput) {
+                    cpfInput.addEventListener('blur', lookupCpf);
+                }
+            });
+        </script>
+    </section>
+</th:block>
+</body>
+</html>

@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <title>Guia Keycloak HIS</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 32px; line-height: 1.4; }
+    h1, h2 { color: #222; }
+    code, pre { font-family: Menlo, Consolas, monospace; }
+    pre { background: #f5f5f5; padding: 12px; border: 1px solid #ddd; white-space: pre-wrap; }
+    ul, ol { margin-top: 6px; }
+  </style>
+</head>
+<body>
+  <h1>Guia de Configuracao Keycloak no HIS</h1>
+
+  <h2>1. Como subir o Keycloak com Docker</h2>
+  <p>Para ambiente local, a forma mais simples e padrao e usar Docker.</p>
+  <p>Comando:</p>
+  <pre>docker run --name keycloak-his ^
+  -p 8081:8080 ^
+  -e KC_BOOTSTRAP_ADMIN_USERNAME=admin ^
+  -e KC_BOOTSTRAP_ADMIN_PASSWORD=admin ^
+  quay.io/keycloak/keycloak:26.1.0 start-dev</pre>
+  <p>No macOS/Linux, o mesmo comando fica:</p>
+  <pre>docker run --name keycloak-his \
+  -p 8081:8080 \
+  -e KC_BOOTSTRAP_ADMIN_USERNAME=admin \
+  -e KC_BOOTSTRAP_ADMIN_PASSWORD=admin \
+  quay.io/keycloak/keycloak:26.1.0 start-dev</pre>
+  <p>Depois disso, acessar:</p>
+  <pre>http://localhost:8081</pre>
+  <p>Login inicial:</p>
+  <pre>usuario: admin
+senha: admin</pre>
+
+  <h2>2. O que precisa configurar no Keycloak</h2>
+  <p>O foco principal nao e o HIS, e sim deixar o Keycloak pronto para o HIS autenticar e para a Admin API funcionar.</p>
+
+  <h2>3. Realm</h2>
+  <p>Para ambiente local simples, pode usar o realm <code>master</code>, que e o padrao atual do HIS.</p>
+  <p>Se quiser organizar melhor depois, pode criar um realm proprio, por exemplo <code>his</code>.</p>
+  <p>Para iniciar rapido, use:</p>
+  <pre>Realm: master</pre>
+
+  <h2>4. Criar o client do HIS</h2>
+  <ol>
+    <li>Entrar no Keycloak.</li>
+    <li>Entrar no realm <code>master</code>.</li>
+    <li>Ir em <code>Clients</code>.</li>
+    <li>Clicar em <code>Create client</code>.</li>
+    <li>Preencher:</li>
+  </ol>
+  <pre>Client type: OpenID Connect
+Client ID: his-web</pre>
+  <ol start="6">
+    <li>Salvar.</li>
+  </ol>
+
+  <h2>5. Configurar o client his-web</h2>
+  <p>Depois de criar, configurar o client assim:</p>
+  <pre>Client authentication: ON
+Authorization: OFF
+Standard flow: ON
+Direct access grants: OFF
+Implicit flow: OFF
+Service accounts roles: ON</pre>
+  <p>Esses pontos sao importantes porque:</p>
+  <ul>
+    <li>o HIS faz login web via OIDC</li>
+    <li>o HIS usa <code>client_secret</code></li>
+    <li>o HIS usa Admin API com <code>client_credentials</code></li>
+  </ul>
+
+  <h2>6. Configurar roles da service account do client</h2>
+  <p>Depois de salvar o client <code>his-web</code>:</p>
+  <ol>
+    <li>Clicar em <code>Service account roles</code> ou no ponto equivalente da versao atual do Keycloak.</li>
+    <li>Clicar em <code>Assign role</code>.</li>
+    <li>Trocar o filtro para <code>Filter by clients</code>.</li>
+    <li>Adicionar os papeis do client <code>realm-management</code>:</li>
+  </ol>
+  <pre>realm-management -> manage-users
+realm-management -> view-users</pre>
+  <p>Opcional, mas recomendado:</p>
+  <pre>realm-management -> query-users</pre>
+  <p>Sem isso, a Admin API do HIS pode autenticar, mas falhar ao consultar ou criar usuarios.</p>
+
+  <h2>7. Configurar URLs do client</h2>
+  <p>No client <code>his-web</code>, configurar:</p>
+  <pre>Root URL: http://localhost:8080
+Home URL: http://localhost:8080/ui/home
+Valid redirect URIs: http://localhost:8080/login/oauth2/code/keycloak
+Opcional para ambiente local mais flexivel: http://localhost:8080/*
+Valid post logout redirect URIs: http://localhost:8080/*
+Web origins: http://localhost:8080</pre>
+  <p>Para o HIS atual, a URI mais precisa e recomendada e:</p>
+  <pre>http://localhost:8080/login/oauth2/code/keycloak</pre>
+  <p>Se quiser seguir o mesmo padrao mais amplo do seu documento antigo, pode adicionar tambem:</p>
+  <pre>http://localhost:8080/*</pre>
+
+  <h2>8. Copiar o client secret</h2>
+  <ol>
+    <li>Abrir o client <code>his-web</code>.</li>
+    <li>Ir em <code>Credentials</code>.</li>
+    <li>Copiar o secret gerado.</li>
+  </ol>
+  <p>Esse secret sera usado pelo HIS para:</p>
+  <ul>
+    <li>login web OIDC</li>
+    <li>Admin API</li>
+  </ul>
+
+  <h2>9. Criar usuarios no Keycloak</h2>
+  <ol>
+    <li>Ir em <code>Users</code>.</li>
+    <li>Clicar em <code>Add user</code>.</li>
+    <li>Preencher ao menos:</li>
+  </ol>
+  <pre>Username
+Email (opcional)
+Enabled = ON</pre>
+  <ol start="4">
+    <li>Salvar.</li>
+    <li>Ir em <code>Credentials</code>.</li>
+    <li>Definir senha.</li>
+  </ol>
+  <p>Observacao: o HIS cria e sincroniza o usuario local pelo <code>keycloakId</code>, mas o login primeiro precisa existir no Keycloak.</p>
+
+  <h2>10. O que o HIS espera do Keycloak</h2>
+  <p>Ao autenticar, o HIS usa:</p>
+  <ul>
+    <li><code>sub</code></li>
+    <li><code>preferred_username</code></li>
+    <li><code>email</code></li>
+  </ul>
+  <p>Depois disso, o usuario ainda precisa de vinculo local no HIS com:</p>
+  <ul>
+    <li>unidade</li>
+    <li>perfil</li>
+  </ul>
+
+  <h2>11. Configuracoes do HIS</h2>
+  <p>Essas configuracoes do HIS ja existem no projeto, mas para referencia os valores principais sao:</p>
+  <pre>KEYCLOAK_ISSUER_URI=http://localhost:8081/realms/master
+KEYCLOAK_CLIENT_ID=his-web
+KEYCLOAK_CLIENT_SECRET=SEU_CLIENT_SECRET
+HIS_KEYCLOAK_ADMIN_ENABLED=true
+HIS_KEYCLOAK_ADMIN_SERVER_URL=http://localhost:8081
+HIS_KEYCLOAK_ADMIN_REALM=master
+HIS_KEYCLOAK_ADMIN_CLIENT_ID=his-web
+HIS_KEYCLOAK_ADMIN_CLIENT_SECRET=SEU_CLIENT_SECRET</pre>
+
+  <h2>12. Checklist final</h2>
+  <ol>
+    <li>Subiu o Keycloak com Docker.</li>
+    <li>Conseguiu entrar com <code>admin/admin</code>.</li>
+    <li>Usou o realm <code>master</code>.</li>
+    <li>Criou o client <code>his-web</code>.</li>
+    <li>Ligou <code>Client authentication</code>.</li>
+    <li>Ligou <code>Service accounts roles</code>.</li>
+    <li>Associou as roles de <code>realm-management</code> para a service account.</li>
+    <li>Configurou a redirect URI do HIS.</li>
+    <li>Copiou o secret.</li>
+    <li>Subiu o HIS.</li>
+    <li>Testou login em <code>http://localhost:8080</code>.</li>
+  </ol>
+
+  <h2>13. Erros comuns</h2>
+  <ul>
+    <li><strong>client_credentials recusado</strong>: normalmente <code>Service accounts roles</code> esta desligado ou o secret esta errado.</li>
+    <li><strong>403 ao consultar ou criar usuarios</strong>: normalmente faltam roles como <code>manage-users</code> e <code>view-users</code> no client.</li>
+    <li><strong>invalid redirect_uri</strong>: a URI <code>http://localhost:8080/login/oauth2/code/keycloak</code> nao foi cadastrada.</li>
+    <li><strong>login funciona, mas o usuario nao entra no HIS</strong>: faltam vinculos locais no banco do HIS.</li>
+    <li><strong>realm errado</strong>: o HIS esta apontando para um realm diferente.</li>
+  </ul>
+</body>
+</html>

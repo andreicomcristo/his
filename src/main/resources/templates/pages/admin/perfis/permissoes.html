@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout('Administracao - Permissoes do Perfil', ~{::content})}">
+<th:block th:fragment="content">
+    <div class="main-card mb-3 card">
+        <div class="card-body">
+            <h5 class="card-title">Permissoes do perfil <span th:text="${perfil.nome}"></span></h5>
+
+            <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+            <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
+
+            <form th:action="@{'/ui/admin/perfis/' + ${perfil.id} + '/permissoes'}" method="post">
+                <div class="form-group" th:each="perm : ${permissoes}">
+                    <div class="custom-checkbox custom-control">
+                        <input type="checkbox" class="custom-control-input"
+                               th:id="${'perm_' + perm.id}" name="permissaoIds"
+                               th:value="${perm.id}" th:checked="${selectedIds.contains(perm.id)}">
+                        <label class="custom-control-label" th:for="${'perm_' + perm.id}"
+                               th:text="${perm.nome}"></label>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary btn-sm" type="submit">Salvar permissoes</button>
+                <a th:href="@{/ui/admin/perfis}" class="btn btn-outline-secondary btn-sm">Voltar</a>
+            </form>
+        </div>
+    </div>
+</th:block>
+</html>

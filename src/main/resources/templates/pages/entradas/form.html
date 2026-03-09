@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:replace="~{layout/base :: layout('HIS | Entrada', ~{::section})}">
+    <section>
+        <style>
+            .required-mark {
+                color: #d92550;
+                margin-left: 2px;
+                font-weight: 700;
+            }
+
+            .entry-block {
+                border: 1px solid #d8dbe2;
+                border-radius: 6px;
+                overflow: hidden;
+                background: #fff;
+                margin-bottom: 24px;
+            }
+
+            .entry-block-header {
+                background: #f7f7f8;
+                padding: 14px 18px;
+                font-size: 1.15rem;
+                font-weight: 600;
+                color: #374151;
+                border-bottom: 1px solid #e5e7eb;
+            }
+
+            .entry-block-body {
+                padding: 18px;
+            }
+        </style>
+        <div class="main-card card">
+            <div class="card-body">
+                <h5 class="card-title">
+                    Entrada do atendimento #<span th:text="${atendimentoId}"></span>
+                </h5>
+
+                <div class="alert alert-success" th:if="${successMessage}" th:text="${successMessage}"></div>
+                <div class="alert alert-danger" th:if="${errorMessage}" th:text="${errorMessage}"></div>
+
+                <form th:action="@{${formAction}}"
+                      method="post"
+                      th:object="${form}">
+                    <div class="entry-block">
+                        <div class="entry-block-header">Identificacao da entrada</div>
+                        <div class="entry-block-body">
+                            <div class="form-row">
+                                <div class="form-group col-md-3">
+                                    <label>Area da entrada<span class="required-mark">*</span></label>
+                                    <select class="form-control" th:field="*{areaId}">
+                                        <option value="">Selecione</option>
+                                        <option th:each="area : ${areasEntrada}" th:value="${area.id}" th:text="${area.nome}"></option>
+                                    </select>
+                                    <small class="text-danger" th:errors="*{areaId}"></small>
+                                </div>
+                                <div class="form-group col-md-3">
+                                    <label>Forma de chegada<span class="required-mark">*</span></label>
+                                    <select class="form-control" th:field="*{formaChegadaId}">
+                                        <option value="">Selecione</option>
+                                        <option th:each="item : ${formasChegada}" th:value="${item.id}" th:text="${item.descricao}"></option>
+                                    </select>
+                                    <small class="text-danger" th:errors="*{formaChegadaId}"></small>
+                                </div>
+                                <div class="form-group col-md-3">
+                                    <label>Motivo da entrada</label>
+                                    <select class="form-control" th:field="*{motivoEntradaId}">
+                                        <option value="">Selecione</option>
+                                        <option th:each="item : ${motivosEntrada}" th:value="${item.id}" th:text="${item.descricao}"></option>
+                                    </select>
+                                    <small class="text-danger" th:errors="*{motivoEntradaId}"></small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="entry-block">
+                        <div class="entry-block-header">Procedencia</div>
+                        <div class="entry-block-body">
+                            <div class="form-row">
+                                <div class="form-group col-md-3">
+                                    <label>Tipo de Procedencia<span class="required-mark">*</span></label>
+                                    <select class="form-control" th:field="*{tipoProcedenciaId}" id="tipoProcedenciaId">
+                                        <option value="">Selecione</option>
+                                        <option th:each="item : ${tiposProcedenciaEntrada}" th:value="${item.id}" th:text="${item.descricao}"></option>
+                                    </select>
+                                    <small class="text-danger" th:errors="*{tipoProcedenciaId}"></small>
+                                </div>
+                                <div class="form-group col-md-3" id="procedenciaGroup">
+                                    <label>Procedencia (Local onde estava)<span class="required-mark">*</span></label>
+                                    <select class="form-control" th:field="*{procedenciaId}" id="procedenciaId">
+                                        <option value="">Selecione</option>
+                                        <option th:each="item : ${procedenciasEntrada}"
+                                                th:value="${item.id}"
+                                                th:text="${item.descricao}"
+                                                th:attr="data-tipo-id=${item.tipoProcedenciaId}"></option>
+                                    </select>
+                                    <small class="text-danger" th:errors="*{procedenciaId}"></small>
+                                </div>
+                                <div class="form-group col-md-3" id="bairroGroup" style="display:none;">
+                                    <label>Procedencia (Local onde estava)<span class="required-mark">*</span></label>
+                                    <select class="form-control" th:field="*{procedenciaBairroId}" id="procedenciaBairroId">
+                                        <option value="">Selecione</option>
+                                        <option th:each="item : ${bairrosEntrada}" th:value="${item.id}" th:text="${item.descricao}"></option>
+                                    </select>
+                                    <small class="text-danger" th:errors="*{procedenciaBairroId}"></small>
+                                </div>
+                                <div class="form-group col-md-3" id="cidadeGroup" style="display:none;">
+                                    <label>UF</label>
+                                    <select class="form-control mb-2" th:field="*{procedenciaCidadeUfId}" id="procedenciaCidadeUfId">
+                                        <option value="">Selecione</option>
+                                        <option th:each="item : ${ufsEntrada}" th:value="${item.id}" th:text="${item.nome + ' - ' + item.sigla}"></option>
+                                    </select>
+                                    <label>Cidade<span class="required-mark">*</span></label>
+                                    <select class="form-control" th:field="*{procedenciaCidadeId}" id="procedenciaCidadeId">
+                                        <option value="">Selecione</option>
+                                        <option th:each="item : ${cidadesEntrada}"
+                                                th:value="${item.id}"
+                                                th:text="${item.descricao}"
+                                                th:attr="data-uf-id=${item.relacionamentoId}"></option>
+                                    </select>
+                                    <small class="text-danger" th:errors="*{procedenciaCidadeId}"></small>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group col-md-12">
+                                    <label>Procedencia (Observacao)</label>
+                                    <input class="form-control" type="text" th:field="*{procedenciaObservacao}">
+                                    <small class="text-danger" th:errors="*{procedenciaObservacao}"></small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="entry-block">
+                        <div class="entry-block-header">Situacao ocupacional e profissao</div>
+                        <div class="entry-block-body">
+                            <div class="form-row">
+                                <div class="form-group col-md-4">
+                                    <label>Situacao ocupacional</label>
+                                    <select class="form-control" th:field="*{situacaoOcupacionalId}">
+                                        <option value="">Selecione</option>
+                                        <option th:each="item : ${situacoesOcupacionais}" th:value="${item.id}" th:text="${item.descricao}"></option>
+                                    </select>
+                                    <small class="text-danger" th:errors="*{situacaoOcupacionalId}"></small>
+                                </div>
+                                <div class="form-group col-md-4">
+                                    <label>Profissao</label>
+                                    <select class="form-control" th:field="*{profissaoId}">
+                                        <option value="">Selecione</option>
+                                        <option th:each="item : ${profissoes}" th:value="${item.id}" th:text="${item.descricao}"></option>
+                                    </select>
+                                    <small class="text-danger" th:errors="*{profissaoId}"></small>
+                                </div>
+                                <div class="form-group col-md-4">
+                                    <label>Tempo de servico</label>
+                                    <input class="form-control" type="text" th:field="*{tempoServico}">
+                                    <small class="text-danger" th:errors="*{tempoServico}"></small>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group col-md-12">
+                                    <label>Profissao (observacao)</label>
+                                    <input class="form-control" type="text" th:field="*{profissaoObservacao}">
+                                    <small class="text-danger" th:errors="*{profissaoObservacao}"></small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="entry-block">
+                        <div class="entry-block-header">Comunicante</div>
+                        <div class="entry-block-body">
+                            <div class="form-row">
+                                <div class="form-group col-md-3">
+                                    <label>Grau de parentesco</label>
+                                    <select class="form-control" th:field="*{grauParentescoId}">
+                                        <option value="">Selecione</option>
+                                        <option th:each="item : ${grausParentesco}" th:value="${item.id}" th:text="${item.descricao}"></option>
+                                    </select>
+                                    <small class="text-danger" th:errors="*{grauParentescoId}"></small>
+                                </div>
+                                <div class="form-group col-md-6">
+                                    <label>Nome do comunicante</label>
+                                    <input class="form-control" type="text" th:field="*{comunicante}">
+                                    <small class="text-danger" th:errors="*{comunicante}"></small>
+                                </div>
+                                <div class="form-group col-md-3">
+                                    <label>Telefone do comunicante</label>
+                                    <input class="form-control" type="text" th:field="*{telefoneComunicante}">
+                                    <small class="text-danger" th:errors="*{telefoneComunicante}"></small>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group col-md-12">
+                                    <label>Identificacao complementar do comunicante</label>
+                                    <textarea class="form-control" rows="2" th:field="*{informacaoAdChegada}"></textarea>
+                                    <small class="text-danger" th:errors="*{informacaoAdChegada}"></small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="entry-block">
+                        <div class="entry-block-header">Informacoes complementares</div>
+                        <div class="entry-block-body">
+                            <div class="form-row">
+                                <div class="form-group col-md-12">
+                                    <label>Observacoes</label>
+                                    <textarea class="form-control" rows="2" th:field="*{observacoes}"></textarea>
+                                    <small class="text-danger" th:errors="*{observacoes}"></small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-sm">Salvar entrada</button>
+                    <a th:href="@{/ui/atendimentos}" class="btn btn-secondary btn-sm">Voltar</a>
+                </form>
+            </div>
+        </div>
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                var tipoSelect = document.getElementById('tipoProcedenciaId');
+                var procedenciaSelect = document.getElementById('procedenciaId');
+                var bairroSelect = document.getElementById('procedenciaBairroId');
+                var cidadeUfSelect = document.getElementById('procedenciaCidadeUfId');
+                var cidadeSelect = document.getElementById('procedenciaCidadeId');
+                var procedenciaGroup = document.getElementById('procedenciaGroup');
+                var bairroGroup = document.getElementById('bairroGroup');
+                var cidadeGroup = document.getElementById('cidadeGroup');
+                var cidadesCache = cidadeSelect
+                    ? Array.from(cidadeSelect.options)
+                        .slice(1)
+                        .map(function (option) {
+                            return {
+                                value: option.value,
+                                label: option.textContent,
+                                ufId: option.getAttribute('data-uf-id')
+                            };
+                        })
+                    : [];
+
+                function refreshProcedencias() {
+                    if (!tipoSelect || !procedenciaSelect) {
+                        return;
+                    }
+                    var tipoId = tipoSelect.value;
+                    Array.from(procedenciaSelect.options).forEach(function (option, index) {
+                        if (index === 0) {
+                            option.hidden = false;
+                            return;
+                        }
+                        option.hidden = !!tipoId && option.getAttribute('data-tipo-id') !== tipoId;
+                    });
+                    if (procedenciaSelect.selectedOptions.length && procedenciaSelect.selectedOptions[0].hidden) {
+                        procedenciaSelect.value = '';
+                    }
+                }
+
+                function refreshCidades() {
+                    if (!cidadeUfSelect || !cidadeSelect) {
+                        return;
+                    }
+                    var ufId = cidadeUfSelect.value;
+                    var selectedCidadeId = cidadeSelect.value;
+                    cidadeSelect.innerHTML = '<option value="">Selecione</option>';
+                    cidadesCache.forEach(function (item) {
+                        if (ufId && item.ufId !== ufId) {
+                            return;
+                        }
+                        var option = document.createElement('option');
+                        option.value = item.value;
+                        option.textContent = item.label;
+                        if (selectedCidadeId && selectedCidadeId === item.value) {
+                            option.selected = true;
+                        }
+                        cidadeSelect.appendChild(option);
+                    });
+                }
+
+                function toggleProcedenciaFields() {
+                    var isBairro = tipoSelect && tipoSelect.value === '2';
+                    var isCidade = tipoSelect && tipoSelect.value === '3';
+                    if (procedenciaGroup) {
+                        procedenciaGroup.style.display = (isBairro || isCidade) ? 'none' : '';
+                    }
+                    if (bairroGroup) {
+                        bairroGroup.style.display = isBairro ? '' : 'none';
+                    }
+                    if (cidadeGroup) {
+                        cidadeGroup.style.display = isCidade ? '' : 'none';
+                    }
+                    if (isBairro && procedenciaSelect) {
+                        procedenciaSelect.value = '';
+                    }
+                    if (!isBairro && bairroSelect) {
+                        bairroSelect.value = '';
+                    }
+                    if (!isCidade && cidadeSelect) {
+                        cidadeSelect.value = '';
+                    }
+                    if (!isCidade && cidadeUfSelect) {
+                        cidadeUfSelect.value = '';
+                    }
+                    refreshProcedencias();
+                    refreshCidades();
+                }
+
+                if (tipoSelect) {
+                    toggleProcedenciaFields();
+                    tipoSelect.addEventListener('change', toggleProcedenciaFields);
+                }
+                if (cidadeUfSelect) {
+                    refreshCidades();
+                    cidadeUfSelect.addEventListener('change', refreshCidades);
+                }
+            });
+        </script>
+    </section>
+</th:block>
+</body>
+</html>

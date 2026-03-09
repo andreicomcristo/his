@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:replace="~{layout/base :: layout('HIS | Identificar Paciente Temporario', ~{::section})}">
+    <section>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="main-card card">
+                    <div class="card-body">
+                        <h5 class="card-title">Identificar paciente temporario por CPF</h5>
+
+                        <div class="alert alert-danger" th:if="${errorMessage}" th:text="${errorMessage}"></div>
+
+                        <p class="mb-1"><strong>Temporario:</strong> <span th:text="${pacienteTemporario.nome}">NOME</span></p>
+                        <p class="mb-3"><strong>ID:</strong> <span th:text="${pacienteTemporario.id}">0</span></p>
+                        <p class="mb-3" th:if="${atendimentoId != null}">
+                            <strong>Atendimento:</strong> <span th:text="${atendimentoId}">0</span>
+                        </p>
+
+                        <div class="alert alert-light border" th:if="${atendimento != null}">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <strong>Unidade</strong>
+                                    <div th:text="${atendimento.unidade.nome}">UNIDADE</div>
+                                </div>
+                                <div class="col-md-3">
+                                    <strong>Tipo</strong>
+                                    <div th:text="${atendimento.tipoAtendimento}">TIPO</div>
+                                </div>
+                                <div class="col-md-3">
+                                    <strong>Status</strong>
+                                    <div th:text="${atendimento.status != null ? atendimento.status.descricao : '-'}">STATUS</div>
+                                </div>
+                                <div class="col-md-3">
+                                    <strong>Chegada</strong>
+                                    <div th:text="${#temporals.format(atendimento.dataHoraChegada, 'dd/MM/yyyy HH:mm')}">-</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <form th:action="@{/ui/pacientes/{id}/identificar(id=${pacienteTemporario.id})}"
+                              th:object="${identificarForm}" method="post" class="mb-3">
+                            <input type="hidden" name="atendimentoId" th:value="${atendimentoId}">
+                            <input type="hidden" name="retorno" th:value="${retorno}">
+                            <div class="form-row">
+                                <div class="form-group col-md-4">
+                                    <label>CPF<span class="required-mark">*</span></label>
+                                    <input class="form-control" type="text" th:field="*{cpf}" placeholder="Somente numeros ou formatado">
+                                    <small class="text-danger" th:errors="*{cpf}"></small>
+                                </div>
+                                <div class="form-group col-md-4 d-flex align-items-end">
+                                    <button type="submit" class="btn btn-primary mr-2">Buscar paciente por CPF</button>
+                                    <a th:href="${retorno}" class="btn btn-secondary">Voltar</a>
+                                </div>
+                            </div>
+                        </form>
+
+                        <div th:if="${pacienteDefinitivo != null}" class="alert alert-warning">
+                            CPF encontrado em paciente definitivo. Confirme o merge:
+                        </div>
+
+                        <div th:if="${pacienteDefinitivo != null}" class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead>
+                                <tr>
+                                    <th>Tipo</th>
+                                    <th>ID</th>
+                                    <th>Nome</th>
+                                    <th>CPF</th>
+                                    <th>Status</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr>
+                                    <td>Temporario (origem)</td>
+                                    <td th:text="${pacienteTemporario.id}">0</td>
+                                    <td th:text="${pacienteTemporario.nome}">NOME</td>
+                                    <td th:text="${cpfInformado}">CPF</td>
+                                    <td>ATIVO</td>
+                                </tr>
+                                <tr>
+                                    <td>Definitivo (destino)</td>
+                                    <td th:text="${pacienteDefinitivo.id}">0</td>
+                                    <td th:text="${pacienteDefinitivo.nome}">NOME</td>
+                                    <td th:text="${pacienteDefinitivo.cpf}">CPF</td>
+                                    <td>ATIVO</td>
+                                </tr>
+                                </tbody>
+                            </table>
+
+                            <form th:action="@{/ui/pacientes/{id}/identificar/merge(id=${pacienteTemporario.id})}" method="post">
+                                <input type="hidden" name="retorno" th:value="${retorno}">
+                                <input type="hidden" name="pacienteDefinitivoId" th:value="${pacienteDefinitivo.id}">
+                                <input type="hidden" name="motivo" value="Identificacao por CPF na triagem">
+                                <button type="submit" class="btn btn-dark">Executar merge agora</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</th:block>
+</body>
+</html>

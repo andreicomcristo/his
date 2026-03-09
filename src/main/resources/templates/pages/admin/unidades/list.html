@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout('Administracao - Unidades', ~{::content})}">
+<th:block th:fragment="content">
+    <div class="main-card mb-3 card">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="card-title mb-0">Unidades</h5>
+                <a class="btn btn-primary btn-sm" th:href="@{/ui/admin/unidades/novo}">Nova unidade</a>
+            </div>
+            <form method="get" th:action="@{/ui/admin/unidades}" class="form-inline mb-3">
+                <input type="text" name="q" class="form-control mr-2" placeholder="Buscar por nome/cnes" th:value="${q}">
+                <button class="btn btn-outline-secondary btn-sm" type="submit">Buscar</button>
+            </form>
+
+            <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+            <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
+
+            <table class="table table-sm table-striped">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nome</th>
+                    <th>Tipo</th>
+                    <th>Cidade</th>
+                    <th>CNES</th>
+                    <th>Status</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="u : ${unidades}">
+                    <td th:text="${u.id}"></td>
+                    <td th:text="${u.nome}"></td>
+                    <td th:text="${u.tipoEstabelecimento}"></td>
+                    <td th:text="${u.cidade == null ? '-' : u.cidade.nome + ' - ' + u.cidade.unidadeFederativa.sigla}"></td>
+                    <td th:text="${u.cnes}"></td>
+                    <td>
+                        <span class="badge" th:classappend="${u.ativo} ? 'badge-success' : 'badge-secondary'"
+                              th:text="${u.ativo} ? 'ATIVA' : 'INATIVA'"></span>
+                    </td>
+                    <td class="text-right">
+                        <a class="btn btn-sm btn-outline-info" th:href="@{'/ui/admin/unidades/' + ${u.id} + '/fluxo'}">Fluxo</a>
+                        <a class="btn btn-sm btn-outline-primary" th:href="@{'/ui/admin/unidades/' + ${u.id} + '/editar'}">Editar</a>
+                        <form th:action="@{'/ui/admin/unidades/' + ${u.id} + '/ativar-desativar'}"
+                              method="post" class="d-inline">
+                            <button type="submit" class="btn btn-sm btn-outline-dark"
+                                    th:text="${u.ativo} ? 'Desativar' : 'Ativar'"></button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</th:block>
+</html>

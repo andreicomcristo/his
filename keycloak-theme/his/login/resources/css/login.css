@@ -1,0 +1,128 @@
+/* HIS Keycloak login theme (Keycloak legacy + modern classes) */
+
+:root {
+  --his-primary: #da624a;
+  --his-primary-hover: #c44f38;
+  --his-surface: #ffffff;
+  --his-text: #253041;
+  --his-muted: #64748b;
+  --his-border: #d7dce5;
+}
+
+body,
+.login-pf body {
+  min-height: 100vh;
+  margin: 0;
+  font-family: "Segoe UI", "Roboto", Arial, sans-serif;
+  color: var(--his-text) !important;
+  background:
+    radial-gradient(circle at 12% 16%, rgba(218, 98, 74, 0.16), transparent 35%),
+    radial-gradient(circle at 80% 6%, rgba(35, 48, 65, 0.10), transparent 38%),
+    linear-gradient(145deg, #eef1f6 0%, #e6ebf3 45%, #f4f7fb 100%) !important;
+}
+
+.login-pf-page,
+.pf-c-login {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 28px 16px !important;
+}
+
+#kc-header-wrapper,
+#kc-page-title {
+  color: var(--his-text) !important;
+  font-size: 24px !important;
+  letter-spacing: 0.2px;
+  font-weight: 700 !important;
+}
+
+#kc-header-wrapper::before,
+.pf-c-login__main-header::before {
+  content: "";
+  display: block;
+  width: 190px;
+  height: 56px;
+  margin: 0 auto 10px auto;
+  background: url("../img/his-logo.png") center center / contain no-repeat;
+}
+
+.login-pf-page .card-pf,
+#kc-content-wrapper,
+.pf-c-login__main {
+  width: min(100%, 460px);
+  background: var(--his-surface) !important;
+  border-radius: 16px !important;
+  border: 1px solid var(--his-border) !important;
+  box-shadow: 0 22px 50px rgba(14, 23, 38, 0.15) !important;
+}
+
+.login-pf-page .card-pf {
+  margin-top: 0 !important;
+}
+
+#kc-content-wrapper {
+  padding: 26px 22px !important;
+}
+
+#kc-form-login label,
+.pf-c-form__label-text {
+  color: var(--his-text) !important;
+  font-weight: 600 !important;
+}
+
+#kc-form-login .form-control,
+#kc-form-login input[type="text"],
+#kc-form-login input[type="password"],
+.pf-c-form-control {
+  height: 42px;
+  border-radius: 10px !important;
+  border: 1px solid var(--his-border) !important;
+  background: #f9fbfd !important;
+}
+
+#kc-form-login .form-control:focus,
+#kc-form-login input[type="text"]:focus,
+#kc-form-login input[type="password"]:focus,
+.pf-c-form-control:focus {
+  border-color: var(--his-primary) !important;
+  box-shadow: 0 0 0 3px rgba(218, 98, 74, 0.18) !important;
+}
+
+#kc-form-login .btn-primary,
+#kc-login,
+.pf-c-button.pf-m-primary {
+  min-height: 42px;
+  border-radius: 10px !important;
+  font-weight: 700 !important;
+  background-color: var(--his-primary) !important;
+  border-color: var(--his-primary) !important;
+}
+
+#kc-form-login .btn-primary:hover,
+#kc-login:hover,
+.pf-c-button.pf-m-primary:hover {
+  background-color: var(--his-primary-hover) !important;
+  border-color: var(--his-primary-hover) !important;
+}
+
+#kc-info,
+#kc-social-providers,
+.pf-c-login__main-footer {
+  color: var(--his-muted) !important;
+}
+
+#kc-locale ul li a,
+#kc-registration a,
+#kc-social-providers a,
+a {
+  color: #0f6abf !important;
+}
+
+#kc-locale ul li a:hover,
+#kc-registration a:hover,
+#kc-social-providers a:hover,
+a:hover {
+  color: #084f90 !important;
+}

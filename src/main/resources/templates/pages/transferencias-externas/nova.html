@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:replace="~{layout/base :: layout('HIS | Nova Transferencia Externa', ~{::section})}">
+    <section>
+        <div class="main-card card">
+            <div class="card-body">
+                <h5 class="card-title">Transferencia externa</h5>
+                <p class="text-muted mb-3">
+                    Atendimento #<span th:text="${atendimento.id}"></span> -
+                    Paciente <strong th:text="${atendimento.paciente.nomeExibicao}"></strong>
+                </p>
+
+                <form th:action="@{/ui/transferencias-externas}" method="post" th:object="${form}">
+                    <input type="hidden" name="atendimentoOrigemId" th:value="${atendimento.id}">
+
+                    <div th:if="${#fields.hasGlobalErrors()}" class="alert alert-danger">
+                        <div th:each="e : ${#fields.globalErrors()}" th:text="${e}"></div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label>Unidade destino</label>
+                            <select class="form-control" th:field="*{unidadeDestinoId}">
+                                <option value="">Selecione...</option>
+                                <option th:each="u : ${unidadesDestino}"
+                                        th:value="${u.id}"
+                                        th:text="${u.nome + (u.cnes != null ? ' | CNES ' + u.cnes : '')}"></option>
+                            </select>
+                            <small class="text-danger" th:errors="*{unidadeDestinoId}"></small>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label>Motivo da transferencia</label>
+                            <input class="form-control" type="text" maxlength="255" th:field="*{motivo}">
+                            <small class="text-danger" th:errors="*{motivo}"></small>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Observacao</label>
+                        <textarea class="form-control" rows="3" th:field="*{observacao}"></textarea>
+                        <small class="text-danger" th:errors="*{observacao}"></small>
+                    </div>
+
+                    <button class="btn btn-primary btn-sm" type="submit">Confirmar transferencia</button>
+                    <a th:href="@{/ui/atendimentos}" class="btn btn-secondary btn-sm">Voltar</a>
+                </form>
+            </div>
+        </div>
+    </section>
+</th:block>
+</body>
+</html>

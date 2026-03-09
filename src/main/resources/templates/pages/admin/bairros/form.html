@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(${modoEdicao} ? 'Administracao - Editar Bairro' : 'Administracao - Novo Bairro', ~{::content})}">
+<th:block th:fragment="content">
+    <div class="main-card mb-3 card">
+        <div class="card-body">
+            <h5 class="card-title" th:text="${modoEdicao} ? 'Editar Bairro' : 'Novo Bairro'"></h5>
+            <form th:object="${form}" method="post"
+                  th:action="${modoEdicao} ? @{'/ui/admin/bairros/' + ${itemId}} : @{/ui/admin/bairros}">
+                <div class="form-row">
+                    <div class="form-group col-md-4">
+                        <label>UF<span class="required-mark">*</span></label>
+                        <select class="form-control form-select chat-input" th:field="*{unidadeFederativaId}" id="unidadeFederativaId">
+                            <option value="">Selecione</option>
+                            <option th:each="uf : ${ufs}" th:value="${uf.id}" th:text="${uf.nome + ' - ' + uf.sigla}"></option>
+                        </select>
+                        <small class="text-danger" th:errors="*{unidadeFederativaId}"></small>
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label>Cidade<span class="required-mark">*</span></label>
+                        <select class="form-control form-select chat-input" th:field="*{cidadeId}" id="cidadeId">
+                            <option value="">Selecione</option>
+                            <option th:each="cidade : ${cidades}" th:value="${cidade.id}" th:text="${cidade.nome}"></option>
+                        </select>
+                        <small class="text-danger" th:errors="*{cidadeId}"></small>
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label>Nome<span class="required-mark">*</span></label>
+                        <input type="text" class="form-control" th:field="*{nome}">
+                        <small class="text-danger" th:errors="*{nome}"></small>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-md-3">
+                        <div class="form-check mt-4">
+                            <input class="form-check-input" type="checkbox" th:field="*{ativo}" id="ativo">
+                            <label class="form-check-label" for="ativo">Ativo</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <button type="submit" class="btn btn-primary mr-2">Salvar</button>
+                    <a class="btn btn-secondary" th:href="@{/ui/admin/bairros}">Voltar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var ufSelect = document.getElementById('unidadeFederativaId');
+            var cidadeSelect = document.getElementById('cidadeId');
+
+            function resetCidades() {
+                cidadeSelect.innerHTML = '<option value="">Selecione</option>';
+            }
+
+            function loadCidades(ufId, selectedCidadeId) {
+                resetCidades();
+                if (!ufId) {
+                    return;
+                }
+                fetch('/ui/admin/cidades/por-uf/' + ufId)
+                    .then(function (response) { return response.json(); })
+                    .then(function (items) {
+                        items.forEach(function (item) {
+                            var option = document.createElement('option');
+                            option.value = item.id;
+                            option.textContent = item.descricao;
+                            if (selectedCidadeId && String(selectedCidadeId) === String(item.id)) {
+                                option.selected = true;
+                            }
+                            cidadeSelect.appendChild(option);
+                        });
+                    });
+            }
+
+            if (ufSelect) {
+                var selectedCidadeId = cidadeSelect.value;
+                if (ufSelect.value) {
+                    loadCidades(ufSelect.value, selectedCidadeId);
+                } else {
+                    resetCidades();
+                }
+                ufSelect.addEventListener('change', function () {
+                    loadCidades(this.value, null);
+                });
+            }
+        });
+    </script>
+</th:block>
+</html>

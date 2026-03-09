@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:replace="~{layout/base :: layout('HIS | Mapa de Leitos', ~{::section})}">
+    <section class="section">
+        <div class="main-card mb-3 card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="card-title mb-0">Mapa de leitos</h5>
+                    <div>
+                        <a class="btn btn-outline-secondary btn-sm" th:href="@{/ui/observacoes}">Observacao</a>
+                        <a class="btn btn-outline-secondary btn-sm" th:href="@{/ui/internacoes}">Internacao</a>
+                    </div>
+                </div>
+
+                <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+                <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
+
+                <div th:if="${#lists.isEmpty(areas)}" class="alert alert-info mb-0">
+                    Nenhum leito ativo encontrado na unidade atual.
+                </div>
+
+                <div th:if="${!#lists.isEmpty(areas)}">
+                    <div class="leito-legend mb-3">
+                        <span class="legend-chip m-total">TOTAL LEITOS</span>
+                        <span class="legend-chip m-livre">LEITOS LIVRES</span>
+                        <span class="legend-chip m-ocupado">LEITOS OCUPADOS</span>
+                        <span class="legend-chip m-observacao">PACIENTES EM OBSERVAÇÃO</span>
+                        <span class="legend-chip m-internacao">PACIENTES EM INTERNAÇÃO</span>
+                        <span class="legend-chip m-virtual">LEITOS VIRTUAIS</span>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-xl-3 col-lg-4 col-md-6 mb-3" th:each="area, iter : ${areas}">
+                            <button type="button"
+                                    class="area-summary-card"
+                                    th:classappend="${iter.index == 0} ? 'active' : ''"
+                                    th:attr="data-area-card=${area.areaId}"
+                                    onclick="selecionarAreaLeito(this)">
+                                <div class="area-summary-top">
+                                    <div class="area-summary-title" th:text="${area.areaNome}">AREA</div>
+                                    <span class="area-summary-rate"
+                                          th:text="${area.taxaNominalPercentual != null ? #numbers.formatDecimal(area.taxaNominalPercentual, 1, 2) + '%' : 'N/A'}">0%</span>
+                                </div>
+                                <div class="area-summary-metrics">
+                                    <span class="m-chip m-total" th:text="${area.totalLeitos}">0</span>
+                                    <span class="m-chip m-livre" th:text="${area.leitosLivres}">0</span>
+                                    <span class="m-chip m-ocupado" th:text="${area.leitosOcupados}">0</span>
+                                    <span class="m-chip m-observacao" th:text="${area.ocupadosObservacao}">0</span>
+                                    <span class="m-chip m-internacao" th:text="${area.ocupadosInternacao}">0</span>
+                                    <span class="m-chip m-virtual" th:text="${area.leitosVirtuais}">0</span>
+                                </div>
+                                <div class="area-summary-legend">TOTAL | LIVRES | OCUPADOS | OBS | INT | VIRTUAIS</div>
+                                <div class="area-progress-track">
+                                    <div class="area-progress-fill"
+                                         th:with="progressWidth=${area.taxaNominalPercentual != null ? #numbers.formatDecimal(area.taxaNominalPercentual, 1, 'NONE', 2, 'POINT') : '0.00'}"
+                                         th:classappend="${area.taxaNominalPercentual != null and area.taxaNominalPercentual >= 90} ? 'high' : (${area.taxaNominalPercentual != null and area.taxaNominalPercentual >= 70} ? 'mid' : 'low')"
+                                         th:style="'width:' + ${progressWidth} + '%;'"></div>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+
+                    <hr class="mt-0 mb-3"/>
+
+                    <div th:each="area, iter : ${areas}"
+                         class="area-detail-wrap"
+                         th:classappend="${iter.index == 0} ? 'active' : ''"
+                         th:style="${iter.index == 0} ? 'display:block;' : 'display:none;'"
+                         th:attr="data-area-panel=${area.areaId}">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="mb-0 font-weight-bold" th:text="${'Leitos da área: ' + area.areaNome}">Leitos da área</h6>
+                            <span class="text-muted small"
+                                  th:text="${'Fixos: ' + area.leitosFixos + ' | Virtuais: ' + area.leitosVirtuais + ' | Ocupação nominal: ' + (area.taxaNominalPercentual != null ? #numbers.formatDecimal(area.taxaNominalPercentual, 1, 2) + '%' : 'N/A')}">
+                            </span>
+                        </div>
+                        <div class="row">
+                            <div class="col-lg-6 mb-3">
+                                <div class="card leito-column-card">
+                                    <div class="card-header d-flex justify-content-between align-items-center">
+                                        <strong>Leitos ocupados</strong>
+                                        <span class="badge badge-danger" th:text="${area.leitosOcupados}">0</span>
+                                    </div>
+                                    <div class="card-body">
+                                        <div th:if="${area.leitosOcupados == 0}" class="alert alert-light mb-0">
+                                            Nenhum leito ocupado nesta área.
+                                        </div>
+                                        <div th:each="leito : ${area.leitos}" th:if="${!leito.livre}" class="leito-box leito-ocupado mb-3">
+                                            <div class="leito-top">
+                                                <strong th:text="${leito.codigo}">L-01</strong>
+                                                <span class="badge badge-danger">OCUPADO</span>
+                                            </div>
+                                            <div class="leito-line text-muted" th:text="${leito.descricao != null ? leito.descricao : '-'}"></div>
+                                            <div class="leito-line">
+                                                <small>
+                                                    <strong>Natureza:</strong>
+                                                    <span th:text="${leito.naturezaOperacionalDescricao}">FIXO CNES</span>
+                                                    <span th:if="${leito.virtualSuperlotacao}" class="badge badge-dark ml-1">VIRTUAL</span>
+                                                </small>
+                                            </div>
+                                            <div class="leito-line"><small th:text="${'Modalidades: ' + leito.modalidadesDescricao}"></small></div>
+                                            <div class="leito-line"><strong>Paciente:</strong> <span th:text="${leito.pacienteNome}">PACIENTE</span></div>
+                                            <div class="leito-line"><strong>Atendimento:</strong> #<span th:text="${leito.atendimentoId}">1</span></div>
+                                            <div class="leito-line"><strong>Contexto:</strong> <span th:text="${leito.contexto}">OBSERVACAO</span></div>
+                                            <div class="leito-line"><strong>Tipo ocupacao:</strong> <span th:text="${leito.tipoOcupacaoDescricao}">DEFINITIVA</span></div>
+
+                                            <div class="mt-2">
+                                                <a th:if="${leito.podeConverterParaInternacao}"
+                                                   class="btn btn-outline-info btn-sm btn-block mb-2"
+                                                   th:href="@{/ui/internacoes/novo(observacaoId=${leito.observacaoId})}">
+                                                    Internar
+                                                </a>
+                                                <a th:if="${canRecepcaoExecutar}"
+                                                   class="btn btn-outline-primary btn-sm btn-block mb-2"
+                                                   th:href="@{/ui/leitos/mapa/transferencia/{id}(id=${leito.ocupacaoId})}">
+                                                    Transferencia interna
+                                                </a>
+                                                <a th:if="${canRecepcaoExecutar}"
+                                                   class="btn btn-outline-danger btn-sm btn-block"
+                                                   th:href="@{/ui/desfechos/novo(atendimentoId=${leito.atendimentoId})}">
+                                                    Desfecho
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-6 mb-3">
+                                <div class="card leito-column-card">
+                                    <div class="card-header d-flex justify-content-between align-items-center">
+                                        <strong>Leitos disponiveis</strong>
+                                        <span class="badge badge-success" th:text="${area.leitosLivres}">0</span>
+                                    </div>
+                                    <div class="card-body">
+                                        <div th:if="${area.leitosLivres == 0}" class="alert alert-light mb-0">
+                                            Nenhum leito livre nesta área.
+                                        </div>
+                                        <div th:each="leito : ${area.leitos}" th:if="${leito.livre}" class="leito-box leito-livre mb-3">
+                                            <div class="leito-top">
+                                                <strong th:text="${leito.codigo}">L-01</strong>
+                                                <span class="badge badge-success">LIVRE</span>
+                                            </div>
+                                            <div class="leito-line text-muted" th:text="${leito.descricao != null ? leito.descricao : '-'}"></div>
+                                            <div class="leito-line">
+                                                <small>
+                                                    <strong>Natureza:</strong>
+                                                    <span th:text="${leito.naturezaOperacionalDescricao}">FIXO CNES</span>
+                                                    <span th:if="${leito.virtualSuperlotacao}" class="badge badge-dark ml-1">VIRTUAL</span>
+                                                </small>
+                                            </div>
+                                            <div class="leito-line"><small th:text="${'Modalidades: ' + leito.modalidadesDescricao}"></small></div>
+                                            <div class="mt-2">
+                                                <a th:if="${leito.permiteObservacao}"
+                                                   class="btn btn-outline-warning btn-sm btn-block mb-2"
+                                                   th:href="@{/ui/observacoes/novo(leitoId=${leito.leitoId})}">
+                                                    Observacao
+                                                </a>
+                                                <a th:if="${leito.permiteInternacao}"
+                                                   class="btn btn-outline-info btn-sm btn-block"
+                                                   th:href="@{/ui/internacoes/novo(leitoId=${leito.leitoId})}">
+                                                    Internacao
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <style>
+        .area-summary-card {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            border: 1px solid #d8dee8;
+            border-left: 5px solid #ced4da;
+            border-radius: .45rem;
+            background: #fff;
+            text-align: left;
+            padding: .85rem .9rem;
+            box-shadow: 0 3px 10px rgba(31, 41, 55, .06);
+            transition: .15s ease-in-out;
+        }
+
+        .area-summary-card:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 7px 18px rgba(31, 41, 55, .08);
+        }
+
+        .area-summary-card.active {
+            border-color: #b9c3d1;
+            border-left-color: #16aaff;
+            box-shadow: 0 10px 24px rgba(63, 106, 216, .12);
+        }
+
+        .area-summary-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: .5rem;
+        }
+
+        .area-summary-title {
+            font-weight: 700;
+            color: #2f3542;
+            font-size: .95rem;
+            line-height: 1.2;
+            text-transform: uppercase;
+        }
+
+        .area-summary-rate {
+            font-size: .85rem;
+            font-weight: 700;
+            color: #4b5563;
+        }
+
+        .area-summary-metrics {
+            margin-bottom: .35rem;
+        }
+
+        .leito-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .45rem;
+        }
+
+        .legend-chip {
+            display: inline-flex;
+            align-items: center;
+            border-radius: .3rem;
+            font-size: .74rem;
+            font-weight: 700;
+            padding: 6px 11px;
+            color: #fff;
+            letter-spacing: .02em;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .m-chip {
+            display: inline-block;
+            min-width: 24px;
+            text-align: center;
+            border-radius: .25rem;
+            font-size: .72rem;
+            font-weight: 700;
+            color: #fff;
+            padding: 2px 6px;
+            margin-right: 3px;
+        }
+
+        .m-total { background: #f39c12; }
+        .m-livre { background: #20bf6b; }
+        .m-ocupado { background: #e74c3c; }
+        .m-observacao { background: #16aaff; }
+        .m-internacao { background: #2d98da; }
+        .m-virtual { background: #8e44ad; }
+
+        .area-summary-legend {
+            color: #6c757d;
+            font-size: .63rem;
+            letter-spacing: .02em;
+            margin-bottom: .4rem;
+        }
+
+        .area-progress-track {
+            width: 100%;
+            height: 10px;
+            border-radius: 20px;
+            background: #edf2f7;
+            overflow: hidden;
+        }
+
+        .area-progress-fill {
+            display: block;
+            height: 100%;
+            width: 0;
+            transition: width .25s ease;
+        }
+
+        .area-progress-fill.low { background: #20bf6b; }
+        .area-progress-fill.mid { background: #f39c12; }
+        .area-progress-fill.high { background: #e74c3c; }
+
+        .area-detail-wrap {
+            display: none;
+        }
+
+        .area-detail-wrap.active {
+            display: block;
+        }
+
+        .leito-column-card {
+            border: 1px solid #dce3ed;
+        }
+
+        .leito-box {
+            border: 1px solid #d9dee7;
+            border-radius: .45rem;
+            padding: .75rem;
+            background: #fff;
+        }
+
+        .leito-livre {
+            border-left: 5px solid #28a745;
+        }
+
+        .leito-ocupado {
+            border-left: 5px solid #dc3545;
+            background: #fff8f8;
+        }
+
+        .leito-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: .35rem;
+        }
+
+        .leito-line {
+            font-size: .85rem;
+            margin-bottom: .2rem;
+            word-break: break-word;
+        }
+        </style>
+
+        <script>
+        function selecionarAreaLeito(botao) {
+            var areaId = botao.getAttribute('data-area-card');
+            document.querySelectorAll('.area-summary-card').forEach(function (item) {
+                item.classList.toggle('active', item === botao);
+            });
+            document.querySelectorAll('.area-detail-wrap').forEach(function (item) {
+                var ativo = item.getAttribute('data-area-panel') === areaId;
+                item.classList.toggle('active', ativo);
+                item.style.display = ativo ? 'block' : 'none';
+            });
+            window.location.hash = 'area-' + areaId;
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            var hash = window.location.hash || '';
+            var card = null;
+            if (hash.startsWith('#area-')) {
+                var areaId = hash.replace('#area-', '');
+                card = document.querySelector('.area-summary-card[data-area-card="' + areaId + '"]');
+            }
+            if (!card) {
+                card = document.querySelector('.area-summary-card');
+            }
+            if (card) {
+                selecionarAreaLeito(card);
+            }
+        });
+        </script>
+    </section>
+</th:block>
+</body>
+</html>

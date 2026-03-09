@@ -1,0 +1,46 @@
+{\rtf1\ansi\deff0
+{\fonttbl{\f0 Arial;}{\f1 Courier New;}}
+\fs24
+\b Guia Resumido CADSUS no HIS\b0\par
+\par
+\b 1. Como habilitar\b0\par
+Abrir o arquivo:\par
+{\f1 src/main/resources/application-local.properties}\par
+\par
+Garantir:\par
+{\f1 his.cadsus.enabled=true\line
+his.cadsus.cert-path=file:/caminho/do/certificado.pfx\line
+his.cadsus.cert-password=SENHA\line
+his.cadsus.cert-type=PKCS12\line
+his.cadsus.ssl-protocol=TLS}\par
+\par
+Reiniciar o HIS e testar o CPF no cadastro de paciente.\par
+\par
+\b 2. Como desabilitar\b0\par
+Opcao 1: no arquivo local, trocar para:\par
+{\f1 his.cadsus.enabled=false}\par
+\par
+Opcao 2: remover o arquivo:\par
+{\f1 src/main/resources/application-local.properties}\par
+\par
+Reiniciar o HIS.\par
+\par
+\b 3. Como trocar o certificado\b0\par
+1. Colocar o novo .pfx em local seguro. Exemplo:\par
+{\f1 /opt/his/secrets/novo-certificado.pfx}\par
+\par
+2. Atualizar no application-local.properties:\par
+{\f1 his.cadsus.cert-path=file:/opt/his/secrets/novo-certificado.pfx\line
+his.cadsus.cert-password=NOVA_SENHA}\par
+\par
+3. Reiniciar o HIS.\par
+4. Testar um CPF real.\par
+\par
+\b 4. Padrao atual do sistema\b0\par
+No arquivo principal, o CADSUS fica desabilitado por padrao:\par
+{\f1 src/main/resources/application.properties}\par
+{\f1 his.cadsus.enabled=false}\par
+\par
+O arquivo local sobrescreve quando existir:\par
+{\f1 spring.config.import=optional:classpath:application-local.properties}\par
+}

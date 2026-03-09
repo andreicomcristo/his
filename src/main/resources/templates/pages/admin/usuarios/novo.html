@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout('Administracao - Novo Usuario', ~{::content})}">
+<th:block th:fragment="content">
+    <div class="main-card mb-3 card">
+        <div class="card-body">
+            <h5 class="card-title">Novo usuario (Keycloak + espelho HIS)</h5>
+
+            <form th:action="@{/ui/admin/usuarios}" method="post" th:object="${form}">
+                <div th:if="${#fields.hasGlobalErrors()}" class="alert alert-danger">
+                    <div th:each="e : ${#fields.globalErrors()}" th:text="${e}"></div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label>Username<span class="required-mark">*</span></label>
+                        <input class="form-control" th:field="*{username}">
+                        <small class="text-danger" th:errors="*{username}"></small>
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label>Email</label>
+                        <input class="form-control" type="email" th:field="*{email}">
+                        <small class="text-danger" th:errors="*{email}"></small>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label>Nome</label>
+                        <input class="form-control" th:field="*{nome}">
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label>Sobrenome</label>
+                        <input class="form-control" th:field="*{sobrenome}">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label>Senha temporaria</label>
+                        <input class="form-control" type="text" th:field="*{senhaTemporaria}">
+                    </div>
+                    <div class="form-group col-md-6 mt-4">
+                        <div class="custom-checkbox custom-control mt-2">
+                            <input type="checkbox" class="custom-control-input" th:field="*{exigirTrocaSenha}" id="trocaSenha">
+                            <label class="custom-control-label" for="trocaSenha">Exigir UPDATE_PASSWORD no primeiro login</label>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary btn-sm" type="submit">Criar usuario</button>
+                <a th:href="@{/ui/admin/usuarios}" class="btn btn-outline-secondary btn-sm">Voltar</a>
+            </form>
+        </div>
+    </div>
+</th:block>
+</html>

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(${modoEdicao} ? 'Administracao - Editar Escala de Glasgow - Resposta Verbal' : 'Administracao - Nova Escala de Glasgow - Resposta Verbal', ~{::content})}">
+<th:block th:fragment="content">
+    <div class="main-card mb-3 card">
+        <div class="card-body">
+            <h5 class="card-title" th:text="${modoEdicao} ? 'Editar item da escala de Glasgow - resposta verbal' : 'Novo item da escala de Glasgow - resposta verbal'">Escala de Glasgow resposta verbal</h5>
+            <form method="post"
+                  th:object="${form}"
+                  th:action="${modoEdicao} ? @{'/ui/admin/glasgow-resposta-verbal/' + ${itemId}} : @{/ui/admin/glasgow-resposta-verbal}">
+                <div class="form-row">
+                    <div class="form-group col-md-3">
+                        <label>Pontos<span class="required-mark">*</span></label>
+                        <input type="number" min="1" max="5" class="form-control" th:field="*{pontos}">
+                        <small class="text-danger" th:errors="*{pontos}"></small>
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label>Descricao<span class="required-mark">*</span></label>
+                        <input type="text" class="form-control" th:field="*{descricao}">
+                        <small class="text-danger" th:errors="*{descricao}"></small>
+                    </div>
+                    <div class="form-group col-md-3 d-flex align-items-center">
+                        <div class="form-check mt-4">
+                            <input type="checkbox" class="form-check-input" th:field="*{ativo}">
+                            <label class="form-check-label" for="ativo">Ativo</label>
+                        </div>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-sm">Salvar</button>
+                <a th:href="@{/ui/admin/glasgow-resposta-verbal}" class="btn btn-secondary btn-sm">Voltar</a>
+            </form>
+        </div>
+    </div>
+</th:block>
+</html>

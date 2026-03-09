@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(|Administracao - ${catalogo.titulo}|, ~{::content})}">
+<th:block th:fragment="content">
+    <div class="main-card mb-3 card">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="card-title mb-0" th:text="${catalogo.titulo}"></h5>
+                <a class="btn btn-primary btn-sm" th:href="@{'/ui/admin/paciente-catalogos/' + ${catalogo.slug} + '/novo'}">Novo cadastro</a>
+            </div>
+            <form method="get" class="form-inline mb-3">
+                <input type="text" name="q" class="form-control mr-2" placeholder="Buscar" th:value="${q}">
+                <button class="btn btn-outline-secondary btn-sm" type="submit">Buscar</button>
+            </form>
+            <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+            <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
+            <table class="table table-sm table-striped">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Principal</th>
+                    <th th:if="${catalogo.usaNomeEDescricao}">Descricao</th>
+                    <th th:if="${catalogo.usaCodigo}">Codigo</th>
+                    <th th:if="${catalogo.usaCodIbge}">Cod. IBGE</th>
+                    <th th:if="${catalogo.usaCboCod}">CBO</th>
+                    <th th:if="${catalogo.usaTipoProcedencia}">Tipo</th>
+                    <th th:if="${catalogo.usaTipoProcedencia}">Unidade</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="item : ${items}">
+                    <td th:text="${item.id}"></td>
+                    <td th:text="${item.principal}"></td>
+                    <td th:if="${catalogo.usaNomeEDescricao}" th:text="${item.secundario}"></td>
+                    <td th:if="${catalogo.usaCodigo}" th:text="${item.extra}"></td>
+                    <td th:if="${catalogo.usaCodIbge}" th:text="${item.extra}"></td>
+                    <td th:if="${catalogo.usaCboCod}" th:text="${item.extra}"></td>
+                    <td th:if="${catalogo.usaTipoProcedencia}" th:text="${item.relacionamento}"></td>
+                    <td th:if="${catalogo.usaTipoProcedencia}" th:text="${item.relacionamentoSecundario ?: 'Global'}"></td>
+                    <td class="text-right">
+                        <a class="btn btn-sm btn-outline-primary" th:href="@{'/ui/admin/paciente-catalogos/' + ${catalogo.slug} + '/' + ${item.id} + '/editar'}">Editar</a>
+                        <form method="post" class="d-inline" th:action="@{'/ui/admin/paciente-catalogos/' + ${catalogo.slug} + '/' + ${item.id} + '/excluir'}">
+                            <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Excluir registro?');">Excluir</button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</th:block>
+</html>

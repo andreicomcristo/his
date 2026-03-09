@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:replace="~{layout/base :: layout('HIS | Indicadores Lean - Consulta', ~{::section})}">
+    <section>
+        <style>
+            .filtro-label {
+                font-weight: 700;
+            }
+
+            .lean-page-title {
+                margin-bottom: 1rem;
+            }
+
+            .lean-page-title .title-main {
+                font-size: 1.2rem;
+                font-weight: 700;
+                color: #2f3542;
+            }
+
+            .lean-page-title .title-sub {
+                color: #6c757d;
+                font-size: .9rem;
+            }
+
+            .lean-filter-card {
+                border: 1px solid #e7ebf0;
+                border-radius: .35rem;
+                background: #fff;
+                box-shadow: 0 .46875rem 2.1875rem rgba(31, 10, 6, .03),
+                            0 .9375rem 1.40625rem rgba(31, 10, 6, .03),
+                            0 .25rem .53125rem rgba(31, 10, 6, .05),
+                            0 .125rem .1875rem rgba(31, 10, 6, .03);
+            }
+
+            .lean-kpi-card {
+                box-shadow: 0 .46875rem 2.1875rem rgba(31, 10, 6, .03),
+                            0 .9375rem 1.40625rem rgba(31, 10, 6, .03),
+                            0 .25rem .53125rem rgba(31, 10, 6, .05),
+                            0 .125rem .1875rem rgba(31, 10, 6, .03);
+            }
+
+            .lean-kpi-code {
+                font-weight: 700;
+                font-size: .75rem;
+                letter-spacing: .02em;
+                color: #da624a;
+            }
+
+            .lean-kpi-info {
+                margin-top: .35rem;
+                font-size: .78rem;
+                color: #6c757d;
+            }
+
+            .lean-table-card {
+                border: 1px solid #e7ebf0;
+                border-radius: .35rem;
+                box-shadow: 0 .46875rem 2.1875rem rgba(31, 10, 6, .03),
+                            0 .9375rem 1.40625rem rgba(31, 10, 6, .03),
+                            0 .25rem .53125rem rgba(31, 10, 6, .05),
+                            0 .125rem .1875rem rgba(31, 10, 6, .03);
+            }
+
+            .lean-table-card .card-header {
+                background: #f8f9fb;
+                border-bottom: 1px solid #e9edf2;
+            }
+
+            .lean-table-card .table thead th {
+                text-transform: uppercase;
+                font-size: .73rem;
+                letter-spacing: .03em;
+                color: #6c757d;
+                border-top: 0;
+            }
+
+            .lean-indicador-link {
+                display: inline-flex;
+                align-items: center;
+                gap: .35rem;
+                font-weight: 700;
+                color: #2f3542;
+                cursor: pointer;
+                text-decoration: none;
+            }
+
+            .lean-indicador-link:hover,
+            .lean-indicador-link:focus {
+                text-decoration: none;
+                color: #da624a;
+            }
+        </style>
+
+        <div class="lean-page-title d-flex justify-content-between align-items-start">
+            <div>
+                <div class="title-main">Indicadores Lean - Consulta</div>
+                <div class="title-sub">KPIs PSG-01, PSG-02 e PSG-03 no periodo filtrado</div>
+            </div>
+            <a class="btn btn-outline-secondary btn-sm"
+               th:href="@{/api/assistencial/indicadores/lean/consulta(dataInicio=${dataInicio},dataFim=${dataFim})}">
+                Ver JSON
+            </a>
+        </div>
+
+        <div class="lean-filter-card card mb-3">
+            <div class="card-body">
+                <div class="alert alert-danger" th:if="${errorMessage}" th:text="${errorMessage}"></div>
+
+                <form th:action="@{/ui/indicadores/lean/consulta}" method="get">
+                    <div class="form-row">
+                        <div class="form-group col-md-3">
+                            <label for="dataInicio" class="filtro-label">Data inicio</label>
+                            <input id="dataInicio" name="dataInicio" type="date" class="form-control" th:value="${dataInicio}">
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label for="dataFim" class="filtro-label">Data fim</label>
+                            <input id="dataFim" name="dataFim" type="date" class="form-control" th:value="${dataFim}">
+                        </div>
+                        <div class="form-group col-md-2 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary btn-block">Consultar</button>
+                        </div>
+                        <div class="form-group col-md-2 d-flex align-items-end">
+                            <a th:href="@{/ui/indicadores/lean/consulta}" class="btn btn-outline-secondary btn-block">Limpar</a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="row" th:if="${resultado != null}">
+            <div class="col-md-6 col-xl-4 mb-3" th:each="item : ${resultado.indicadores}"
+                 th:with="
+                    accent=${item.codigo == 'PSG-01'} ? '#3ac47d'
+                        : (${item.codigo == 'PSG-02'} ? '#16aaff' : '#f7b924')">
+                <div class="card card-btm-border lean-kpi-card" th:style="'border-bottom-color:' + ${accent} + ';'">
+                    <div class="widget-chart widget-chart-hover text-left p-3">
+                        <div class="icon-wrapper rounded-circle mr-3" th:style="'border:1px solid ' + ${accent} + ';'">
+                            <div class="icon-wrapper-bg" th:style="'background:' + ${accent} + ';'"></div>
+                            <i class="pe-7s-clock" th:style="'color:' + ${accent} + ';'"></i>
+                        </div>
+                        <div class="widget-chart-content">
+                            <div class="widget-subheading" th:text="${item.descricao}">Indicador</div>
+                            <div class="widget-numbers">
+                                <span th:text="${item.mediaMinutos != null ? #numbers.formatDecimal(item.mediaMinutos, 1, 2) : 'N/A'}">0,00</span>
+                                <small class="text-muted ml-1">min</small>
+                            </div>
+                            <div class="widget-description">
+                                <a href="#" class="lean-indicador-link"
+                                   th:attr="data-codigo=${item.codigo},data-descricao=${item.descricao}">
+                                    <span class="lean-kpi-code" th:text="${item.codigo}">PSG-01</span>
+                                    <i class="pe-7s-help1"></i>
+                                </a>
+                                <div class="lean-kpi-info" th:if="${item.observacao != null}" th:text="${item.observacao}"></div>
+                                <div class="lean-kpi-info">Total de casos: <strong th:text="${item.totalCasos}">0</strong></div>
+                                <div class="lean-kpi-info" th:if="${item.totalFallbackDesfecho != null}">
+                                    Fallback por desfecho: <strong th:text="${item.totalFallbackDesfecho}">0</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row" th:if="${resultado != null}">
+            <div class="col-lg-12 mb-3">
+                <div class="lean-table-card card h-100">
+                    <div class="card-header">
+                        <strong>Resumo dos tempos (minutos)</strong>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-striped mb-0">
+                                <thead>
+                                <tr>
+                                    <th>Codigo</th>
+                                    <th>Indicador</th>
+                                    <th>Media</th>
+                                    <th>Mediana</th>
+                                    <th>P90</th>
+                                    <th>Total casos</th>
+                                    <th>Fallback desfecho</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr th:if="${#lists.isEmpty(resultado.indicadores)}">
+                                    <td colspan="7" class="text-center">Sem dados no periodo</td>
+                                </tr>
+                                <tr th:each="item : ${resultado.indicadores}">
+                                    <td th:text="${item.codigo}">PSG-01</td>
+                                    <td th:text="${item.descricao}">LOS sem internacao</td>
+                                    <td th:text="${item.mediaMinutos != null ? #numbers.formatDecimal(item.mediaMinutos, 1, 2) : 'N/A'}">0,00</td>
+                                    <td th:text="${item.medianaMinutos != null ? #numbers.formatDecimal(item.medianaMinutos, 1, 2) : 'N/A'}">0,00</td>
+                                    <td th:text="${item.p90Minutos != null ? #numbers.formatDecimal(item.p90Minutos, 1, 2) : 'N/A'}">0,00</td>
+                                    <td th:text="${item.totalCasos}">0</td>
+                                    <td th:text="${item.totalFallbackDesfecho != null ? item.totalFallbackDesfecho : '-'}">-</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="modalRegraIndicadorConsulta" tabindex="-1" role="dialog" aria-labelledby="modalRegraIndicadorConsultaLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modalRegraIndicadorConsultaLabel">Regra do indicador</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="mb-2"><strong id="modalRegraIndicadorCodigo">PSG-01</strong> - <span id="modalRegraIndicadorDescricao">Descricao</span></p>
+                        <div id="modalRegraIndicadorTexto"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const regras = {
+                    'PSG-01': 'Media entre atendimento.data_hora_chegada e desfecho.data_hora para tipo de desfecho ATENDIMENTO, excluindo motivos EVASAO/ABANDONO.',
+                    'PSG-02': 'Media entre atendimento.data_hora_chegada e a primeira entrada em leito de internacao com ocupacao DEFINITIVA.',
+                    'PSG-03': 'Media entre internacao.data_hora_decisao_internacao e a primeira entrada em leito DEFINITIVO; quando nao houver leito definitivo, usa desfecho.data_hora como fallback.'
+                };
+
+                if (!window.jQuery) {
+                    return;
+                }
+
+                const $ = window.jQuery;
+
+                $('.lean-indicador-link').each(function () {
+                    const codigo = ($(this).data('codigo') || '').toString();
+                    const title = regras[codigo] || 'Sem regra documentada para este indicador.';
+                    $(this).attr('title', title);
+                    $(this).attr('data-toggle', 'tooltip');
+                    $(this).attr('data-placement', 'top');
+                });
+
+                $('[data-toggle="tooltip"]').tooltip();
+
+                $('.lean-indicador-link').on('click', function (event) {
+                    event.preventDefault();
+                    const codigo = ($(this).data('codigo') || '').toString();
+                    const descricao = ($(this).data('descricao') || '').toString();
+                    const regra = regras[codigo] || 'Regra ainda nao cadastrada para este indicador.';
+
+                    $('#modalRegraIndicadorCodigo').text(codigo || 'N/A');
+                    $('#modalRegraIndicadorDescricao').text(descricao || 'Indicador');
+                    $('#modalRegraIndicadorTexto').html('<p class="mb-0">' + regra + '</p>');
+                    $('#modalRegraIndicadorConsulta').modal('show');
+                });
+            });
+        </script>
+    </section>
+</th:block>
+</body>
+</html>

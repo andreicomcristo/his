@@ -1,0 +1,80 @@
+{\rtf1\ansi\deff0
+{\fonttbl{\f0 Arial;}{\f1 Courier New;}}
+\fs24
+\b Guia de Fluxo de Entrada no HIS\b0\par
+\par
+\b 1. Objetivo\b0\par
+Este guia resume como o HIS trata a entrada do paciente conforme o fluxo configurado na unidade.\par
+\par
+\b 2. Conceitos principais\b0\par
+- Atendimento: registro principal da passagem do paciente pela unidade.\par
+- Episodio: agregado assistencial do caso.\par
+- Entrada: ficha da recepcao.\par
+- Classificacao de risco: etapa de triagem, quando exigida.\par
+- Area: setor operacional. Quando tem capacidade RECEBE_ENTRADA, funciona como porta de entrada.\par
+\par
+\b 3. Fluxo 1: unidade com recepcao primeiro\b0\par
+1. Recepcao cria ou seleciona o paciente.\par
+2. Recepcao cria o atendimento.\par
+3. Recepcao preenche a ficha de entrada.\par
+4. Se o tipo exigir classificacao, o atendimento segue para classificacao.\par
+5. Se nao exigir, segue para o proximo passo do fluxo.\par
+\par
+\b 4. Fluxo 2: unidade com classificacao primeiro\b0\par
+1. Classificacao cria ou seleciona o paciente.\par
+2. Classificacao cria o atendimento.\par
+3. Classificacao registra a triagem.\par
+4. Recepcao acessa a lista Pendentes de entrada.\par
+5. Recepcao completa os dados do paciente e registra a entrada.\par
+\par
+\b 5. Listas operacionais\b0\par
+- Lista de atendimentos: fila principal da recepcao.\par
+- Pendentes de entrada: atendimentos ja classificados que ainda nao tem entrada.\par
+- Classificacao de risco: fila principal da classificacao.\par
+- Pendentes de classificacao: atendimentos ja recepcionados que ainda precisam classificar.\par
+\par
+\b 6. Regras de exibicao por fluxo\b0\par
+Quando primeiro_passo = RECEPCAO:\par
+- Recepcao usa Lista de atendimentos.\par
+- Pendentes de entrada nao precisa aparecer.\par
+- Classificacao usa Pendentes de classificacao, quando existir triagem obrigatoria.\par
+\par
+Quando primeiro_passo = TRIAGEM:\par
+- Classificacao usa Classificacao de risco.\par
+- Recepcao usa Lista de atendimentos e Pendentes de entrada.\par
+\par
+\b 7. Regras por tipo de atendimento\b0\par
+A obrigatoriedade de triagem e configurada por tipo de atendimento na unidade.\par
+- Se o tipo exige triagem, ele deve passar pela classificacao.\par
+- Se o tipo nao exige triagem, ele nao deve aparecer como pendencia falsa na lista de classificacao.\par
+\par
+\b 8. O que a entrada registra hoje\b0\par
+- Area da entrada\par
+- Forma de chegada\par
+- Motivo da entrada\par
+- Tipo de procedencia\par
+- Procedencia por bairro, cidade ou catalogo geral\par
+- Situacao ocupacional\par
+- Profissao e observacao de profissao\par
+- Comunicante, telefone e grau de parentesco\par
+- Observacoes gerais\par
+\par
+\b 9. Alta no fluxo\b0\par
+A alta e um evento proprio, separado do atendimento, mas relacionado a ele.\par
+- Alta de atendimento\par
+- Alta de observacao\par
+- Alta de internacao\par
+\par
+\b 10. Evolucao prevista\b0\par
+- Refinar regras de fechamento de episodio.\par
+- Criar observacao e internacao como etapas proprias.\par
+- Usar area atual do atendimento para localizacao operacional.\par
+- Separar melhor listas por papel: recepcao e classificacao.\par
+\par
+\b 11. Resumo pratico\b0\par
+{\f1 RECEPCAO PRIMEIRO\par
+Paciente -> Atendimento -> Entrada -> Classificacao (se obrigatoria)\par
+\par
+CLASSIFICACAO PRIMEIRO\par
+Paciente -> Atendimento -> Classificacao -> Entrada\par}
+}

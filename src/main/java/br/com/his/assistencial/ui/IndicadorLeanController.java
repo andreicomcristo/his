@@ -1,0 +1,127 @@
+package br.com.his.assistencial.ui;
+
+import java.time.LocalDate;
+
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.server.ResponseStatusException;
+
+import br.com.his.access.context.UnidadeContext;
+import br.com.his.access.service.OperationalPermissionService;
+import br.com.his.assistencial.api.dto.LeanConsultaResponse;
+import br.com.his.assistencial.api.dto.LeanPortaTriagemResponse;
+import br.com.his.assistencial.api.dto.TaxaOcupacaoLeanResponse;
+import br.com.his.assistencial.service.IndicadorLeanService;
+
+@Controller
+@RequestMapping("/ui/indicadores/lean")
+public class IndicadorLeanController {
+
+    private final IndicadorLeanService indicadorLeanService;
+    private final UnidadeContext unidadeContext;
+    private final OperationalPermissionService operationalPermissionService;
+
+    public IndicadorLeanController(IndicadorLeanService indicadorLeanService,
+                                   UnidadeContext unidadeContext,
+                                   OperationalPermissionService operationalPermissionService) {
+        this.indicadorLeanService = indicadorLeanService;
+        this.unidadeContext = unidadeContext;
+        this.operationalPermissionService = operationalPermissionService;
+    }
+
+    @GetMapping("/taxa-ocupacao")
+    public String taxaOcupacao(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicio,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFim,
+            Authentication authentication,
+            Model model) {
+        requirePermission(authentication, OperationalPermissionService.PERM_ATENDIMENTO_ACESSAR);
+        Long unidadeId = unidadeContext.getUnidadeAtual()
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "Selecione uma unidade antes de consultar indicadores"));
+
+        LocalDate fim = dataFim != null ? dataFim : LocalDate.now();
+        LocalDate inicio = dataInicio != null ? dataInicio : fim.withDayOfMonth(1);
+
+        model.addAttribute("dataInicio", inicio);
+        model.addAttribute("dataFim", fim);
+
+        try {
+            TaxaOcupacaoLeanResponse response = indicadorLeanService.calcularTaxasOcupacao(unidadeId, inicio, fim);
+            model.addAttribute("resultado", response);
+        } catch (IllegalArgumentException ex) {
+            model.addAttribute("errorMessage", ex.getMessage());
+        }
+
+        return "pages/indicadores/lean-taxa-ocupacao";
+    }
+
+    @GetMapping("/porta-triagem")
+    public String portaTriagem(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicio,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFim,
+            Authentication authentication,
+            Model model) {
+        requirePermission(authentication, OperationalPermissionService.PERM_ATENDIMENTO_ACESSAR);
+        Long unidadeId = unidadeContext.getUnidadeAtual()
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "Selecione uma unidade antes de consultar indicadores"));
+
+        LocalDate fim = dataFim != null ? dataFim : LocalDate.now();
+        LocalDate inicio = dataInicio != null ? dataInicio : fim.withDayOfMonth(1);
+
+        model.addAttribute("dataInicio", inicio);
+        model.addAttribute("dataFim", fim);
+
+        try {
+            LeanPortaTriagemResponse response = indicadorLeanService.calcularPortaTriagem(unidadeId, inicio, fim);
+            model.addAttribute("resultado", response);
+        } catch (IllegalArgumentException ex) {
+            model.addAttribute("errorMessage", ex.getMessage());
+        }
+
+        return "pages/indicadores/lean-porta-triagem";
+    }
+
+    @GetMapping("/consulta")
+    public String consulta(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicio,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFim,
+            Authentication authentication,
+            Model model) {
+        requirePermission(authentication, OperationalPermissionService.PERM_ATENDIMENTO_ACESSAR);
+        Long unidadeId = unidadeContext.getUnidadeAtual()
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "Selecione uma unidade antes de consultar indicadores"));
+
+        LocalDate fim = dataFim != null ? dataFim : LocalDate.now();
+        LocalDate inicio = dataInicio != null ? dataInicio : fim.withDayOfMonth(1);
+
+        model.addAttribute("dataInicio", inicio);
+        model.addAttribute("dataFim", fim);
+
+        try {
+            LeanConsultaResponse response = indicadorLeanService.calcularConsulta(unidadeId, inicio, fim);
+            model.addAttribute("resultado", response);
+        } catch (IllegalArgumentException ex) {
+            model.addAttribute("errorMessage", ex.getMessage());
+        }
+
+        return "pages/indicadores/lean-consulta";
+    }
+
+    private void requirePermission(Authentication authentication, String permission) {
+        if (!operationalPermissionService.has(authentication, permission)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Acesso negado");
+        }
+    }
+}

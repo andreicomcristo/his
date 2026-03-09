@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(${modoEdicao} ? 'Administracao - Editar Classificacao de Cor' : 'Administracao - Nova Classificacao de Cor', ~{::content})}">
+<th:block th:fragment="content">
+    <div class="main-card mb-3 card">
+        <div class="card-body">
+            <h5 class="card-title" th:text="${modoEdicao} ? 'Editar classificacao de cor' : 'Nova classificacao de cor'">Classificacao de cor</h5>
+            <form method="post"
+                  th:object="${form}"
+                  th:action="${modoEdicao} ? @{'/ui/admin/classificacao-cores/' + ${itemId}} : @{/ui/admin/classificacao-cores}">
+                <style>
+                    .color-picker-wrapper {
+                        display: flex;
+                        align-items: end;
+                        gap: 12px;
+                    }
+
+                    .color-picker-wrapper input[type="color"] {
+                        width: 52px;
+                        height: 38px;
+                        padding: 0;
+                        border: 1px solid #d8dbe2;
+                        border-radius: 6px;
+                        background: #fff;
+                    }
+                </style>
+                <div class="form-row">
+                    <div class="form-group col-md-4">
+                        <label>Descricao<span class="required-mark">*</span></label>
+                        <input type="text" class="form-control" th:field="*{descricao}" placeholder="Ex.: VERMELHO">
+                        <small class="text-danger" th:errors="*{descricao}"></small>
+                    </div>
+                    <div class="form-group col-md-3">
+                        <label>Cor</label>
+                        <div class="color-picker-wrapper">
+                            <input type="text" class="form-control" th:field="*{cor}" placeholder="#D64545">
+                            <input type="color" id="corPicker" th:value="${form.cor != null ? form.cor : '#D64545'}">
+                        </div>
+                        <small class="text-danger" th:errors="*{cor}"></small>
+                    </div>
+                    <div class="form-group col-md-2">
+                        <label>Ordem<span class="required-mark">*</span></label>
+                        <input type="number" min="0" max="9999" class="form-control" th:field="*{ordemExibicao}">
+                        <small class="text-danger" th:errors="*{ordemExibicao}"></small>
+                    </div>
+                    <div class="form-group col-md-3 d-flex align-items-center">
+                        <div class="form-check mt-4 mr-3">
+                            <input type="checkbox" class="form-check-input" th:field="*{riscoMaior}">
+                            <label class="form-check-label" for="riscoMaior">Risco maior</label>
+                        </div>
+                        <div class="form-check mt-4">
+                            <input type="checkbox" class="form-check-input" th:field="*{ativo}">
+                            <label class="form-check-label" for="ativo">Ativo</label>
+                        </div>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-sm">Salvar</button>
+                <a th:href="@{/ui/admin/classificacao-cores}" class="btn btn-secondary btn-sm">Voltar</a>
+            </form>
+            <script>
+                document.addEventListener('DOMContentLoaded', function () {
+                    const corInput = document.getElementById('cor');
+                    const corPicker = document.getElementById('corPicker');
+                    if (!corInput || !corPicker) {
+                        return;
+                    }
+
+                    const normalizeHex = (value) => {
+                        if (!value) {
+                            return '#000000';
+                        }
+                        return /^#[0-9A-Fa-f]{6}$/.test(value) ? value : '#000000';
+                    };
+
+                    corPicker.value = normalizeHex(corInput.value);
+
+                    corPicker.addEventListener('input', function () {
+                        corInput.value = corPicker.value.toUpperCase();
+                    });
+
+                    corInput.addEventListener('input', function () {
+                        if (/^#[0-9A-Fa-f]{6}$/.test(corInput.value)) {
+                            corPicker.value = corInput.value;
+                        }
+                    });
+                });
+            </script>
+        </div>
+    </div>
+</th:block>
+</html>

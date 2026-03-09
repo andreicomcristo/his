@@ -1,0 +1,31 @@
+{\rtf1\ansi\deff0
+{\fonttbl{\f0 Arial;}{\f1 Courier New;}}
+\fs24
+\b Guia Resumido de Fluxo de Entrada no HIS\b0\par
+\par
+\b 1. Dois fluxos principais\b0\par
+- Recepcao primeiro: Paciente -> Atendimento -> Entrada -> Classificacao (se obrigatoria)\par
+- Classificacao primeiro: Paciente -> Atendimento -> Classificacao -> Entrada\par
+\par
+\b 2. Listas operacionais\b0\par
+- Lista de atendimentos: trabalho principal da recepcao.\par
+- Pendentes de entrada: classificados sem entrada.\par
+- Classificacao de risco: trabalho principal da triagem.\par
+- Pendentes de classificacao: recepcionados sem classificacao.\par
+\par
+\b 3. Regras basicas\b0\par
+- Se a unidade comeca por recepcao, nao faz sentido mostrar pendentes de entrada.\par
+- Se a unidade comeca por classificacao, a recepcao trabalha com pendentes de entrada.\par
+- Tipos que nao exigem triagem nao devem aparecer como pendencia falsa de classificacao.\par
+\par
+\b 4. Entrada registra\b0\par
+- Area da entrada\par
+- Forma de chegada\par
+- Motivo da entrada\par
+- Procedencia\par
+- Situacao ocupacional e profissao\par
+- Comunicante\par
+\par
+\b 5. Alta\b0\par
+A alta e um evento proprio relacionado ao atendimento. No futuro deve distinguir atendimento, observacao e internacao.\par
+}

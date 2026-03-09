@@ -1,0 +1,13 @@
+# Copie para `application-local.properties` e ajuste apenas em ambiente local.
+# Nao versionar o arquivo real com segredos.
+
+# CADSUS / DATASUS via mesmo certificado usado temporariamente no GestHosp
+his.cadsus.enabled=true
+his.cadsus.cert-path=file:/Users/alvarobarbosa/workspace-spring-tools-for-eclipse-4.31.0.RELEASE/java_gesthosp/src/main/resources/certificado/certificado2025.pfx
+his.cadsus.cert-password=Di4x878b
+
+# Endpoints padrao
+his.cadsus.token-url=https://ehr-auth.saude.gov.br/api/osb/token
+his.cadsus.supplier-url=https://servicos.saude.gov.br/cadsus/v2/PDQSupplierJWT
+his.cadsus.cert-type=PKCS12
+his.cadsus.ssl-protocol=TLS

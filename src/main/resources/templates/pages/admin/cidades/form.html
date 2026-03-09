@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(${modoEdicao} ? 'Administracao - Editar Cidade' : 'Administracao - Nova Cidade', ~{::content})}">
+<th:block th:fragment="content">
+    <div class="main-card mb-3 card">
+        <div class="card-body">
+            <h5 class="card-title" th:text="${modoEdicao} ? 'Editar Cidade' : 'Nova Cidade'"></h5>
+            <form th:object="${form}" method="post"
+                  th:action="${modoEdicao} ? @{'/ui/admin/cidades/' + ${itemId}} : @{/ui/admin/cidades}">
+                <div class="form-row">
+                    <div class="form-group col-md-4">
+                        <label>UF<span class="required-mark">*</span></label>
+                        <select class="form-control" th:field="*{unidadeFederativaId}">
+                            <option value="">Selecione</option>
+                            <option th:each="uf : ${ufs}" th:value="${uf.id}" th:text="${uf.nome + ' - ' + uf.sigla}"></option>
+                        </select>
+                        <small class="text-danger" th:errors="*{unidadeFederativaId}"></small>
+                    </div>
+                    <div class="form-group col-md-5">
+                        <label>Nome<span class="required-mark">*</span></label>
+                        <input type="text" class="form-control" th:field="*{nome}">
+                        <small class="text-danger" th:errors="*{nome}"></small>
+                    </div>
+                    <div class="form-group col-md-3">
+                        <label>Cod. IBGE</label>
+                        <input type="text" class="form-control" maxlength="5" th:field="*{codigoIbge}">
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <button type="submit" class="btn btn-primary mr-2">Salvar</button>
+                    <a class="btn btn-secondary" th:href="@{/ui/admin/cidades}">Voltar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</th:block>
+</html>

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <title>Guia Fluxo de Entrada HIS</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 32px; line-height: 1.4; }
+    h1, h2 { color: #222; }
+    code, pre { font-family: Menlo, Consolas, monospace; }
+    pre { background: #f5f5f5; padding: 12px; border: 1px solid #ddd; white-space: pre-wrap; }
+    ul, ol { margin-top: 6px; }
+  </style>
+</head>
+<body>
+  <h1>Guia de Fluxo de Entrada no HIS</h1>
+
+  <h2>1. Objetivo</h2>
+  <p>Este guia resume como o HIS trata a entrada do paciente conforme o fluxo configurado na unidade.</p>
+
+  <h2>2. Conceitos principais</h2>
+  <ul>
+    <li><strong>Atendimento</strong>: registro principal da passagem do paciente pela unidade.</li>
+    <li><strong>Episodio</strong>: agregado assistencial do caso.</li>
+    <li><strong>Entrada</strong>: ficha da recepcao.</li>
+    <li><strong>Classificacao de risco</strong>: etapa de triagem, quando exigida.</li>
+    <li><strong>Area</strong>: setor operacional. Quando tem capacidade <code>RECEBE_ENTRADA</code>, funciona como porta de entrada.</li>
+  </ul>
+
+  <h2>3. Fluxo 1: unidade com recepcao primeiro</h2>
+  <ol>
+    <li>Recepcao cria ou seleciona o paciente.</li>
+    <li>Recepcao cria o atendimento.</li>
+    <li>Recepcao preenche a ficha de entrada.</li>
+    <li>Se o tipo exigir classificacao, o atendimento segue para classificacao.</li>
+    <li>Se nao exigir, segue para o proximo passo do fluxo.</li>
+  </ol>
+
+  <h2>4. Fluxo 2: unidade com classificacao primeiro</h2>
+  <ol>
+    <li>Classificacao cria ou seleciona o paciente.</li>
+    <li>Classificacao cria o atendimento.</li>
+    <li>Classificacao registra a triagem.</li>
+    <li>Recepcao acessa a lista <code>Pendentes de entrada</code>.</li>
+    <li>Recepcao completa os dados do paciente e registra a entrada.</li>
+  </ol>
+
+  <h2>5. Listas operacionais</h2>
+  <p>No sidebar, as listas devem ser entendidas assim:</p>
+  <ul>
+    <li><strong>Lista de atendimentos</strong>: fila principal da recepcao.</li>
+    <li><strong>Pendentes de entrada</strong>: atendimentos ja classificados que ainda nao tem entrada.</li>
+    <li><strong>Classificacao de risco</strong>: fila principal da classificacao.</li>
+    <li><strong>Pendentes de classificacao</strong>: atendimentos ja recepcionados que ainda precisam classificar.</li>
+  </ul>
+
+  <h2>6. Regras de exibicao por fluxo</h2>
+  <p>Quando <code>primeiro_passo = RECEPCAO</code>:</p>
+  <ul>
+    <li>Recepcao usa <code>Lista de atendimentos</code>.</li>
+    <li><code>Pendentes de entrada</code> nao precisa aparecer.</li>
+    <li>Classificacao usa <code>Pendentes de classificacao</code>, quando existir triagem obrigatoria.</li>
+  </ul>
+  <p>Quando <code>primeiro_passo = TRIAGEM</code>:</p>
+  <ul>
+    <li>Classificacao usa <code>Classificacao de risco</code>.</li>
+    <li>Recepcao usa <code>Lista de atendimentos</code> e <code>Pendentes de entrada</code>.</li>
+  </ul>
+
+  <h2>7. Regras por tipo de atendimento</h2>
+  <p>A obrigatoriedade de triagem e configurada por tipo de atendimento na unidade.</p>
+  <ul>
+    <li>Se o tipo exige triagem, ele deve passar pela classificacao.</li>
+    <li>Se o tipo nao exige triagem, ele nao deve aparecer como pendencia falsa na lista de classificacao.</li>
+  </ul>
+
+  <h2>8. O que a entrada registra hoje</h2>
+  <ul>
+    <li>Area da entrada</li>
+    <li>Forma de chegada</li>
+    <li>Motivo da entrada</li>
+    <li>Tipo de procedencia</li>
+    <li>Procedencia por bairro, cidade ou catalogo geral</li>
+    <li>Situacao ocupacional</li>
+    <li>Profissao e observacao de profissao</li>
+    <li>Comunicante, telefone e grau de parentesco</li>
+    <li>Observacoes gerais</li>
+  </ul>
+
+  <h2>9. Alta no fluxo</h2>
+  <p>A alta e um evento proprio, separado do atendimento, mas relacionado a ele.</p>
+  <ul>
+    <li>Alta de atendimento</li>
+    <li>Alta de observacao</li>
+    <li>Alta de internacao</li>
+  </ul>
+  <p>No fluxo atual, a alta de atendimento e disparada a partir da lista de atendimentos.</p>
+
+  <h2>10. Evolucao prevista</h2>
+  <ul>
+    <li>Refinar regras de fechamento de episodio.</li>
+    <li>Criar observacao e internacao como etapas proprias.</li>
+    <li>Usar area atual do atendimento para localizacao operacional.</li>
+    <li>Separar melhor listas por papel: recepcao e classificacao.</li>
+  </ul>
+
+  <h2>11. Resumo pratico</h2>
+  <pre>RECEPCAO PRIMEIRO
+Paciente -> Atendimento -> Entrada -> Classificacao (se obrigatoria)
+
+CLASSIFICACAO PRIMEIRO
+Paciente -> Atendimento -> Classificacao -> Entrada</pre>
+</body>
+</html>

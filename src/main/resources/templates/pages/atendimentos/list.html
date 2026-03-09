@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:replace="~{layout/base :: layout('HIS | Atendimentos', ~{::section})}">
+    <section>
+        <style>
+            .atendimento-acoes-dropdown .dropdown-toggle::after {
+                display: none;
+            }
+
+            .atendimento-acoes-trigger {
+                min-width: 52px;
+                height: 38px;
+                padding: 0 10px;
+                border: 1px solid #d8dbe2;
+                border-radius: 7px;
+                background: #f5f6f8;
+                color: #4b5563;
+                box-shadow: none;
+            }
+
+            .atendimento-acoes-trigger:hover,
+            .atendimento-acoes-trigger:focus {
+                background: #eef0f3;
+                color: #2f3542;
+                box-shadow: none;
+            }
+
+            .atendimento-acoes-trigger .fa {
+                font-size: 16px;
+            }
+
+            .atendimento-acoes-trigger .caret {
+                margin-left: 8px;
+            }
+
+            .atendimento-acoes-menu {
+                min-width: 280px;
+                padding: 0;
+                border: 1px solid rgba(0, 0, 0, 0.15);
+                border-radius: 9px;
+                box-shadow: 0 10px 24px rgba(31, 41, 55, 0.14);
+                overflow: hidden;
+            }
+
+            .atendimento-acoes-header {
+                padding: 18px 20px 8px;
+                font-size: 13px;
+                font-weight: 700;
+                letter-spacing: 0.04em;
+                color: #d96245;
+            }
+
+            .atendimento-acoes-body {
+                padding: 2px 0 10px;
+            }
+
+            .atendimento-acoes-menu .dropdown-item {
+                padding: 10px 20px;
+                font-size: 15px;
+                font-weight: 500;
+                color: #2f3542;
+                white-space: normal;
+            }
+
+            .atendimento-acoes-menu .dropdown-item:hover,
+            .atendimento-acoes-menu .dropdown-item:focus {
+                background: #f7f7f8;
+                color: #1f2937;
+            }
+
+            .atendimento-acoes-menu .dropdown-divider {
+                margin: 8px 0;
+            }
+
+            .atendimento-acoes-menu form {
+                margin: 0;
+            }
+
+            .atendimento-acoes-menu .dropdown-item.btn-link {
+                width: 100%;
+                border: 0;
+                background: transparent;
+                text-align: left;
+                text-decoration: none;
+            }
+
+            .fila-code {
+                font-size: 21px;
+                font-weight: 700;
+                color: #2f3542;
+                line-height: 1;
+                margin-bottom: 10px;
+            }
+
+            .fila-main {
+                display: block;
+                font-size: 15px;
+                font-weight: 700;
+                color: #2f3542;
+                margin-bottom: 6px;
+                line-height: 1.35;
+            }
+
+            .fila-line {
+                display: block;
+                font-size: 14px;
+                color: #444b57;
+                margin-bottom: 4px;
+                line-height: 1.35;
+            }
+
+            .fila-risk {
+                display: inline-block;
+                min-width: 110px;
+                padding: 8px 14px;
+                border-radius: 8px;
+                text-align: center;
+                font-size: 14px;
+                font-weight: 700;
+                color: #fff;
+            }
+
+            .fila-status-pill {
+                display: inline-block;
+                padding: 7px 12px;
+                border-radius: 8px;
+                background: #eef0f3;
+                color: #2f3542;
+                font-size: 13px;
+                font-weight: 700;
+            }
+
+            .filtro-label {
+                font-weight: 700;
+            }
+        </style>
+        <div class="main-card card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="card-title mb-0" th:text="${pageTitle}">Atendimentos</h5>
+                    <div>
+                        <a th:if="${showNovoAtendimentoButton and canCriarAtendimento}" th:href="@{/ui/atendimentos/novo}" class="btn btn-primary btn-sm">Novo atendimento</a>
+                    </div>
+                </div>
+
+                <div class="alert alert-success" th:if="${successMessage}" th:text="${successMessage}"></div>
+                <div class="alert alert-danger" th:if="${errorMessage}" th:text="${errorMessage}"></div>
+
+                <form th:action="${listActionPath}" method="get" class="mb-3">
+                    <div class="form-row">
+                        <div class="form-group col-md-3">
+                            <label for="nome" class="filtro-label">Nome</label>
+                            <input id="nome" name="nome" type="text" class="form-control" th:value="${nome}">
+                        </div>
+                        <div class="form-group col-md-2">
+                            <label for="cpf" class="filtro-label">CPF</label>
+                            <input id="cpf" name="cpf" type="text" class="form-control" th:value="${cpf}">
+                        </div>
+                        <div class="form-group col-md-2">
+                            <label for="tipoAtendimento" class="filtro-label">Tipo de atendimento</label>
+                            <select id="tipoAtendimento" name="tipoAtendimento" class="form-control">
+                                <option value="">TODOS</option>
+                                <option th:each="item : ${tiposAtendimento}"
+                                        th:value="${item.name()}"
+                                        th:selected="${tipoAtendimentoSelecionado == item}"
+                                        th:text="${item.name()}"></option>
+                            </select>
+                        </div>
+                        <div class="form-group col-md-2">
+                            <label for="statusId" class="filtro-label">Status</label>
+                            <select id="statusId" name="statusId" class="form-control">
+                                <option value="">TODOS</option>
+                                <option th:each="item : ${statusAtendimentoOptions}"
+                                        th:value="${item.id}"
+                                        th:selected="${statusSelecionadoId == item.id}"
+                                        th:text="${item.descricao}"></option>
+                            </select>
+                        </div>
+                        <div class="form-group col-md-3" th:if="${showAreaEntradaFilter}">
+                            <label for="areaEntradaId" class="filtro-label" th:text="${areaFilterLabel}">Porta de entrada</label>
+                            <select id="areaEntradaId" name="areaEntradaId" class="form-control">
+                                <option value="">TODAS</option>
+                                <option th:each="item : ${areasEntradaOptions}"
+                                        th:value="${item.id}"
+                                        th:selected="${areaEntradaSelecionadaId == item.id}"
+                                        th:text="${item.nome}"></option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-3">
+                            <label for="dataInicio" class="filtro-label">Data inicio</label>
+                            <input id="dataInicio" name="dataInicio" type="date" class="form-control" th:value="${dataInicio}">
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label for="dataFim" class="filtro-label">Data fim</label>
+                            <input id="dataFim" name="dataFim" type="date" class="form-control" th:value="${dataFim}">
+                        </div>
+                        <div class="form-group col-md-2 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary btn-block">Filtrar</button>
+                        </div>
+                        <div class="form-group col-md-2 d-flex align-items-end">
+                            <a th:href="${listActionPath}" class="btn btn-outline-secondary btn-block">Limpar</a>
+                        </div>
+                    </div>
+                </form>
+
+                <table class="table table-bordered table-hover table-sm">
+                    <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Dados do paciente</th>
+                        <th>Dados do atendimento/entrada</th>
+                        <th>Classificação de risco</th>
+                        <th>Situação atual / Desfecho</th>
+                        <th>Acoes</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:if="${#lists.isEmpty(atendimentos)}">
+                        <td colspan="6" class="text-center" th:text="${emptyMessage}">Nenhum atendimento encontrado</td>
+                    </tr>
+                    <tr th:each="a : ${atendimentos}">
+                        <td>
+                            <div class="fila-code" th:text="${a.id}"></div>
+                            <span class="fila-line" th:text="${a.unidade.nome + '.' + #temporals.format(a.dataHoraChegada, 'yyyy') + '.' + a.id}"></span>
+                        </td>
+                        <td>
+                            <span class="fila-main" th:text="${a.paciente.nomeExibicao}"></span>
+                            <span class="fila-line" th:if="${a.paciente.cpf != null}" th:text="${'CPF: ' + a.paciente.cpf}"></span>
+                            <span class="fila-line" th:if="${a.paciente.cns != null}" th:text="${'Cartão SUS: ' + a.paciente.cns}"></span>
+                            <span class="fila-line" th:if="${a.paciente.dataNascimento != null}"
+                                  th:text="${#temporals.format(a.paciente.dataNascimento, 'dd/MM/yyyy') + ' - ' + T(java.time.Period).between(a.paciente.dataNascimento, T(java.time.LocalDate).now()).years + ' ANO(S)'}"></span>
+                            <span class="fila-line" th:if="${a.paciente.dataNascimento == null and a.paciente.idadeAparente != null}"
+                                  th:text="${'Idade aparente: ' + a.paciente.idadeAparente + ' ano(s)'}"></span>
+                            <span class="badge badge-warning" th:if="${a.paciente.temporario}">TEMPORARIO</span>
+                        </td>
+                        <td>
+                            <th:block th:with="entrada=${entradasMap[a.id]}">
+                                <span class="fila-main"
+                                      th:text="${entrada != null and entrada.dataHoraEntrada != null ? #temporals.format(entrada.dataHoraEntrada, 'dd/MM/yyyy - HH:mm') : #temporals.format(a.dataHoraChegada, 'dd/MM/yyyy - HH:mm')}"></span>
+                                <span class="fila-line" th:text="${a.tipoAtendimento}"></span>
+                                <span class="fila-line" th:if="${entrada != null and entrada.motivoEntrada != null}" th:text="${entrada.motivoEntrada.descricao}"></span>
+                                <span class="fila-line" th:if="${entrada != null and entrada.area != null}" th:text="${'Área: ' + entrada.area.nome}"></span>
+                            </th:block>
+                        </td>
+                        <td>
+                            <th:block th:with="classificacao=${classificacoesMap[a.id]}">
+                                <th:block th:if="${classificacao != null and classificacao.classificacaoCor != null}">
+                                    <span class="fila-risk"
+                                          th:style="${classificacao.classificacaoCor.cor != null ? 'background:' + classificacao.classificacaoCor.cor + '; color:#fff;' : 'background:#6c757d; color:#fff;'}"
+                                          th:text="${classificacao.classificacaoCor.descricao}"></span>
+                                    <span class="fila-line mt-2"
+                                          th:if="${classificacao.queixaPrincipal != null}"
+                                          th:text="${classificacao.queixaPrincipal}"></span>
+                                </th:block>
+                                <span class="fila-line" th:if="${classificacao == null or classificacao.classificacaoCor == null}">SEM CLASSIFICAÇÃO</span>
+                            </th:block>
+                        </td>
+                        <td>
+                            <th:block th:with="desfecho=${desfechosMap[a.id]}, internacaoAtiva=${internacoesAtivasMap[a.id]}, observacaoAtiva=${observacoesAtivasMap[a.id]}">
+                                <th:block th:if="${desfecho != null}">
+                                    <span class="fila-status-pill"
+                                          th:style="${desfecho.motivoDesfecho.cor != null ? 'background:' + desfecho.motivoDesfecho.cor + '; color:#fff;' : ''}"
+                                          th:text="${desfecho.motivoDesfecho.descricao}"></span>
+                                    <span class="fila-line mt-2" th:text="${#temporals.format(desfecho.dataHora, 'dd/MM/yyyy - HH:mm')}"></span>
+                                    <span class="fila-line" th:text="${desfecho.tipoDesfecho.descricao}"></span>
+                                </th:block>
+                                <th:block th:if="${desfecho == null and internacaoAtiva != null}">
+                                    <span class="fila-status-pill"
+                                          th:style="${statusInternacaoVisual != null and statusInternacaoVisual.cor != null ? 'background:' + statusInternacaoVisual.cor + '; color:#fff;' : 'background:#17a2b8;color:#fff;'}"
+                                          th:text="${statusInternacaoVisual != null ? statusInternacaoVisual.descricao : 'INTERNACAO'}"></span>
+                                    <span class="fila-line mt-2"
+                                          th:text="${#temporals.format(internacaoAtiva.dataHoraInicioInternacao != null ? internacaoAtiva.dataHoraInicioInternacao : internacaoAtiva.dataHoraDecisaoInternacao, 'dd/MM/yyyy - HH:mm')}"></span>
+                                </th:block>
+                                <th:block th:if="${desfecho == null and internacaoAtiva == null and observacaoAtiva != null}">
+                                    <span class="fila-status-pill"
+                                          th:style="${statusObservacaoVisual != null and statusObservacaoVisual.cor != null ? 'background:' + statusObservacaoVisual.cor + '; color:#fff;' : 'background:#ffc107;color:#212529;'}"
+                                          th:text="${statusObservacaoVisual != null ? statusObservacaoVisual.descricao : 'OBSERVACAO'}"></span>
+                                    <span class="fila-line mt-2"
+                                          th:text="${#temporals.format(observacaoAtiva.dataHoraInicio, 'dd/MM/yyyy - HH:mm')}"></span>
+                                </th:block>
+                                <th:block th:if="${desfecho == null and internacaoAtiva == null and observacaoAtiva == null}">
+                                    <span class="fila-status-pill"
+                                          th:style="${a.status != null and a.status.cor != null ? 'background:' + a.status.cor + '; color:#fff;' : ''}"
+                                          th:text="${a.status != null ? a.status.descricao : '-'}"></span>
+                                </th:block>
+                            </th:block>
+                        </td>
+                        <td>
+                            <div class="dropdown d-inline-block atendimento-acoes-dropdown">
+                                <button type="button"
+                                        class="btn atendimento-acoes-trigger dropdown-toggle"
+                                        data-toggle="dropdown"
+                                        aria-haspopup="true"
+                                        aria-expanded="false"
+                                        title="Ações"
+                                        aria-label="Ações">
+                                    <i class="fa fa-list-ul"></i>
+                                    <span class="caret"></span>
+                                </button>
+                                <div class="dropdown-menu dropdown-menu-right atendimento-acoes-menu" role="menu">
+                                    <div class="atendimento-acoes-header">OPÇÕES</div>
+                                    <div class="atendimento-acoes-body">
+                                        <a th:if="${canTriagemExecutar}" class="dropdown-item" th:href="@{/ui/triagem/{id}(id=${a.id})}">Classificacao de risco</a>
+                                        <a th:if="${canRegistrarEntrada}"
+                                           class="dropdown-item"
+                                           th:href="${pendingEntryMode} ? @{/ui/entradas/pendente/{id}(id=${a.id})} : @{/ui/entradas/atendimento/{id}(id=${a.id})}">Entrada</a>
+                                        <a th:if="${(canRecepcaoExecutar or canBurocrataExecutar) and a.status != null and a.status.codigo != 'FINALIZADO' and a.status.codigo != 'EVADIU' and a.status.codigo != 'TRANSFERIDO'}"
+                                           class="dropdown-item"
+                                           th:href="@{/ui/observacoes/novo(atendimentoId=${a.id})}">Observacao</a>
+                                        <a th:if="${(canRecepcaoExecutar or canBurocrataExecutar) and a.status != null and a.status.codigo != 'FINALIZADO' and a.status.codigo != 'EVADIU' and a.status.codigo != 'TRANSFERIDO'}"
+                                           class="dropdown-item"
+                                           th:href="@{/ui/internacoes/novo(atendimentoId=${a.id})}">Internacao</a>
+                                        <a th:if="${canRecepcaoExecutar and a.status != null and a.status.codigo != 'FINALIZADO' and a.status.codigo != 'EVADIU' and a.status.codigo != 'TRANSFERIDO'}"
+                                           class="dropdown-item"
+                                           th:href="@{/ui/transferencias-externas/nova/{id}(id=${a.id})}">Transferir</a>
+                                        <a class="dropdown-item" th:href="@{/ui/atendimentos/{id}/timeline(id=${a.id})}">Timeline</a>
+                                        <div th:if="${canRecepcaoExecutar}" class="dropdown-divider"></div>
+                                        <a th:if="${canRecepcaoExecutar and a.status != null and a.status.codigo != 'FINALIZADO' and a.status.codigo != 'EVADIU' and a.status.codigo != 'TRANSFERIDO'}"
+                                           class="dropdown-item"
+                                           th:href="@{/ui/desfechos/novo(atendimentoId=${a.id})}">Desfecho</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+</th:block>
+</body>
+</html>

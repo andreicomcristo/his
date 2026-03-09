@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(${modoEdicao} ? 'Editar Internacao' : 'Nova Internacao', ~{::content})}">
+<th:block th:fragment="content">
+    <div class="main-card mb-3 card">
+        <div class="card-body">
+            <h5 class="card-title" th:text="${modoEdicao} ? 'Editar internacao' : 'Nova internacao'">Internacao</h5>
+            <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
+            <div th:if="${observacaoOrigem != null}" class="alert alert-info">
+                Conversao de observacao #<span th:text="${observacaoOrigem.id}"></span> do atendimento #<span th:text="${observacaoOrigem.atendimento.id}"></span>.
+            </div>
+            <form method="post"
+                  th:object="${form}"
+                  th:action="${modoEdicao} ? @{'/ui/internacoes/' + ${itemId}} : @{/ui/internacoes}">
+                <input th:if="${!modoEdicao and atendimentoTravado}" type="hidden" name="atendimentoTravado" value="true">
+                <input th:if="${!modoEdicao and leitoTravado}" type="hidden" name="leitoTravado" value="true">
+                <input type="hidden" th:field="*{observacaoOrigemId}">
+                <div class="form-row">
+                    <div class="form-group col-md-12">
+                        <label>Atendimento<span class="required-mark">*</span></label>
+                        <th:block th:if="${!modoEdicao and atendimentoTravado and atendimentoSelecionado != null}">
+                            <input type="hidden" th:field="*{atendimentoId}">
+                            <input type="text"
+                                   class="form-control"
+                                   readonly
+                                   th:value="${'#' + atendimentoSelecionado.id + ' - ' + atendimentoSelecionado.paciente.nomeExibicao + ' - ' + atendimentoSelecionado.unidade.nome}">
+                        </th:block>
+                        <select th:if="${modoEdicao or !atendimentoTravado or atendimentoSelecionado == null}"
+                                class="form-control"
+                                th:field="*{atendimentoId}">
+                            <option value="">Selecione</option>
+                            <option th:each="item : ${atendimentos}"
+                                    th:value="${item.id}"
+                                    th:text="${'#' + item.id + ' - ' + item.paciente.nomeExibicao + ' - ' + item.unidade.nome}"></option>
+                        </select>
+                        <small class="text-danger" th:errors="*{atendimentoId}"></small>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-md-4">
+                        <label>Origem da demanda</label>
+                        <select class="form-control" th:field="*{origemDemandaId}">
+                            <option value="">Selecione</option>
+                            <option th:each="item : ${origensDemanda}" th:value="${item.id}" th:text="${item.descricao}"></option>
+                        </select>
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label>Perfil da internacao</label>
+                        <select class="form-control" th:field="*{perfilInternacaoId}">
+                            <option value="">Selecione</option>
+                            <option th:each="item : ${perfisInternacao}" th:value="${item.id}" th:text="${item.descricao}"></option>
+                        </select>
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label>Data/Hora decisao<span class="required-mark">*</span></label>
+                        <input type="datetime-local" class="form-control" th:field="*{dataHoraDecisaoInternacao}">
+                        <small class="text-danger" th:errors="*{dataHoraDecisaoInternacao}"></small>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-md-4">
+                        <label>Data/Hora inicio</label>
+                        <input type="datetime-local" class="form-control" th:field="*{dataHoraInicioInternacao}">
+                        <small class="text-danger" th:errors="*{dataHoraInicioInternacao}"></small>
+                    </div>
+                    <div class="form-group col-md-8">
+                        <label>Leito</label>
+                        <th:block th:if="${!modoEdicao and leitoTravado}">
+                            <input type="hidden" name="leitoId" th:value="*{leitoId}">
+                            <select class="form-control" th:field="*{leitoId}" disabled>
+                                <option value="">Sem leito</option>
+                                <option th:each="item : ${leitosDisponiveis}"
+                                        th:value="${item.id}"
+                                        th:text="${item.area.nome + ' - ' + item.codigo + (item.descricao != null ? ' - ' + item.descricao : '')}"></option>
+                            </select>
+                        </th:block>
+                        <select th:if="${modoEdicao or !leitoTravado}" class="form-control" th:field="*{leitoId}">
+                            <option value="">Sem leito</option>
+                            <option th:each="item : ${leitosDisponiveis}"
+                                    th:value="${item.id}"
+                                    th:text="${item.area.nome + ' - ' + item.codigo + (item.descricao != null ? ' - ' + item.descricao : '')}"></option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-md-4">
+                        <label>Tipo de ocupacao</label>
+                        <th:block th:if="${!modoEdicao and leitoTravado}">
+                            <input type="hidden" name="tipoOcupacaoId" th:value="*{tipoOcupacaoId}">
+                            <select class="form-control" th:field="*{tipoOcupacaoId}" disabled>
+                                <option value="">Selecione</option>
+                                <option th:each="item : ${tiposOcupacao}" th:value="${item.id}" th:text="${item.descricao}"></option>
+                            </select>
+                        </th:block>
+                        <select th:if="${modoEdicao or !leitoTravado}" class="form-control" th:field="*{tipoOcupacaoId}">
+                            <option value="">Selecione</option>
+                            <option th:each="item : ${tiposOcupacao}" th:value="${item.id}" th:text="${item.descricao}"></option>
+                        </select>
+                        <small class="form-text text-muted">Usado quando houver leito selecionado.</small>
+                    </div>
+                    <div class="form-group col-md-8">
+                        <label>Observacao</label>
+                        <textarea class="form-control" rows="3" th:field="*{observacao}"></textarea>
+                        <small class="text-danger" th:errors="*{observacao}"></small>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-sm">Salvar</button>
+                <a th:href="@{/ui/internacoes}" class="btn btn-secondary btn-sm">Voltar</a>
+            </form>
+            <script th:if="${modoEdicao or !leitoTravado}">
+                document.addEventListener('DOMContentLoaded', function () {
+                    const leitoSelect = document.getElementById('leitoId');
+                    const tipoOcupacaoSelect = document.getElementById('tipoOcupacaoId');
+                    if (leitoSelect && tipoOcupacaoSelect) {
+                        const refreshTipo = () => {
+                            if (!leitoSelect.value) {
+                                tipoOcupacaoSelect.value = '';
+                                tipoOcupacaoSelect.setAttribute('disabled', 'disabled');
+                            } else {
+                                tipoOcupacaoSelect.removeAttribute('disabled');
+                            }
+                        };
+                        leitoSelect.addEventListener('change', refreshTipo);
+                        refreshTipo();
+                    }
+                });
+            </script>
+        </div>
+    </div>
+</th:block>
+</html>

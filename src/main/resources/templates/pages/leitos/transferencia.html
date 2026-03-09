@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout('Transferencia Interna de Leito', ~{::content})}">
+<th:block th:fragment="content">
+    <div class="main-card mb-3 card">
+        <div class="card-body">
+            <h5 class="card-title">Transferencia interna de leito</h5>
+            <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
+            <div class="alert alert-light border mb-3">
+                <div><strong>Paciente:</strong> <span th:text="${atendimento.paciente.nomeExibicao}"></span></div>
+                <div><strong>Atendimento:</strong> #<span th:text="${atendimento.id}"></span></div>
+                <div><strong>Leito atual:</strong> <span th:text="${ocupacao.leito.area.nome + ' - ' + ocupacao.leito.codigo}"></span></div>
+                <div><strong>Modalidade:</strong> <span th:text="${modalidadeTransferencia}"></span></div>
+            </div>
+
+            <form method="post"
+                  th:object="${form}"
+                  th:action="@{/ui/leitos/mapa/transferencia/{id}(id=${ocupacao.id})}">
+                <div class="form-row">
+                    <div class="form-group col-md-12">
+                        <label>Leito de destino<span class="required-mark">*</span></label>
+                        <select class="form-control" th:field="*{leitoDestinoId}">
+                            <option value="">Selecione</option>
+                            <option th:each="item : ${leitosDestino}"
+                                    th:value="${item.id}"
+                                    th:text="${item.area.nome + ' - ' + item.codigo + (item.descricao != null ? ' - ' + item.descricao : '')}"></option>
+                        </select>
+                        <small class="text-danger" th:errors="*{leitoDestinoId}"></small>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-md-12">
+                        <label>Observacao</label>
+                        <textarea class="form-control" rows="3" th:field="*{observacao}"></textarea>
+                        <small class="text-danger" th:errors="*{observacao}"></small>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-sm">Transferir</button>
+                <a th:href="@{/ui/leitos/mapa}" class="btn btn-secondary btn-sm">Voltar</a>
+            </form>
+        </div>
+    </div>
+</th:block>
+</html>

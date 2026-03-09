@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:replace="~{layout/base :: layout('HIS | Home', ~{::section})}">
+    <section>
+        <style>
+            .home-title {
+                margin-bottom: 1rem;
+            }
+
+            .home-title .main {
+                font-size: 1.25rem;
+                font-weight: 700;
+                color: #2f3542;
+            }
+
+            .home-title .sub {
+                color: #6c757d;
+                font-size: .9rem;
+            }
+
+            .home-widget {
+                border: 0;
+                border-radius: .55rem;
+                color: #fff;
+                box-shadow: 0 .46875rem 2.1875rem rgba(31, 10, 6, .04),
+                            0 .9375rem 1.40625rem rgba(31, 10, 6, .04),
+                            0 .25rem .53125rem rgba(31, 10, 6, .06),
+                            0 .125rem .1875rem rgba(31, 10, 6, .04);
+                min-height: 158px;
+            }
+
+            .home-widget .card-body {
+                padding: 1rem 1rem .85rem 1rem;
+            }
+
+            .home-widget .home-widget-top {
+                display: flex;
+                align-items: flex-start;
+                justify-content: space-between;
+                gap: .75rem;
+            }
+
+            .home-widget .home-widget-title {
+                font-size: .92rem;
+                font-weight: 700;
+                letter-spacing: .01em;
+                margin-bottom: .3rem;
+                line-height: 1.25;
+                text-transform: uppercase;
+            }
+
+            .home-widget .home-widget-sub {
+                font-size: .77rem;
+                opacity: .86;
+                line-height: 1.28;
+                min-height: 34px;
+            }
+
+            .home-widget .home-widget-icon {
+                width: 34px;
+                height: 34px;
+                border-radius: 50%;
+                background: rgba(255, 255, 255, .2);
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                flex-shrink: 0;
+                font-size: 1.15rem;
+            }
+
+            .home-widget .home-widget-value {
+                margin-top: .9rem;
+                font-size: 1.95rem;
+                line-height: 1.1;
+                font-weight: 700;
+            }
+
+            .home-grid-card {
+                border: 1px solid #e9edf2;
+                border-radius: .4rem;
+                box-shadow: 0 .46875rem 2.1875rem rgba(31, 10, 6, .03),
+                            0 .9375rem 1.40625rem rgba(31, 10, 6, .03),
+                            0 .25rem .53125rem rgba(31, 10, 6, .05),
+                            0 .125rem .1875rem rgba(31, 10, 6, .03);
+            }
+
+            .home-grid-card .card-header {
+                background: #f8f9fb;
+                border-bottom: 1px solid #e9edf2;
+                font-weight: 700;
+            }
+
+            .home-grid-card .table thead th {
+                text-transform: uppercase;
+                font-size: .72rem;
+                letter-spacing: .03em;
+                color: #6c757d;
+                border-top: 0;
+            }
+        </style>
+
+        <div class="home-title">
+            <div>
+                <div class="main">Painel operacional da unidade</div>
+                <div class="sub" th:if="${dashboard != null}">
+                    Atualizado para hoje:
+                    <strong th:text="${#temporals.format(dashboard.referencia, 'dd/MM/yyyy')}">01/01/2026</strong>
+                </div>
+            </div>
+        </div>
+
+        <div class="alert alert-danger" th:if="${errorMessage}" th:text="${errorMessage}"></div>
+
+        <div th:if="${dashboard != null}">
+            <div class="row">
+                <div class="col-xl-3 col-md-6 mb-3" th:each="item : ${dashboard.operacaoCards}">
+                    <div class="card home-widget" th:classappend="${item.backgroundClass}">
+                        <div class="card-body">
+                            <div class="home-widget-top">
+                                <div>
+                                    <div class="home-widget-title" th:text="${item.titulo}">Indicador</div>
+                                    <div class="home-widget-sub" th:text="${item.detalhe}">Descricao</div>
+                                </div>
+                                <div class="home-widget-icon">
+                                    <i th:class="${item.icone}"></i>
+                                </div>
+                            </div>
+                            <div class="home-widget-value" th:text="${item.valor}">0</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-lg-8 mb-3">
+                    <div class="home-grid-card card h-100">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <strong>Fila de atencao (mais antigos)</strong>
+                            <span class="text-muted small">Top 8</span>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-sm table-striped mb-0">
+                                    <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Paciente</th>
+                                        <th>Status</th>
+                                        <th>Chegada</th>
+                                        <th>Espera (min)</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <tr th:if="${#lists.isEmpty(dashboard.filaAtencao)}">
+                                        <td colspan="5" class="text-center text-muted py-3">Sem atendimentos em espera</td>
+                                    </tr>
+                                    <tr th:each="item : ${dashboard.filaAtencao}">
+                                        <td>
+                                            <a th:href="@{/ui/atendimentos/{id}/timeline(id=${item.atendimentoId})}"
+                                               th:text="${item.atendimentoId}">1</a>
+                                        </td>
+                                        <td th:text="${item.paciente}">PACIENTE</td>
+                                        <td th:text="${item.status}">STATUS</td>
+                                        <td th:text="${item.chegadaEm != null ? #temporals.format(item.chegadaEm, 'dd/MM/yyyy HH:mm') : '-'}">00/00/0000 00:00</td>
+                                        <td th:text="${item.minutosEspera}">0</td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4 mb-3">
+                    <div class="home-grid-card card h-100">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <strong>Desfechos de hoje</strong>
+                            <a class="small" th:href="@{/ui/desfechos}">Ver lista</a>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-sm table-striped mb-0">
+                                    <thead>
+                                    <tr>
+                                        <th>Motivo</th>
+                                        <th>Total</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <tr th:if="${#lists.isEmpty(dashboard.desfechosHoje)}">
+                                        <td colspan="2" class="text-center text-muted py-3">Sem desfechos no dia</td>
+                                    </tr>
+                                    <tr th:each="item : ${dashboard.desfechosHoje}">
+                                        <td th:text="${item.motivo}">ALTA_MEDICA</td>
+                                        <td th:text="${item.total}">0</td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</th:block>
+</body>
+</html>

@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout('Acesso negado', ~{::content})}">
+<th:block th:fragment="content">
+    <div class="main-card mb-3 card">
+        <div class="card-body">
+            <h5 class="card-title text-danger">Acesso negado</h5>
+            <p>Voce nao possui permissao <strong>ADMIN_USUARIOS</strong> ou <strong>ADMIN_SISTEMA</strong>
+                na unidade atual para acessar esta area.</p>
+            <a th:href="@{/ui/home}" class="btn btn-primary">Voltar para Home</a>
+        </div>
+    </div>
+</th:block>
+</html>

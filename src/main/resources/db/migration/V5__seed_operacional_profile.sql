@@ -1,0 +1,17 @@
+INSERT INTO permissao (nome)
+VALUES
+    ('PACIENTE_VISUALIZAR'),
+    ('PACIENTE_EDITAR'),
+    ('ATENDIMENTO_ACESSAR')
+ON CONFLICT (nome) DO NOTHING;
+
+INSERT INTO perfil (nome)
+VALUES ('OPERACIONAL_BASICO')
+ON CONFLICT (nome) DO NOTHING;
+
+INSERT INTO perfil_permissao (perfil_id, permissao_id)
+SELECT p.id, pm.id
+FROM perfil p
+JOIN permissao pm ON pm.nome IN ('PACIENTE_VISUALIZAR', 'PACIENTE_EDITAR', 'ATENDIMENTO_ACESSAR')
+WHERE p.nome = 'OPERACIONAL_BASICO'
+ON CONFLICT (perfil_id, permissao_id) DO NOTHING;

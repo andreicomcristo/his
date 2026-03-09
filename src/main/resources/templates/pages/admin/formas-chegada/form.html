@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(${modoEdicao} ? 'Administracao - Editar Forma de Chegada' : 'Administracao - Nova Forma de Chegada', ~{::content})}">
+<th:block th:fragment="content">
+    <div class="main-card mb-3 card">
+        <div class="card-body">
+            <h5 class="card-title" th:text="${modoEdicao} ? 'Editar forma de chegada' : 'Nova forma de chegada'">Forma de chegada</h5>
+            <form method="post"
+                  th:object="${form}"
+                  th:action="${modoEdicao} ? @{'/ui/admin/formas-chegada/' + ${itemId}} : @{/ui/admin/formas-chegada}">
+                <div class="form-row">
+                    <div class="form-group col-md-4">
+                        <label>Descricao<span class="required-mark">*</span></label>
+                        <input type="text" class="form-control" th:field="*{descricao}">
+                        <small class="text-danger" th:errors="*{descricao}"></small>
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label>Perfil de chegada<span class="required-mark">*</span></label>
+                        <select class="form-control" th:field="*{perfilChegada}">
+                            <option th:value="${T(br.com.his.assistencial.model.PerfilChegada).VERTICAL}">VERTICAL</option>
+                            <option th:value="${T(br.com.his.assistencial.model.PerfilChegada).HORIZONTAL}">HORIZONTAL</option>
+                        </select>
+                        <small class="text-danger" th:errors="*{perfilChegada}"></small>
+                    </div>
+                    <div class="form-group col-md-4 d-flex align-items-center">
+                        <div class="form-check mt-4">
+                            <input type="checkbox" class="form-check-input" th:field="*{ativo}">
+                            <label class="form-check-label" for="ativo">Ativo</label>
+                        </div>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-sm">Salvar</button>
+                <a th:href="@{/ui/admin/formas-chegada}" class="btn btn-secondary btn-sm">Voltar</a>
+            </form>
+        </div>
+    </div>
+</th:block>
+</html>

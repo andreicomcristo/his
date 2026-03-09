@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout('Administracao - Usuario', ~{::content})}">
+<th:block th:fragment="content">
+    <div class="main-card mb-3 card">
+        <div class="card-body">
+            <h5 class="card-title">Usuario</h5>
+            <p class="mb-1"><strong>ID:</strong> <span th:text="${usuario.id}"></span></p>
+            <p class="mb-1"><strong>Username:</strong> <span th:text="${usuario.username}"></span></p>
+            <p class="mb-1"><strong>Email:</strong> <span th:text="${usuario.email}"></span></p>
+            <p class="mb-3"><strong>Keycloak ID:</strong> <small th:text="${usuario.keycloakId}"></small></p>
+
+            <form th:action="@{'/ui/admin/usuarios/' + ${usuario.id} + '/provisionar-keycloak'}" method="post" class="mb-3">
+                <button class="btn btn-sm"
+                        th:classappend="${usuario.keycloakId != null and #strings.startsWith(usuario.keycloakId, 'pending:')} ? 'btn-warning' : 'btn-outline-primary'"
+                        type="submit"
+                        th:text="${usuario.keycloakId != null and #strings.startsWith(usuario.keycloakId, 'pending:')} ? 'Provisionar no Keycloak' : 'Recriar no Keycloak'">
+                    Provisionar no Keycloak
+                </button>
+            </form>
+
+            <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+            <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
+
+            <h6>Adicionar vinculo</h6>
+            <form th:action="@{'/ui/admin/usuarios/' + ${usuario.id} + '/vinculos'}"
+                  method="post" th:object="${vinculoForm}" class="form-row mb-3">
+                <div class="col-md-4">
+                    <label>Unidade<span class="required-mark">*</span></label>
+                    <select class="form-control" th:field="*{unidadeId}">
+                        <option value="">Selecione unidade</option>
+                        <option th:each="u : ${unidades}" th:value="${u.id}" th:text="${u.nome}"></option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label>Perfil<span class="required-mark">*</span></label>
+                    <select class="form-control" th:field="*{perfilId}">
+                        <option value="">Selecione perfil</option>
+                        <option th:each="p : ${perfis}" th:value="${p.id}" th:text="${p.nome}"></option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" class="btn btn-primary btn-sm">Adicionar</button>
+                    <a th:href="@{/ui/admin/usuarios}" class="btn btn-outline-secondary btn-sm">Voltar</a>
+                </div>
+            </form>
+
+            <h6>Vinculos</h6>
+            <table class="table table-sm table-striped">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Unidade</th>
+                    <th>Perfil</th>
+                    <th>Status</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="v : ${vinculos}">
+                    <td th:text="${v.id}"></td>
+                    <td th:text="${v.unidade.nome}"></td>
+                    <td>
+                        <form method="post"
+                              th:action="@{'/ui/admin/usuarios/' + ${usuario.id} + '/vinculos/' + ${v.id} + '/perfil'}"
+                              class="form-inline">
+                            <select class="form-control form-control-sm mr-2" name="perfilId">
+                                <option th:each="p : ${perfis}" th:value="${p.id}" th:text="${p.nome}"
+                                        th:selected="${p.id == v.perfil.id}"></option>
+                            </select>
+                            <button class="btn btn-sm btn-outline-primary" type="submit">Trocar</button>
+                        </form>
+                    </td>
+                    <td>
+                        <span class="badge" th:classappend="${v.ativo} ? 'badge-success' : 'badge-secondary'"
+                              th:text="${v.ativo} ? 'ATIVO' : 'INATIVO'"></span>
+                    </td>
+                    <td class="text-right">
+                        <form method="post"
+                              th:action="@{'/ui/admin/usuarios/' + ${usuario.id} + '/vinculos/' + ${v.id} + '/remover'}"
+                              class="d-inline">
+                            <button class="btn btn-sm btn-outline-danger" type="submit">Remover</button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</th:block>
+</html>

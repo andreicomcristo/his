@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(${modoEdicao} ? 'Administracao - Editar Sexo' : 'Administracao - Novo Sexo', ~{::content})}">
+<th:block th:fragment="content">
+    <div class="main-card mb-3 card">
+        <div class="card-body">
+            <h5 class="card-title" th:text="${modoEdicao} ? 'Editar sexo' : 'Novo sexo'">Sexo</h5>
+            <form method="post"
+                  th:object="${form}"
+                  th:action="${modoEdicao} ? @{'/ui/admin/sexos/' + ${itemId}} : @{/ui/admin/sexos}">
+                <div class="form-row">
+                    <div class="form-group col-md-3">
+                        <label>Codigo<span class="required-mark">*</span></label>
+                        <input type="text" class="form-control" th:field="*{codigo}" maxlength="10">
+                        <small class="text-danger" th:errors="*{codigo}"></small>
+                    </div>
+                    <div class="form-group col-md-5">
+                        <label>Descricao<span class="required-mark">*</span></label>
+                        <input type="text" class="form-control" th:field="*{descricao}" maxlength="60">
+                        <small class="text-danger" th:errors="*{descricao}"></small>
+                    </div>
+                    <div class="form-group col-md-4 d-flex align-items-center">
+                        <div class="form-check mt-4">
+                            <input type="checkbox" class="form-check-input" th:field="*{ativo}">
+                            <label class="form-check-label" for="ativo">Ativo</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="alert alert-danger" th:if="${#fields.hasGlobalErrors()}">
+                    <div th:each="err : ${#fields.globalErrors()}" th:text="${err}"></div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-sm">Salvar</button>
+                <a th:href="@{/ui/admin/sexos}" class="btn btn-secondary btn-sm">Voltar</a>
+            </form>
+        </div>
+    </div>
+</th:block>
+</html>

@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:replace="~{layout/base :: layout('HIS | Indicadores Lean - Taxa de Ocupacao', ~{::section})}">
+    <section>
+        <style>
+            .filtro-label {
+                font-weight: 700;
+            }
+
+            .lean-page-title {
+                margin-bottom: 1rem;
+            }
+
+            .lean-page-title .title-main {
+                font-size: 1.2rem;
+                font-weight: 700;
+                color: #2f3542;
+            }
+
+            .lean-page-title .title-sub {
+                color: #6c757d;
+                font-size: .9rem;
+            }
+
+            .lean-filter-card {
+                border: 1px solid #e7ebf0;
+                border-radius: .35rem;
+                background: #fff;
+                box-shadow: 0 .46875rem 2.1875rem rgba(31, 10, 6, .03),
+                            0 .9375rem 1.40625rem rgba(31, 10, 6, .03),
+                            0 .25rem .53125rem rgba(31, 10, 6, .05),
+                            0 .125rem .1875rem rgba(31, 10, 6, .03);
+            }
+
+            .lean-kpi-card {
+                box-shadow: 0 .46875rem 2.1875rem rgba(31, 10, 6, .03),
+                            0 .9375rem 1.40625rem rgba(31, 10, 6, .03),
+                            0 .25rem .53125rem rgba(31, 10, 6, .05),
+                            0 .125rem .1875rem rgba(31, 10, 6, .03);
+            }
+
+            .lean-kpi-code {
+                font-weight: 700;
+                font-size: .75rem;
+                letter-spacing: .02em;
+            }
+
+            .lean-kpi-info {
+                margin-top: .35rem;
+                font-size: .78rem;
+                color: #6c757d;
+            }
+
+            .lean-kpi-progress {
+                margin: .6rem 0 .1rem;
+                height: 6px;
+                background: #edf1f7;
+            }
+
+            .lean-table-card {
+                border: 1px solid #e7ebf0;
+                border-radius: .35rem;
+                box-shadow: 0 .46875rem 2.1875rem rgba(31, 10, 6, .03),
+                            0 .9375rem 1.40625rem rgba(31, 10, 6, .03),
+                            0 .25rem .53125rem rgba(31, 10, 6, .05),
+                            0 .125rem .1875rem rgba(31, 10, 6, .03);
+            }
+
+            .lean-table-card .card-header {
+                background: #f8f9fb;
+                border-bottom: 1px solid #e9edf2;
+            }
+
+            .lean-table-card .table thead th {
+                text-transform: uppercase;
+                font-size: .73rem;
+                letter-spacing: .03em;
+                color: #6c757d;
+                border-top: 0;
+            }
+
+            .lean-table-card .table tbody td {
+                vertical-align: middle;
+            }
+
+            .lean-indicador-link {
+                display: inline-flex;
+                align-items: center;
+                gap: .35rem;
+                font-weight: 700;
+                color: #2f3542;
+                cursor: pointer;
+                text-decoration: none;
+            }
+
+            .lean-indicador-link:hover,
+            .lean-indicador-link:focus {
+                text-decoration: none;
+                color: #da624a;
+            }
+        </style>
+
+        <div class="lean-page-title d-flex justify-content-between align-items-start">
+            <div>
+                <div class="title-main">Indicadores Lean - Taxa de Ocupacao</div>
+                <div class="title-sub">Painel TO-01 a TO-05 com visao nominal (base fixa) e operacional (base total)</div>
+            </div>
+            <a class="btn btn-outline-secondary btn-sm"
+               th:href="@{/api/assistencial/indicadores/lean/taxa-ocupacao(dataInicio=${dataInicio},dataFim=${dataFim})}">
+                Ver JSON
+            </a>
+        </div>
+
+        <div class="lean-filter-card card mb-3">
+            <div class="card-body">
+                <div class="alert alert-danger" th:if="${errorMessage}" th:text="${errorMessage}"></div>
+
+                <form th:action="@{/ui/indicadores/lean/taxa-ocupacao}" method="get">
+                    <div class="form-row">
+                        <div class="form-group col-md-3">
+                            <label for="dataInicio" class="filtro-label">Data inicio</label>
+                            <input id="dataInicio" name="dataInicio" type="date" class="form-control" th:value="${dataInicio}">
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label for="dataFim" class="filtro-label">Data fim</label>
+                            <input id="dataFim" name="dataFim" type="date" class="form-control" th:value="${dataFim}">
+                        </div>
+                        <div class="form-group col-md-2 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary btn-block">Consultar</button>
+                        </div>
+                        <div class="form-group col-md-2 d-flex align-items-end">
+                            <a th:href="@{/ui/indicadores/lean/taxa-ocupacao}" class="btn btn-outline-secondary btn-block">Limpar</a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="row" th:if="${resultado != null}">
+            <div class="col-md-6 col-xl-4 mb-3" th:each="item : ${resultado.indicadores}"
+                 th:with="
+                    accent=${item.codigo == 'TO-01'} ? '#da624a'
+                        : (${item.codigo == 'TO-02'} ? '#3ac47d'
+                        : (${item.codigo == 'TO-03'} ? '#f7b924'
+                        : (${item.codigo == 'TO-04'} ? '#16aaff' : '#794c8a'))),
+                    progress=${item.taxaNominalPercentual == null ? 0 : (item.taxaNominalPercentual > 100 ? 100 : item.taxaNominalPercentual)}">
+                <div class="card card-btm-border lean-kpi-card" th:style="'border-bottom-color:' + ${accent} + ';'">
+                    <div class="widget-chart widget-chart-hover text-left p-3">
+                        <div class="icon-wrapper rounded-circle mr-3" th:style="'border:1px solid ' + ${accent} + ';'">
+                            <div class="icon-wrapper-bg" th:style="'background:' + ${accent} + ';'"></div>
+                            <i class="pe-7s-network" th:style="'color:' + ${accent} + ';'"></i>
+                        </div>
+                        <div class="widget-chart-content">
+                            <div class="widget-subheading" th:text="${item.descricao}">Taxa</div>
+                            <div class="widget-numbers">
+                                <span th:text="${item.taxaNominalPercentual != null ? #numbers.formatDecimal(item.taxaNominalPercentual, 1, 2) : 'N/A'}">0,00</span>
+                                <span th:if="${item.taxaNominalPercentual != null}">%</span>
+                            </div>
+                            <div class="widget-description">
+                                <span class="lean-kpi-code" th:text="${item.codigo}">TO-01</span>
+                                <div class="lean-kpi-info">
+                                    <strong>Fixos:</strong> <span th:text="${item.leitosFixosElegiveis}">0</span> |
+                                    <strong>Totais:</strong> <span th:text="${item.leitosTotaisElegiveis}">0</span> |
+                                    <strong>Min ocupados:</strong> <span th:text="${#numbers.formatDecimal(item.minutosOcupados, 1, 2)}">0</span>
+                                </div>
+                                <div class="lean-kpi-info">
+                                    <strong>Operacional:</strong>
+                                    <span th:text="${item.taxaOperacionalPercentual != null ? #numbers.formatDecimal(item.taxaOperacionalPercentual, 1, 2) + '%' : 'N/A'}">0,00%</span>
+                                </div>
+                            </div>
+                            <div class="progress lean-kpi-progress">
+                                <div class="progress-bar" role="progressbar"
+                                     th:style="'width:' + ${progress} + '%; background:' + ${accent} + ';'"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="lean-table-card card mb-3" th:if="${resultado != null}">
+            <div class="card-header">
+                <strong>Indicadores oficiais Lean (TO-01 a TO-05)</strong>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover table-striped table-sm mb-0">
+                        <thead>
+                        <tr>
+                            <th>Codigo</th>
+                            <th>Indicador</th>
+                            <th>Leitos fixos</th>
+                            <th>Leitos totais</th>
+                            <th>Minutos ocupados</th>
+                            <th>Min disponivel nominal</th>
+                            <th>Min disponivel operacional</th>
+                            <th>Taxa nominal (%)</th>
+                            <th>Taxa operacional (%)</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:if="${#lists.isEmpty(resultado.indicadores)}">
+                            <td colspan="9" class="text-center">Sem dados para o periodo informado</td>
+                        </tr>
+                        <tr th:each="item : ${resultado.indicadores}">
+                            <td>
+                                <a href="#" class="lean-indicador-link"
+                                   th:attr="data-codigo=${item.codigo},data-descricao=${item.descricao}">
+                                    <span th:text="${item.codigo}">TO-01</span>
+                                    <i class="pe-7s-help1"></i>
+                                </a>
+                            </td>
+                            <td th:text="${item.descricao}">Taxa</td>
+                            <td th:text="${item.leitosFixosElegiveis}">0</td>
+                            <td th:text="${item.leitosTotaisElegiveis}">0</td>
+                            <td th:text="${#numbers.formatDecimal(item.minutosOcupados, 1, 2)}">0</td>
+                            <td th:text="${item.minutosDisponiveisNominal}">0</td>
+                            <td th:text="${item.minutosDisponiveisOperacional}">0</td>
+                            <td th:text="${item.taxaNominalPercentual != null ? #numbers.formatDecimal(item.taxaNominalPercentual, 1, 2) : 'N/A'}">0,00</td>
+                            <td th:text="${item.taxaOperacionalPercentual != null ? #numbers.formatDecimal(item.taxaOperacionalPercentual, 1, 2) : 'N/A'}">0,00</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="lean-table-card card" th:if="${resultado != null and !#lists.isEmpty(resultado.indicadoresPorTipoLeito)}">
+            <div class="card-header">
+                <strong>Detalhamento por tipo de leito</strong>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover table-striped table-sm mb-0">
+                        <thead>
+                        <tr>
+                            <th>Tipo de leito</th>
+                            <th>Leitos fixos</th>
+                            <th>Leitos totais</th>
+                            <th>Minutos ocupados</th>
+                            <th>Min disponivel nominal</th>
+                            <th>Min disponivel operacional</th>
+                            <th>Taxa nominal (%)</th>
+                            <th>Taxa operacional (%)</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="item : ${resultado.indicadoresPorTipoLeito}">
+                            <td th:text="${item.tipoLeito}">ENFERMARIA</td>
+                            <td th:text="${item.leitosFixosElegiveis}">0</td>
+                            <td th:text="${item.leitosTotaisElegiveis}">0</td>
+                            <td th:text="${#numbers.formatDecimal(item.minutosOcupados, 1, 2)}">0</td>
+                            <td th:text="${item.minutosDisponiveisNominal}">0</td>
+                            <td th:text="${item.minutosDisponiveisOperacional}">0</td>
+                            <td th:text="${item.taxaNominalPercentual != null ? #numbers.formatDecimal(item.taxaNominalPercentual, 1, 2) : 'N/A'}">0,00</td>
+                            <td th:text="${item.taxaOperacionalPercentual != null ? #numbers.formatDecimal(item.taxaOperacionalPercentual, 1, 2) : 'N/A'}">0,00</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="modalRegraIndicador" tabindex="-1" role="dialog" aria-labelledby="modalRegraIndicadorLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modalRegraIndicadorLabel">Regra do indicador</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="mb-2"><strong id="modalRegraIndicadorCodigo">TO-01</strong> - <span id="modalRegraIndicadorDescricao">Descricao</span></p>
+                        <div id="modalRegraIndicadorTexto"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const regras = {
+                    'TO-01': {
+                        curta: 'Taxa hospitalar com duas visoes: nominal (base fixa) e operacional (base total).',
+                        detalhe: '<p><strong>Numerador (ambas):</strong> minutos ocupados em todos os leitos assistenciais ativos.</p>' +
+                            '<p><strong>TO nominal:</strong> minutos ocupados / minutos disponiveis dos leitos fixos.</p>' +
+                            '<p class="mb-0"><strong>TO operacional:</strong> minutos ocupados / minutos disponiveis de leitos fixos + virtuais ativos.</p>'
+                    },
+                    'TO-02': {
+                        curta: 'Taxa dos leitos clinicos com visao nominal e operacional.',
+                        detalhe: '<p><strong>Escopo:</strong> apenas leitos com perfil CLINICO.</p>' +
+                            '<p><strong>TO nominal:</strong> usa somente base fixa (CNES + fixo nao CNES).</p>' +
+                            '<p class="mb-0"><strong>TO operacional:</strong> usa base fixa + virtual superlotacao.</p>'
+                    },
+                    'TO-03': {
+                        curta: 'Taxa dos leitos cirurgicos com visao nominal e operacional.',
+                        detalhe: '<p><strong>Escopo:</strong> apenas leitos com perfil CIRURGICO.</p>' +
+                            '<p><strong>TO nominal:</strong> base fixa.</p>' +
+                            '<p class="mb-0"><strong>TO operacional:</strong> base fixa + virtual superlotacao.</p>'
+                    },
+                    'TO-04': {
+                        curta: 'Taxa dos leitos de UTI geral com visao nominal e operacional.',
+                        detalhe: '<p><strong>Escopo:</strong> apenas tipo de leito UTI_GERAL.</p>' +
+                            '<p><strong>TO nominal:</strong> base fixa.</p>' +
+                            '<p class="mb-0"><strong>TO operacional:</strong> base fixa + virtual superlotacao.</p>'
+                    },
+                    'TO-05': {
+                        curta: 'Taxa dos leitos de semi-intensiva com visao nominal e operacional.',
+                        detalhe: '<p><strong>Escopo:</strong> apenas tipo de leito SEMI_INTENSIVA.</p>' +
+                            '<p><strong>TO nominal:</strong> base fixa.</p>' +
+                            '<p class="mb-0"><strong>TO operacional:</strong> base fixa + virtual superlotacao.</p>'
+                    }
+                };
+
+                if (!window.jQuery) {
+                    return;
+                }
+
+                const $ = window.jQuery;
+
+                $('.lean-indicador-link').each(function () {
+                    const codigo = ($(this).data('codigo') || '').toString();
+                    const regra = regras[codigo];
+                    const title = regra ? regra.curta : 'Sem regra documentada para este indicador.';
+                    $(this).attr('title', title);
+                    $(this).attr('data-toggle', 'tooltip');
+                    $(this).attr('data-placement', 'top');
+                });
+
+                $('[data-toggle="tooltip"]').tooltip();
+
+                $('.lean-indicador-link').on('click', function (event) {
+                    event.preventDefault();
+                    const codigo = ($(this).data('codigo') || '').toString();
+                    const descricao = ($(this).data('descricao') || '').toString();
+                    const regra = regras[codigo];
+
+                    $('#modalRegraIndicadorCodigo').text(codigo || 'N/A');
+                    $('#modalRegraIndicadorDescricao').text(descricao || 'Indicador');
+                    $('#modalRegraIndicadorTexto').html(regra ? regra.detalhe : '<p class="mb-0">Regra ainda nao cadastrada para este indicador.</p>');
+                    $('#modalRegraIndicador').modal('show');
+                });
+            });
+        </script>
+    </section>
+</th:block>
+</body>
+</html>
