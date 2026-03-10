@@ -67,7 +67,7 @@
                                 </div>
                                 <div class="form-group" th:classappend="*{temporario} ? 'col-md-3' : 'col-md-6'">
                                     <label>Sexo<span class="required-mark">*</span></label>
-                                    <select class="form-control" th:field="*{sexo}">
+                                    <select class="multiselect-dropdown form-control" th:field="*{sexo}">
                                         <option value="">Selecione</option>
                                         <option th:each="item : ${sexos}" th:value="${item.codigo}" th:text="${item.descricao}"></option>
                                     </select>
@@ -78,21 +78,21 @@
                             <div class="form-row">
                                 <div class="form-group col-md-4">
                                     <label>Orientacao Sexual</label>
-                                    <select class="form-control" th:field="*{orientacaoSexualId}">
+                                    <select class="multiselect-dropdown form-control" th:field="*{orientacaoSexualId}">
                                         <option value="">Selecione</option>
                                         <option th:each="item : ${orientacoesSexuais}" th:value="${item.id}" th:text="${item.descricao}"></option>
                                     </select>
                                 </div>
                                 <div class="form-group col-md-4">
                                     <label>Identidade de Genero</label>
-                                    <select class="form-control" th:field="*{identidadeGeneroId}">
+                                    <select class="multiselect-dropdown form-control" th:field="*{identidadeGeneroId}">
                                         <option value="">Selecione</option>
                                         <option th:each="item : ${identidadesGenero}" th:value="${item.id}" th:text="${item.descricao}"></option>
                                     </select>
                                 </div>
                                 <div class="form-group col-md-4">
                                     <label>Pessoa com Deficiencia</label>
-                                    <select class="form-control" th:field="*{deficienciaId}">
+                                    <select class="multiselect-dropdown form-control" th:field="*{deficienciaId}">
                                         <option value="">Selecione</option>
                                         <option th:each="item : ${deficiencias}" th:value="${item.id}" th:text="${item.descricao}"></option>
                                     </select>
@@ -113,21 +113,21 @@
                             <div class="form-row">
                                 <div class="form-group col-md-4">
                                     <label>Raça ou Cor</label>
-                                    <select class="form-control" th:field="*{racaCorId}">
+                                    <select class="multiselect-dropdown form-control" th:field="*{racaCorId}">
                                         <option value="">Selecione</option>
                                         <option th:each="item : ${racasCor}" th:value="${item.id}" th:text="${item.descricao}"></option>
                                     </select>
                                 </div>
                                 <div class="form-group col-md-4">
                                     <label>Etnia Indigena</label>
-                                    <select class="form-control" th:field="*{etniaIndigenaId}">
+                                    <select class="multiselect-dropdown form-control" th:field="*{etniaIndigenaId}">
                                         <option value="">Selecione</option>
                                         <option th:each="item : ${etniasIndigenas}" th:value="${item.id}" th:text="${item.descricao}"></option>
                                     </select>
                                 </div>
                                 <div class="form-group col-md-4">
                                     <label>Tipo Sanguineo</label>
-                                    <select class="form-control" th:field="*{tipoSanguineoId}">
+                                    <select class="multiselect-dropdown form-control" th:field="*{tipoSanguineoId}">
                                         <option value="">Selecione</option>
                                         <option th:each="item : ${tiposSanguineos}" th:value="${item.id}" th:text="${item.descricao}"></option>
                                     </select>
@@ -137,14 +137,14 @@
                             <div class="form-row">
                                 <div class="form-group col-md-6">
                                     <label>Nacionalidade</label>
-                                    <select class="form-control" th:field="*{nacionalidadeId}">
+                                    <select class="multiselect-dropdown form-control" th:field="*{nacionalidadeId}">
                                         <option value="">Selecione</option>
                                         <option th:each="item : ${nacionalidades}" th:value="${item.id}" th:text="${item.descricao}"></option>
                                     </select>
                                 </div>
                                 <div class="form-group col-md-6">
                                     <label>Naturalidade</label>
-                                    <select class="form-control" th:field="*{naturalidadeId}">
+                                    <select class="multiselect-dropdown form-control" th:field="*{naturalidadeId}">
                                         <option value="">Selecione</option>
                                         <option th:each="item : ${naturalidades}" th:value="${item.id}" th:text="${item.descricao}"></option>
                                     </select>
@@ -165,14 +165,14 @@
                             <div class="form-row">
                                 <div class="form-group col-md-6">
                                     <label>Escolaridade</label>
-                                    <select class="form-control" th:field="*{escolaridadeId}">
+                                    <select class="multiselect-dropdown form-control" th:field="*{escolaridadeId}">
                                         <option value="">Selecione</option>
                                         <option th:each="item : ${escolaridades}" th:value="${item.id}" th:text="${item.descricao}"></option>
                                     </select>
                                 </div>
                                 <div class="form-group col-md-6">
                                     <label>Estado Civil</label>
-                                    <select class="form-control" th:field="*{estadoCivilId}">
+                                    <select class="multiselect-dropdown form-control" th:field="*{estadoCivilId}">
                                         <option value="">Selecione</option>
                                         <option th:each="item : ${estadosCivis}" th:value="${item.id}" th:text="${item.descricao}"></option>
                                     </select>
@@ -182,14 +182,14 @@
                             <div class="form-row">
                                 <div class="form-group col-md-6">
                                     <label>Profissao</label>
-                                    <select class="form-control" th:field="*{profissaoId}">
+                                    <select class="multiselect-dropdown form-control" th:field="*{profissaoId}">
                                         <option value="">Selecione</option>
                                         <option th:each="item : ${profissoes}" th:value="${item.id}" th:text="${item.descricao}"></option>
                                     </select>
                                 </div>
                                 <div class="form-group col-md-6">
                                     <label>Procedencia</label>
-                                    <select class="form-control" th:field="*{procedenciaId}">
+                                    <select class="multiselect-dropdown form-control" th:field="*{procedenciaId}">
                                         <option value="">Selecione</option>
                                         <option th:each="item : ${procedencias}" th:value="${item.id}" th:text="${item.descricao}"></option>
                                     </select>
@@ -237,14 +237,14 @@
                             <div class="form-row">
                                 <div class="form-group col-md-6">
                                     <label>UF</label>
-                                    <select class="form-control" th:field="*{unidadeFederativaId}" id="unidadeFederativaId">
+                                    <select class="multiselect-dropdown form-control" th:field="*{unidadeFederativaId}" id="unidadeFederativaId">
                                         <option value="">Selecione</option>
                                         <option th:each="item : ${ufs}" th:value="${item.id}" th:text="${item.nome + ' - ' + item.sigla}"></option>
                                     </select>
                                 </div>
                                 <div class="form-group col-md-6">
                                     <label>Cidade</label>
-                                    <select class="form-control" th:field="*{cidadeId}" id="cidadeId">
+                                    <select class="multiselect-dropdown form-control" th:field="*{cidadeId}" id="cidadeId">
                                         <option value="">Selecione</option>
                                         <option th:each="item : ${cidades}" th:value="${item.id}" th:text="${item.nome}"></option>
                                     </select>
@@ -390,8 +390,7 @@
                     }
                     if (ufSelect && data.unidadeFederativaId) {
                         ufSelect.value = String(data.unidadeFederativaId);
-                    }
-                    if (ufSelect && data.unidadeFederativaId) {
+                        $(ufSelect).trigger('change');
                         loadCidades(data.unidadeFederativaId, data.cidadeId);
                     }
                 }
@@ -402,8 +401,14 @@
                     if (nomeInput && data.nome) { nomeInput.value = data.nome; }
                     if (nomeMaeInput && data.nomeMae) { nomeMaeInput.value = data.nomeMae; }
                     if (nomePaiInput && data.nomePai) { nomePaiInput.value = data.nomePai; }
-                    if (sexoInput && data.sexo) { sexoInput.value = data.sexo; }
-                    if (racaCorInput && data.racaCorId) { racaCorInput.value = String(data.racaCorId); }
+                    if (sexoInput && data.sexo) {
+                        sexoInput.value = data.sexo;
+                        $(sexoInput).trigger('change');
+                    }
+                    if (racaCorInput && data.racaCorId) {
+                        racaCorInput.value = String(data.racaCorId);
+                        $(racaCorInput).trigger('change');
+                    }
                     if (dataNascimentoInput && data.dataNascimento) { dataNascimentoInput.value = data.dataNascimento; }
                     if (emailInput && data.email) { emailInput.value = data.email.replace(/^mailto:/i, ''); }
                     if (cepInput && data.cep) { cepInput.value = maskCep(data.cep); }
@@ -413,6 +418,7 @@
                     if (bairroInput && data.bairro) { bairroInput.value = data.bairro; }
                     if (ufSelect && data.unidadeFederativaId) {
                         ufSelect.value = String(data.unidadeFederativaId);
+                        $(ufSelect).trigger('change');
                         loadCidades(data.unidadeFederativaId, data.cidadeId);
                     }
                 }

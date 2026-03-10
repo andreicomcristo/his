@@ -38,3 +38,4 @@ src/main/resources/application-local.properties
 # macOS / ambientes locais
 .DS_Store
 .venv/
+local/
