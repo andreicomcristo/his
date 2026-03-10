@@ -494,9 +494,9 @@
                     if (ufSelect.value) {
                         loadCidades(ufSelect.value, selectedCidadeId);
                     }
-                    ufSelect.addEventListener('change', function () {
-                        loadCidades(this.value, null);
-                    });
+                    $(ufSelect).on('change', function () {
+                    loadCidades(this.value, null);
+                });
                 }
 
                 if (cepInput) {
