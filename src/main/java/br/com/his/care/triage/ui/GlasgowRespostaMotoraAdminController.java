@@ -29,7 +29,7 @@ public class GlasgowRespostaMotoraAdminController {
     public String listar(@RequestParam(required = false) String q, Model model) {
         model.addAttribute("items", service.listar(q));
         model.addAttribute("q", q);
-        return "pages/admin/glasgow-resposta-motora/list";
+        return "pages/care/triage/admin/glasgow-resposta-motora/list";
     }
 
     @GetMapping("/novo")
@@ -38,7 +38,7 @@ public class GlasgowRespostaMotoraAdminController {
             model.addAttribute("form", new GlasgowRespostaMotoraForm());
         }
         model.addAttribute("modoEdicao", false);
-        return "pages/admin/glasgow-resposta-motora/form";
+        return "pages/care/triage/admin/glasgow-resposta-motora/form";
     }
 
     @PostMapping
@@ -48,7 +48,7 @@ public class GlasgowRespostaMotoraAdminController {
                         RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
             model.addAttribute("modoEdicao", false);
-            return "pages/admin/glasgow-resposta-motora/form";
+            return "pages/care/triage/admin/glasgow-resposta-motora/form";
         }
         service.criar(form);
         redirectAttributes.addFlashAttribute("successMessage", "Item da escala de Glasgow (resposta motora) cadastrado com sucesso");
@@ -60,7 +60,7 @@ public class GlasgowRespostaMotoraAdminController {
         model.addAttribute("form", service.toForm(service.buscar(id)));
         model.addAttribute("modoEdicao", true);
         model.addAttribute("itemId", id);
-        return "pages/admin/glasgow-resposta-motora/form";
+        return "pages/care/triage/admin/glasgow-resposta-motora/form";
     }
 
     @PostMapping("/{id}")
@@ -72,7 +72,7 @@ public class GlasgowRespostaMotoraAdminController {
         if (bindingResult.hasErrors()) {
             model.addAttribute("modoEdicao", true);
             model.addAttribute("itemId", id);
-            return "pages/admin/glasgow-resposta-motora/form";
+            return "pages/care/triage/admin/glasgow-resposta-motora/form";
         }
         service.atualizar(id, form);
         redirectAttributes.addFlashAttribute("successMessage", "Item da escala de Glasgow (resposta motora) atualizado com sucesso");

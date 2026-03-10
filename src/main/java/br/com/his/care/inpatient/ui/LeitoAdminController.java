@@ -35,7 +35,7 @@ public class LeitoAdminController {
         model.addAttribute("items", items);
         model.addAttribute("mapaModalidades", service.mapaModalidadesDescricao(items));
         model.addAttribute("q", q);
-        return "pages/admin/leitos/list";
+        return "pages/care/inpatient/admin/leitos/list";
     }
 
     @GetMapping("/novo")
@@ -45,7 +45,7 @@ public class LeitoAdminController {
         }
         model.addAttribute("modoEdicao", false);
         populateModel(model);
-        return "pages/admin/leitos/form";
+        return "pages/care/inpatient/admin/leitos/form";
     }
 
     @PostMapping
@@ -56,7 +56,7 @@ public class LeitoAdminController {
         if (bindingResult.hasErrors()) {
             model.addAttribute("modoEdicao", false);
             populateModel(model);
-            return "pages/admin/leitos/form";
+            return "pages/care/inpatient/admin/leitos/form";
         }
         try {
             service.criar(form);
@@ -66,7 +66,7 @@ public class LeitoAdminController {
             model.addAttribute("modoEdicao", false);
             model.addAttribute("errorMessage", ex.getMessage());
             populateModel(model);
-            return "pages/admin/leitos/form";
+            return "pages/care/inpatient/admin/leitos/form";
         }
     }
 
@@ -76,7 +76,7 @@ public class LeitoAdminController {
         model.addAttribute("modoEdicao", true);
         model.addAttribute("itemId", id);
         populateModel(model);
-        return "pages/admin/leitos/form";
+        return "pages/care/inpatient/admin/leitos/form";
     }
 
     @PostMapping("/{id}")
@@ -89,7 +89,7 @@ public class LeitoAdminController {
             model.addAttribute("modoEdicao", true);
             model.addAttribute("itemId", id);
             populateModel(model);
-            return "pages/admin/leitos/form";
+            return "pages/care/inpatient/admin/leitos/form";
         }
         try {
             service.atualizar(id, form);
@@ -100,7 +100,7 @@ public class LeitoAdminController {
             model.addAttribute("itemId", id);
             model.addAttribute("errorMessage", ex.getMessage());
             populateModel(model);
-            return "pages/admin/leitos/form";
+            return "pages/care/inpatient/admin/leitos/form";
         }
     }
 

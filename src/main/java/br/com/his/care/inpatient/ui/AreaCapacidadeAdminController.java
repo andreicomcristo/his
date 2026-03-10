@@ -33,7 +33,7 @@ public class AreaCapacidadeAdminController {
         }
         model.addAttribute("area", service.buscarArea(areaId));
         model.addAttribute("capacidades", capacidadeAreaAdminService.listarTodas());
-        return "pages/admin/areas/capacidades";
+        return "pages/care/inpatient/admin/areas/capacidades";
     }
 
     @PostMapping

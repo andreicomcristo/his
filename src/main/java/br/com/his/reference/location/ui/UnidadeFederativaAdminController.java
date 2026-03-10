@@ -29,7 +29,7 @@ public class UnidadeFederativaAdminController {
     public String listar(@RequestParam(required = false) String q, Model model) {
         model.addAttribute("items", service.listar(q));
         model.addAttribute("q", q);
-        return "pages/admin/unidades-federativas/list";
+        return "pages/reference/location/admin/unidades-federativas/list";
     }
 
     @GetMapping("/novo")
@@ -38,7 +38,7 @@ public class UnidadeFederativaAdminController {
             model.addAttribute("form", new UnidadeFederativaForm());
         }
         model.addAttribute("modoEdicao", false);
-        return "pages/admin/unidades-federativas/form";
+        return "pages/reference/location/admin/unidades-federativas/form";
     }
 
     @PostMapping
@@ -48,7 +48,7 @@ public class UnidadeFederativaAdminController {
                         RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
             model.addAttribute("modoEdicao", false);
-            return "pages/admin/unidades-federativas/form";
+            return "pages/reference/location/admin/unidades-federativas/form";
         }
         service.criar(form);
         redirectAttributes.addFlashAttribute("successMessage", "UF cadastrada com sucesso");
@@ -60,7 +60,7 @@ public class UnidadeFederativaAdminController {
         model.addAttribute("form", service.toForm(service.buscar(id)));
         model.addAttribute("modoEdicao", true);
         model.addAttribute("itemId", id);
-        return "pages/admin/unidades-federativas/form";
+        return "pages/reference/location/admin/unidades-federativas/form";
     }
 
     @PostMapping("/{id}")
@@ -72,7 +72,7 @@ public class UnidadeFederativaAdminController {
         if (bindingResult.hasErrors()) {
             model.addAttribute("modoEdicao", true);
             model.addAttribute("itemId", id);
-            return "pages/admin/unidades-federativas/form";
+            return "pages/reference/location/admin/unidades-federativas/form";
         }
         service.atualizar(id, form);
         redirectAttributes.addFlashAttribute("successMessage", "UF atualizada com sucesso");

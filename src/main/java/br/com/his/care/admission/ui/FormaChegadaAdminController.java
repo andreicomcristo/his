@@ -29,7 +29,7 @@ public class FormaChegadaAdminController {
     public String listar(@RequestParam(required = false) String q, Model model) {
         model.addAttribute("items", service.listar(q));
         model.addAttribute("q", q);
-        return "pages/admin/formas-chegada/list";
+        return "pages/care/admission/admin/formas-chegada/list";
     }
 
     @GetMapping("/novo")
@@ -38,7 +38,7 @@ public class FormaChegadaAdminController {
             model.addAttribute("form", new FormaChegadaForm());
         }
         model.addAttribute("modoEdicao", false);
-        return "pages/admin/formas-chegada/form";
+        return "pages/care/admission/admin/formas-chegada/form";
     }
 
     @PostMapping
@@ -48,7 +48,7 @@ public class FormaChegadaAdminController {
                         RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
             model.addAttribute("modoEdicao", false);
-            return "pages/admin/formas-chegada/form";
+            return "pages/care/admission/admin/formas-chegada/form";
         }
         service.criar(form);
         redirectAttributes.addFlashAttribute("successMessage", "Forma de chegada cadastrada com sucesso");
@@ -60,7 +60,7 @@ public class FormaChegadaAdminController {
         model.addAttribute("form", service.toForm(service.buscar(id)));
         model.addAttribute("modoEdicao", true);
         model.addAttribute("itemId", id);
-        return "pages/admin/formas-chegada/form";
+        return "pages/care/admission/admin/formas-chegada/form";
     }
 
     @PostMapping("/{id}")
@@ -72,7 +72,7 @@ public class FormaChegadaAdminController {
         if (bindingResult.hasErrors()) {
             model.addAttribute("modoEdicao", true);
             model.addAttribute("itemId", id);
-            return "pages/admin/formas-chegada/form";
+            return "pages/care/admission/admin/formas-chegada/form";
         }
         service.atualizar(id, form);
         redirectAttributes.addFlashAttribute("successMessage", "Forma de chegada atualizada com sucesso");

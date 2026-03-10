@@ -29,7 +29,7 @@ public class TipoDesfechoAdminController {
     public String listar(@RequestParam(required = false) String q, Model model) {
         model.addAttribute("items", service.listar(q));
         model.addAttribute("q", q);
-        return "pages/admin/tipos-desfecho/list";
+        return "pages/care/attendance/admin/tipos-desfecho/list";
     }
 
     @GetMapping("/novo")
@@ -38,7 +38,7 @@ public class TipoDesfechoAdminController {
             model.addAttribute("form", new TipoDesfechoForm());
         }
         model.addAttribute("modoEdicao", false);
-        return "pages/admin/tipos-desfecho/form";
+        return "pages/care/attendance/admin/tipos-desfecho/form";
     }
 
     @PostMapping
@@ -48,7 +48,7 @@ public class TipoDesfechoAdminController {
                         RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
             model.addAttribute("modoEdicao", false);
-            return "pages/admin/tipos-desfecho/form";
+            return "pages/care/attendance/admin/tipos-desfecho/form";
         }
         service.criar(form);
         redirectAttributes.addFlashAttribute("successMessage", "Tipo de desfecho cadastrado com sucesso");
@@ -60,7 +60,7 @@ public class TipoDesfechoAdminController {
         model.addAttribute("form", service.toForm(service.buscar(id)));
         model.addAttribute("modoEdicao", true);
         model.addAttribute("itemId", id);
-        return "pages/admin/tipos-desfecho/form";
+        return "pages/care/attendance/admin/tipos-desfecho/form";
     }
 
     @PostMapping("/{id}")
@@ -72,7 +72,7 @@ public class TipoDesfechoAdminController {
         if (bindingResult.hasErrors()) {
             model.addAttribute("modoEdicao", true);
             model.addAttribute("itemId", id);
-            return "pages/admin/tipos-desfecho/form";
+            return "pages/care/attendance/admin/tipos-desfecho/form";
         }
         service.atualizar(id, form);
         redirectAttributes.addFlashAttribute("successMessage", "Tipo de desfecho atualizado com sucesso");

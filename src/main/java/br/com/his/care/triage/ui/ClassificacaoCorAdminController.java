@@ -29,7 +29,7 @@ public class ClassificacaoCorAdminController {
     public String listar(@RequestParam(required = false) String q, Model model) {
         model.addAttribute("items", service.listar(q));
         model.addAttribute("q", q);
-        return "pages/admin/classificacao-cores/list";
+        return "pages/care/triage/admin/classificacao-cores/list";
     }
 
     @GetMapping("/novo")
@@ -38,7 +38,7 @@ public class ClassificacaoCorAdminController {
             model.addAttribute("form", new ClassificacaoCorForm());
         }
         model.addAttribute("modoEdicao", false);
-        return "pages/admin/classificacao-cores/form";
+        return "pages/care/triage/admin/classificacao-cores/form";
     }
 
     @PostMapping
@@ -48,7 +48,7 @@ public class ClassificacaoCorAdminController {
                         RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
             model.addAttribute("modoEdicao", false);
-            return "pages/admin/classificacao-cores/form";
+            return "pages/care/triage/admin/classificacao-cores/form";
         }
         service.criar(form);
         redirectAttributes.addFlashAttribute("successMessage", "Classificacao de cor cadastrada com sucesso");
@@ -60,7 +60,7 @@ public class ClassificacaoCorAdminController {
         model.addAttribute("form", service.toForm(service.buscar(id)));
         model.addAttribute("modoEdicao", true);
         model.addAttribute("itemId", id);
-        return "pages/admin/classificacao-cores/form";
+        return "pages/care/triage/admin/classificacao-cores/form";
     }
 
     @PostMapping("/{id}")
@@ -72,7 +72,7 @@ public class ClassificacaoCorAdminController {
         if (bindingResult.hasErrors()) {
             model.addAttribute("modoEdicao", true);
             model.addAttribute("itemId", id);
-            return "pages/admin/classificacao-cores/form";
+            return "pages/care/triage/admin/classificacao-cores/form";
         }
         service.atualizar(id, form);
         redirectAttributes.addFlashAttribute("successMessage", "Classificacao de cor atualizada com sucesso");

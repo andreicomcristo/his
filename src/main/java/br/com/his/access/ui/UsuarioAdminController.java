@@ -42,7 +42,7 @@ public class UsuarioAdminController {
     public String listar(@RequestParam(required = false) String q, Model model) {
         model.addAttribute("usuarios", usuarioAdminService.listar(q));
         model.addAttribute("q", q);
-        return "pages/admin/usuarios/list";
+        return "pages/access/admin/usuarios/list";
     }
 
     @GetMapping("/novo")
@@ -50,7 +50,7 @@ public class UsuarioAdminController {
         if (!model.containsAttribute("form")) {
             model.addAttribute("form", new UsuarioNovoForm());
         }
-        return "pages/admin/usuarios/novo";
+        return "pages/access/admin/usuarios/novo";
     }
 
     @PostMapping
@@ -59,7 +59,7 @@ public class UsuarioAdminController {
                         Model model,
                         RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
-            return "pages/admin/usuarios/novo";
+            return "pages/access/admin/usuarios/novo";
         }
         try {
             var usuario = usuarioAdminService.criarNoKeycloakERegistrarEspelho(form);
@@ -68,7 +68,7 @@ public class UsuarioAdminController {
         } catch (IllegalArgumentException ex) {
             bindingResult.reject("usuario", ex.getMessage());
             model.addAttribute("form", form);
-            return "pages/admin/usuarios/novo";
+            return "pages/access/admin/usuarios/novo";
         }
     }
 
@@ -81,7 +81,7 @@ public class UsuarioAdminController {
         }
         model.addAttribute("unidades", unidadeRepository.findAll());
         model.addAttribute("perfis", perfilRepository.findAll());
-        return "pages/admin/usuarios/detail";
+        return "pages/access/admin/usuarios/detail";
     }
 
     @PostMapping("/{id}/vinculos")
@@ -95,7 +95,7 @@ public class UsuarioAdminController {
             model.addAttribute("vinculos", usuarioAdminService.listarVinculos(id));
             model.addAttribute("unidades", unidadeRepository.findAll());
             model.addAttribute("perfis", perfilRepository.findAll());
-            return "pages/admin/usuarios/detail";
+            return "pages/access/admin/usuarios/detail";
         }
         try {
             usuarioAdminService.adicionarVinculo(id, vinculoForm);

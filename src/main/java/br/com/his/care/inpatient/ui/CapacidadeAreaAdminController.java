@@ -29,7 +29,7 @@ public class CapacidadeAreaAdminController {
     public String listar(@RequestParam(required = false) String q, Model model) {
         model.addAttribute("items", service.listar(q));
         model.addAttribute("q", q);
-        return "pages/admin/capacidades-area/list";
+        return "pages/care/inpatient/admin/capacidades-area/list";
     }
 
     @GetMapping("/novo")
@@ -38,7 +38,7 @@ public class CapacidadeAreaAdminController {
             model.addAttribute("form", new CapacidadeAreaForm());
         }
         model.addAttribute("modoEdicao", false);
-        return "pages/admin/capacidades-area/form";
+        return "pages/care/inpatient/admin/capacidades-area/form";
     }
 
     @PostMapping
@@ -48,7 +48,7 @@ public class CapacidadeAreaAdminController {
                         RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
             model.addAttribute("modoEdicao", false);
-            return "pages/admin/capacidades-area/form";
+            return "pages/care/inpatient/admin/capacidades-area/form";
         }
         service.criar(form);
         redirectAttributes.addFlashAttribute("successMessage", "Capacidade cadastrada com sucesso");
@@ -60,7 +60,7 @@ public class CapacidadeAreaAdminController {
         model.addAttribute("form", service.toForm(service.buscar(id)));
         model.addAttribute("modoEdicao", true);
         model.addAttribute("itemId", id);
-        return "pages/admin/capacidades-area/form";
+        return "pages/care/inpatient/admin/capacidades-area/form";
     }
 
     @PostMapping("/{id}")
@@ -72,7 +72,7 @@ public class CapacidadeAreaAdminController {
         if (bindingResult.hasErrors()) {
             model.addAttribute("modoEdicao", true);
             model.addAttribute("itemId", id);
-            return "pages/admin/capacidades-area/form";
+            return "pages/care/inpatient/admin/capacidades-area/form";
         }
         service.atualizar(id, form);
         redirectAttributes.addFlashAttribute("successMessage", "Capacidade atualizada com sucesso");

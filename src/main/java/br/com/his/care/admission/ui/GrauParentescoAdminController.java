@@ -29,7 +29,7 @@ public class GrauParentescoAdminController {
     public String listar(@RequestParam(required = false) String q, Model model) {
         model.addAttribute("items", service.listar(q));
         model.addAttribute("q", q);
-        return "pages/admin/graus-parentesco/list";
+        return "pages/care/admission/admin/graus-parentesco/list";
     }
 
     @GetMapping("/novo")
@@ -38,7 +38,7 @@ public class GrauParentescoAdminController {
             model.addAttribute("form", new GrauParentescoForm());
         }
         model.addAttribute("modoEdicao", false);
-        return "pages/admin/graus-parentesco/form";
+        return "pages/care/admission/admin/graus-parentesco/form";
     }
 
     @PostMapping
@@ -48,7 +48,7 @@ public class GrauParentescoAdminController {
                         RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
             model.addAttribute("modoEdicao", false);
-            return "pages/admin/graus-parentesco/form";
+            return "pages/care/admission/admin/graus-parentesco/form";
         }
         service.criar(form);
         redirectAttributes.addFlashAttribute("successMessage", "Grau de parentesco cadastrado com sucesso");
@@ -60,7 +60,7 @@ public class GrauParentescoAdminController {
         model.addAttribute("form", service.toForm(service.buscar(id)));
         model.addAttribute("modoEdicao", true);
         model.addAttribute("itemId", id);
-        return "pages/admin/graus-parentesco/form";
+        return "pages/care/admission/admin/graus-parentesco/form";
     }
 
     @PostMapping("/{id}")
@@ -72,7 +72,7 @@ public class GrauParentescoAdminController {
         if (bindingResult.hasErrors()) {
             model.addAttribute("modoEdicao", true);
             model.addAttribute("itemId", id);
-            return "pages/admin/graus-parentesco/form";
+            return "pages/care/admission/admin/graus-parentesco/form";
         }
         service.atualizar(id, form);
         redirectAttributes.addFlashAttribute("successMessage", "Grau de parentesco atualizado com sucesso");

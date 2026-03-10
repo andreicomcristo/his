@@ -29,7 +29,7 @@ public class AlergiaSeveridadeAdminController {
     public String listar(@RequestParam(required = false) String q, Model model) {
         model.addAttribute("items", service.listar(q));
         model.addAttribute("q", q);
-        return "pages/admin/alergias-severidades/list";
+        return "pages/care/triage/admin/alergias-severidades/list";
     }
 
     @GetMapping("/novo")
@@ -38,7 +38,7 @@ public class AlergiaSeveridadeAdminController {
             model.addAttribute("form", new AlergiaSeveridadeForm());
         }
         model.addAttribute("modoEdicao", false);
-        return "pages/admin/alergias-severidades/form";
+        return "pages/care/triage/admin/alergias-severidades/form";
     }
 
     @PostMapping
@@ -48,7 +48,7 @@ public class AlergiaSeveridadeAdminController {
                         RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
             model.addAttribute("modoEdicao", false);
-            return "pages/admin/alergias-severidades/form";
+            return "pages/care/triage/admin/alergias-severidades/form";
         }
         service.criar(form);
         redirectAttributes.addFlashAttribute("successMessage", "Severidade de alergia cadastrada com sucesso");
@@ -60,7 +60,7 @@ public class AlergiaSeveridadeAdminController {
         model.addAttribute("form", service.toForm(service.buscar(id)));
         model.addAttribute("modoEdicao", true);
         model.addAttribute("itemId", id);
-        return "pages/admin/alergias-severidades/form";
+        return "pages/care/triage/admin/alergias-severidades/form";
     }
 
     @PostMapping("/{id}")
@@ -72,7 +72,7 @@ public class AlergiaSeveridadeAdminController {
         if (bindingResult.hasErrors()) {
             model.addAttribute("modoEdicao", true);
             model.addAttribute("itemId", id);
-            return "pages/admin/alergias-severidades/form";
+            return "pages/care/triage/admin/alergias-severidades/form";
         }
         service.atualizar(id, form);
         redirectAttributes.addFlashAttribute("successMessage", "Severidade de alergia atualizada com sucesso");

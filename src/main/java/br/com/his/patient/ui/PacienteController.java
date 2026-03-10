@@ -70,7 +70,7 @@ public class PacienteController {
         model.addAttribute("nome", nome);
         model.addAttribute("cpf", cpf);
         model.addAttribute("cns", cns);
-        return "pages/pacientes/list";
+        return "pages/patient/list";
     }
 
     @GetMapping("/novo")
@@ -83,7 +83,7 @@ public class PacienteController {
         }
         populateLookups(model);
         model.addAttribute("modoEdicao", false);
-        return "pages/pacientes/form";
+        return "pages/patient/form";
     }
 
     @GetMapping("/cidades-por-uf/{unidadeFederativaId}")
@@ -125,7 +125,7 @@ public class PacienteController {
         if (bindingResult.hasErrors()) {
             populateLookups(model);
             model.addAttribute("modoEdicao", false);
-            return "pages/pacientes/form";
+            return "pages/patient/form";
         }
 
         try {
@@ -138,7 +138,7 @@ public class PacienteController {
             bindingResult.reject("paciente", ex.getMessage());
             populateLookups(model);
             model.addAttribute("modoEdicao", false);
-            return "pages/pacientes/form";
+            return "pages/patient/form";
         }
     }
 
@@ -156,7 +156,7 @@ public class PacienteController {
         model.addAttribute("pacienteForm", form);
         model.addAttribute("pacienteId", paciente.getId());
         model.addAttribute("modoEdicao", true);
-        return "pages/pacientes/form";
+        return "pages/patient/form";
     }
 
     @PostMapping("/{id}")
@@ -169,7 +169,7 @@ public class PacienteController {
             populateLookups(model);
             model.addAttribute("pacienteId", id);
             model.addAttribute("modoEdicao", true);
-            return "pages/pacientes/form";
+            return "pages/patient/form";
         }
 
         try {
@@ -186,7 +186,7 @@ public class PacienteController {
             populateLookups(model);
             model.addAttribute("pacienteId", id);
             model.addAttribute("modoEdicao", true);
-            return "pages/pacientes/form";
+            return "pages/patient/form";
         }
     }
 
@@ -249,7 +249,7 @@ public class PacienteController {
         if (atendimentoId != null) {
             model.addAttribute("atendimento", assistencialFlowService.buscarAtendimento(atendimentoId));
         }
-        return "pages/pacientes/identificar-cpf";
+        return "pages/patient/identificar-cpf";
     }
 
     @PostMapping("/{id}/identificar")
@@ -279,7 +279,7 @@ public class PacienteController {
             if (atendimentoId != null) {
                 model.addAttribute("atendimento", assistencialFlowService.buscarAtendimento(atendimentoId));
             }
-            return "pages/pacientes/identificar-cpf";
+            return "pages/patient/identificar-cpf";
         }
 
         var candidato = pacienteService.buscarDefinitivoAtivoPorCpf(cpf, pacienteTemporario.getId());
@@ -292,7 +292,7 @@ public class PacienteController {
             if (atendimentoId != null) {
                 model.addAttribute("atendimento", assistencialFlowService.buscarAtendimento(atendimentoId));
             }
-            return "pages/pacientes/identificar-cpf";
+            return "pages/patient/identificar-cpf";
         }
 
         redirectAttributes.addFlashAttribute("successMessage",

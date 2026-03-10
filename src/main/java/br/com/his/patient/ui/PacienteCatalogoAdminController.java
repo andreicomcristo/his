@@ -33,7 +33,7 @@ public class PacienteCatalogoAdminController {
     @GetMapping
     public String index(Model model) {
         model.addAttribute("catalogos", PacienteCatalogoTipo.visiveis());
-        return "pages/admin/paciente-catalogos/index";
+        return "pages/patient/admin/paciente-catalogos/index";
     }
 
     @GetMapping("/{tipo}")
@@ -44,7 +44,7 @@ public class PacienteCatalogoAdminController {
         model.addAttribute("catalogo", catalogo);
         model.addAttribute("items", pacienteCatalogoAdminService.listar(catalogo, q));
         model.addAttribute("q", q);
-        return "pages/admin/paciente-catalogos/list";
+        return "pages/patient/admin/paciente-catalogos/list";
     }
 
     @GetMapping("/{tipo}/novo")
@@ -55,7 +55,7 @@ public class PacienteCatalogoAdminController {
         }
         populateModel(model, catalogo);
         model.addAttribute("modoEdicao", false);
-        return "pages/admin/paciente-catalogos/form";
+        return "pages/patient/admin/paciente-catalogos/form";
     }
 
     @PostMapping("/{tipo}")
@@ -68,7 +68,7 @@ public class PacienteCatalogoAdminController {
         if (bindingResult.hasErrors()) {
             populateModel(model, catalogo);
             model.addAttribute("modoEdicao", false);
-            return "pages/admin/paciente-catalogos/form";
+            return "pages/patient/admin/paciente-catalogos/form";
         }
         try {
             pacienteCatalogoAdminService.criar(catalogo, form);
@@ -78,7 +78,7 @@ public class PacienteCatalogoAdminController {
             bindingResult.reject("catalogo", ex.getMessage());
             populateModel(model, catalogo);
             model.addAttribute("modoEdicao", false);
-            return "pages/admin/paciente-catalogos/form";
+            return "pages/patient/admin/paciente-catalogos/form";
         }
     }
 
@@ -89,7 +89,7 @@ public class PacienteCatalogoAdminController {
         populateModel(model, catalogo);
         model.addAttribute("modoEdicao", true);
         model.addAttribute("itemId", id);
-        return "pages/admin/paciente-catalogos/form";
+        return "pages/patient/admin/paciente-catalogos/form";
     }
 
     @PostMapping("/{tipo}/{id}")
@@ -104,7 +104,7 @@ public class PacienteCatalogoAdminController {
             populateModel(model, catalogo);
             model.addAttribute("modoEdicao", true);
             model.addAttribute("itemId", id);
-            return "pages/admin/paciente-catalogos/form";
+            return "pages/patient/admin/paciente-catalogos/form";
         }
         try {
             pacienteCatalogoAdminService.atualizar(catalogo, id, form);
@@ -115,7 +115,7 @@ public class PacienteCatalogoAdminController {
             populateModel(model, catalogo);
             model.addAttribute("modoEdicao", true);
             model.addAttribute("itemId", id);
-            return "pages/admin/paciente-catalogos/form";
+            return "pages/patient/admin/paciente-catalogos/form";
         }
     }
 

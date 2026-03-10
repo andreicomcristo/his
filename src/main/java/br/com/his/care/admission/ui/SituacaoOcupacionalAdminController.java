@@ -27,7 +27,7 @@ public class SituacaoOcupacionalAdminController {
     @GetMapping
     public String listar(Model model) {
         model.addAttribute("items", service.listarTodas());
-        return "pages/admin/situacoes-ocupacionais/list";
+        return "pages/care/admission/admin/situacoes-ocupacionais/list";
     }
 
     @GetMapping("/novo")
@@ -36,7 +36,7 @@ public class SituacaoOcupacionalAdminController {
             model.addAttribute("form", new SituacaoOcupacionalForm());
         }
         model.addAttribute("modoEdicao", false);
-        return "pages/admin/situacoes-ocupacionais/form";
+        return "pages/care/admission/admin/situacoes-ocupacionais/form";
     }
 
     @PostMapping
@@ -46,7 +46,7 @@ public class SituacaoOcupacionalAdminController {
                         RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
             model.addAttribute("modoEdicao", false);
-            return "pages/admin/situacoes-ocupacionais/form";
+            return "pages/care/admission/admin/situacoes-ocupacionais/form";
         }
         service.criar(form);
         redirectAttributes.addFlashAttribute("successMessage", "Situacao ocupacional criada com sucesso");
@@ -58,7 +58,7 @@ public class SituacaoOcupacionalAdminController {
         model.addAttribute("form", service.toForm(service.buscarPorId(id)));
         model.addAttribute("itemId", id);
         model.addAttribute("modoEdicao", true);
-        return "pages/admin/situacoes-ocupacionais/form";
+        return "pages/care/admission/admin/situacoes-ocupacionais/form";
     }
 
     @PostMapping("/{id}")
@@ -70,7 +70,7 @@ public class SituacaoOcupacionalAdminController {
         if (bindingResult.hasErrors()) {
             model.addAttribute("itemId", id);
             model.addAttribute("modoEdicao", true);
-            return "pages/admin/situacoes-ocupacionais/form";
+            return "pages/care/admission/admin/situacoes-ocupacionais/form";
         }
         service.atualizar(id, form);
         redirectAttributes.addFlashAttribute("successMessage", "Situacao ocupacional atualizada com sucesso");

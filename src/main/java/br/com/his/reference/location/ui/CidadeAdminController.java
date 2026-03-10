@@ -37,7 +37,7 @@ public class CidadeAdminController {
     public String listar(@RequestParam(required = false) String q, Model model) {
         model.addAttribute("items", service.listar(q));
         model.addAttribute("q", q);
-        return "pages/admin/cidades/list";
+        return "pages/reference/location/admin/cidades/list";
     }
 
     @GetMapping("/novo")
@@ -47,7 +47,7 @@ public class CidadeAdminController {
         }
         populateModel(model);
         model.addAttribute("modoEdicao", false);
-        return "pages/admin/cidades/form";
+        return "pages/reference/location/admin/cidades/form";
     }
 
     @PostMapping
@@ -58,7 +58,7 @@ public class CidadeAdminController {
         if (bindingResult.hasErrors()) {
             populateModel(model);
             model.addAttribute("modoEdicao", false);
-            return "pages/admin/cidades/form";
+            return "pages/reference/location/admin/cidades/form";
         }
         service.criar(form);
         redirectAttributes.addFlashAttribute("successMessage", "Cidade cadastrada com sucesso");
@@ -71,7 +71,7 @@ public class CidadeAdminController {
         populateModel(model);
         model.addAttribute("modoEdicao", true);
         model.addAttribute("itemId", id);
-        return "pages/admin/cidades/form";
+        return "pages/reference/location/admin/cidades/form";
     }
 
     @PostMapping("/{id}")
@@ -84,7 +84,7 @@ public class CidadeAdminController {
             populateModel(model);
             model.addAttribute("modoEdicao", true);
             model.addAttribute("itemId", id);
-            return "pages/admin/cidades/form";
+            return "pages/reference/location/admin/cidades/form";
         }
         service.atualizar(id, form);
         redirectAttributes.addFlashAttribute("successMessage", "Cidade atualizada com sucesso");

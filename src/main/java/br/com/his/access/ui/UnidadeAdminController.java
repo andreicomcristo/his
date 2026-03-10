@@ -37,7 +37,7 @@ public class UnidadeAdminController {
     public String listar(@RequestParam(required = false) String q, Model model) {
         model.addAttribute("unidades", unidadeAdminService.listar(q));
         model.addAttribute("q", q);
-        return "pages/admin/unidades/list";
+        return "pages/access/admin/unidades/list";
     }
 
     @GetMapping("/novo")
@@ -47,7 +47,7 @@ public class UnidadeAdminController {
         }
         populateModel(model, (UnidadeForm) model.getAttribute("form"));
         model.addAttribute("modoEdicao", false);
-        return "pages/admin/unidades/form";
+        return "pages/access/admin/unidades/form";
     }
 
     @PostMapping
@@ -58,7 +58,7 @@ public class UnidadeAdminController {
         if (bindingResult.hasErrors()) {
             populateModel(model, form);
             model.addAttribute("modoEdicao", false);
-            return "pages/admin/unidades/form";
+            return "pages/access/admin/unidades/form";
         }
         try {
             unidadeAdminService.criar(form);
@@ -68,7 +68,7 @@ public class UnidadeAdminController {
             bindingResult.reject("unidade", ex.getMessage());
             populateModel(model, form);
             model.addAttribute("modoEdicao", false);
-            return "pages/admin/unidades/form";
+            return "pages/access/admin/unidades/form";
         }
     }
 
@@ -85,7 +85,7 @@ public class UnidadeAdminController {
         populateModel(model, form);
         model.addAttribute("modoEdicao", true);
         model.addAttribute("unidadeId", id);
-        return "pages/admin/unidades/form";
+        return "pages/access/admin/unidades/form";
     }
 
     @PostMapping("/{id}")
@@ -98,7 +98,7 @@ public class UnidadeAdminController {
             populateModel(model, form);
             model.addAttribute("modoEdicao", true);
             model.addAttribute("unidadeId", id);
-            return "pages/admin/unidades/form";
+            return "pages/access/admin/unidades/form";
         }
         try {
             unidadeAdminService.atualizar(id, form);
@@ -109,7 +109,7 @@ public class UnidadeAdminController {
             populateModel(model, form);
             model.addAttribute("modoEdicao", true);
             model.addAttribute("unidadeId", id);
-            return "pages/admin/unidades/form";
+            return "pages/access/admin/unidades/form";
         }
     }
 

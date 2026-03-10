@@ -42,7 +42,7 @@ public class BairroAdminController {
     public String listar(@RequestParam(required = false) String q, Model model) {
         model.addAttribute("items", service.listar(q));
         model.addAttribute("q", q);
-        return "pages/admin/bairros/list";
+        return "pages/reference/location/admin/bairros/list";
     }
 
     @GetMapping("/novo")
@@ -52,7 +52,7 @@ public class BairroAdminController {
         }
         populateModel(model, (BairroForm) model.getAttribute("form"));
         model.addAttribute("modoEdicao", false);
-        return "pages/admin/bairros/form";
+        return "pages/reference/location/admin/bairros/form";
     }
 
     @PostMapping
@@ -63,7 +63,7 @@ public class BairroAdminController {
         if (bindingResult.hasErrors()) {
             populateModel(model, form);
             model.addAttribute("modoEdicao", false);
-            return "pages/admin/bairros/form";
+            return "pages/reference/location/admin/bairros/form";
         }
         service.criar(form);
         redirectAttributes.addFlashAttribute("successMessage", "Bairro cadastrado com sucesso");
@@ -77,7 +77,7 @@ public class BairroAdminController {
         populateModel(model, form);
         model.addAttribute("modoEdicao", true);
         model.addAttribute("itemId", id);
-        return "pages/admin/bairros/form";
+        return "pages/reference/location/admin/bairros/form";
     }
 
     @PostMapping("/{id}")
@@ -90,7 +90,7 @@ public class BairroAdminController {
             populateModel(model, form);
             model.addAttribute("modoEdicao", true);
             model.addAttribute("itemId", id);
-            return "pages/admin/bairros/form";
+            return "pages/reference/location/admin/bairros/form";
         }
         service.atualizar(id, form);
         redirectAttributes.addFlashAttribute("successMessage", "Bairro atualizado com sucesso");

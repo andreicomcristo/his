@@ -29,7 +29,7 @@ public class StatusAtendimentoAdminController {
     public String listar(@RequestParam(required = false) String q, Model model) {
         model.addAttribute("items", service.listar(q));
         model.addAttribute("q", q);
-        return "pages/admin/status-atendimento/list";
+        return "pages/care/attendance/admin/status-atendimento/list";
     }
 
     @GetMapping("/novo")
@@ -38,7 +38,7 @@ public class StatusAtendimentoAdminController {
             model.addAttribute("form", new StatusAtendimentoForm());
         }
         model.addAttribute("modoEdicao", false);
-        return "pages/admin/status-atendimento/form";
+        return "pages/care/attendance/admin/status-atendimento/form";
     }
 
     @PostMapping
@@ -48,7 +48,7 @@ public class StatusAtendimentoAdminController {
                         RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
             model.addAttribute("modoEdicao", false);
-            return "pages/admin/status-atendimento/form";
+            return "pages/care/attendance/admin/status-atendimento/form";
         }
         service.criar(form);
         redirectAttributes.addFlashAttribute("successMessage", "Status de atendimento cadastrado com sucesso");
@@ -60,7 +60,7 @@ public class StatusAtendimentoAdminController {
         model.addAttribute("form", service.toForm(service.buscar(id)));
         model.addAttribute("modoEdicao", true);
         model.addAttribute("itemId", id);
-        return "pages/admin/status-atendimento/form";
+        return "pages/care/attendance/admin/status-atendimento/form";
     }
 
     @PostMapping("/{id}")
@@ -72,7 +72,7 @@ public class StatusAtendimentoAdminController {
         if (bindingResult.hasErrors()) {
             model.addAttribute("modoEdicao", true);
             model.addAttribute("itemId", id);
-            return "pages/admin/status-atendimento/form";
+            return "pages/care/attendance/admin/status-atendimento/form";
         }
         service.atualizar(id, form);
         redirectAttributes.addFlashAttribute("successMessage", "Status de atendimento atualizado com sucesso");

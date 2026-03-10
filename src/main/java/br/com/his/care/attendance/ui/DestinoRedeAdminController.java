@@ -29,7 +29,7 @@ public class DestinoRedeAdminController {
     public String listar(@RequestParam(required = false) String q, Model model) {
         model.addAttribute("items", service.listar(q));
         model.addAttribute("q", q);
-        return "pages/admin/destinos-rede/list";
+        return "pages/care/attendance/admin/destinos-rede/list";
     }
 
     @GetMapping("/novo")
@@ -38,7 +38,7 @@ public class DestinoRedeAdminController {
             model.addAttribute("form", new DestinoRedeForm());
         }
         model.addAttribute("modoEdicao", false);
-        return "pages/admin/destinos-rede/form";
+        return "pages/care/attendance/admin/destinos-rede/form";
     }
 
     @PostMapping
@@ -48,7 +48,7 @@ public class DestinoRedeAdminController {
                         RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
             model.addAttribute("modoEdicao", false);
-            return "pages/admin/destinos-rede/form";
+            return "pages/care/attendance/admin/destinos-rede/form";
         }
         service.criar(form);
         redirectAttributes.addFlashAttribute("successMessage", "Destino de rede cadastrado com sucesso");
@@ -60,7 +60,7 @@ public class DestinoRedeAdminController {
         model.addAttribute("form", service.toForm(service.buscar(id)));
         model.addAttribute("modoEdicao", true);
         model.addAttribute("itemId", id);
-        return "pages/admin/destinos-rede/form";
+        return "pages/care/attendance/admin/destinos-rede/form";
     }
 
     @PostMapping("/{id}")
@@ -72,7 +72,7 @@ public class DestinoRedeAdminController {
         if (bindingResult.hasErrors()) {
             model.addAttribute("modoEdicao", true);
             model.addAttribute("itemId", id);
-            return "pages/admin/destinos-rede/form";
+            return "pages/care/attendance/admin/destinos-rede/form";
         }
         service.atualizar(id, form);
         redirectAttributes.addFlashAttribute("successMessage", "Destino de rede atualizado com sucesso");

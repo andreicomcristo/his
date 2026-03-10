@@ -29,7 +29,7 @@ public class SexoAdminController {
     public String listar(@RequestParam(required = false) String q, Model model) {
         model.addAttribute("items", service.listar(q));
         model.addAttribute("q", q);
-        return "pages/admin/sexos/list";
+        return "pages/patient/admin/sexos/list";
     }
 
     @GetMapping("/novo")
@@ -38,7 +38,7 @@ public class SexoAdminController {
             model.addAttribute("form", new SexoForm());
         }
         model.addAttribute("modoEdicao", false);
-        return "pages/admin/sexos/form";
+        return "pages/patient/admin/sexos/form";
     }
 
     @PostMapping
@@ -48,7 +48,7 @@ public class SexoAdminController {
                         RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
             model.addAttribute("modoEdicao", false);
-            return "pages/admin/sexos/form";
+            return "pages/patient/admin/sexos/form";
         }
         try {
             service.criar(form);
@@ -57,7 +57,7 @@ public class SexoAdminController {
         } catch (IllegalArgumentException ex) {
             bindingResult.reject("form", ex.getMessage());
             model.addAttribute("modoEdicao", false);
-            return "pages/admin/sexos/form";
+            return "pages/patient/admin/sexos/form";
         }
     }
 
@@ -66,7 +66,7 @@ public class SexoAdminController {
         model.addAttribute("form", service.toForm(service.buscar(id)));
         model.addAttribute("modoEdicao", true);
         model.addAttribute("itemId", id);
-        return "pages/admin/sexos/form";
+        return "pages/patient/admin/sexos/form";
     }
 
     @PostMapping("/{id}")
@@ -78,7 +78,7 @@ public class SexoAdminController {
         if (bindingResult.hasErrors()) {
             model.addAttribute("modoEdicao", true);
             model.addAttribute("itemId", id);
-            return "pages/admin/sexos/form";
+            return "pages/patient/admin/sexos/form";
         }
         try {
             service.atualizar(id, form);
@@ -88,7 +88,7 @@ public class SexoAdminController {
             bindingResult.reject("form", ex.getMessage());
             model.addAttribute("modoEdicao", true);
             model.addAttribute("itemId", id);
-            return "pages/admin/sexos/form";
+            return "pages/patient/admin/sexos/form";
         }
     }
 

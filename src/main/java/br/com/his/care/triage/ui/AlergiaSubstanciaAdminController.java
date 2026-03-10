@@ -29,7 +29,7 @@ public class AlergiaSubstanciaAdminController {
     public String listar(@RequestParam(required = false) String q, Model model) {
         model.addAttribute("items", service.listar(q));
         model.addAttribute("q", q);
-        return "pages/admin/alergias-substancias/list";
+        return "pages/care/triage/admin/alergias-substancias/list";
     }
 
     @GetMapping("/novo")
@@ -38,7 +38,7 @@ public class AlergiaSubstanciaAdminController {
             model.addAttribute("form", new AlergiaSubstanciaForm());
         }
         model.addAttribute("modoEdicao", false);
-        return "pages/admin/alergias-substancias/form";
+        return "pages/care/triage/admin/alergias-substancias/form";
     }
 
     @PostMapping
@@ -48,7 +48,7 @@ public class AlergiaSubstanciaAdminController {
                         RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
             model.addAttribute("modoEdicao", false);
-            return "pages/admin/alergias-substancias/form";
+            return "pages/care/triage/admin/alergias-substancias/form";
         }
         service.criar(form);
         redirectAttributes.addFlashAttribute("successMessage", "Substancia de alergia cadastrada com sucesso");
@@ -60,7 +60,7 @@ public class AlergiaSubstanciaAdminController {
         model.addAttribute("form", service.toForm(service.buscar(id)));
         model.addAttribute("modoEdicao", true);
         model.addAttribute("itemId", id);
-        return "pages/admin/alergias-substancias/form";
+        return "pages/care/triage/admin/alergias-substancias/form";
     }
 
     @PostMapping("/{id}")
@@ -72,7 +72,7 @@ public class AlergiaSubstanciaAdminController {
         if (bindingResult.hasErrors()) {
             model.addAttribute("modoEdicao", true);
             model.addAttribute("itemId", id);
-            return "pages/admin/alergias-substancias/form";
+            return "pages/care/triage/admin/alergias-substancias/form";
         }
         service.atualizar(id, form);
         redirectAttributes.addFlashAttribute("successMessage", "Substancia de alergia atualizada com sucesso");

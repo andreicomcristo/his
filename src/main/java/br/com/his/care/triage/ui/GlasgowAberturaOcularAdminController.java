@@ -29,7 +29,7 @@ public class GlasgowAberturaOcularAdminController {
     public String listar(@RequestParam(required = false) String q, Model model) {
         model.addAttribute("items", service.listar(q));
         model.addAttribute("q", q);
-        return "pages/admin/glasgow-abertura-ocular/list";
+        return "pages/care/triage/admin/glasgow-abertura-ocular/list";
     }
 
     @GetMapping("/novo")
@@ -38,7 +38,7 @@ public class GlasgowAberturaOcularAdminController {
             model.addAttribute("form", new GlasgowAberturaOcularForm());
         }
         model.addAttribute("modoEdicao", false);
-        return "pages/admin/glasgow-abertura-ocular/form";
+        return "pages/care/triage/admin/glasgow-abertura-ocular/form";
     }
 
     @PostMapping
@@ -48,7 +48,7 @@ public class GlasgowAberturaOcularAdminController {
                         RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
             model.addAttribute("modoEdicao", false);
-            return "pages/admin/glasgow-abertura-ocular/form";
+            return "pages/care/triage/admin/glasgow-abertura-ocular/form";
         }
         service.criar(form);
         redirectAttributes.addFlashAttribute("successMessage", "Item da escala de Glasgow (abertura ocular) cadastrado com sucesso");
@@ -60,7 +60,7 @@ public class GlasgowAberturaOcularAdminController {
         model.addAttribute("form", service.toForm(service.buscar(id)));
         model.addAttribute("modoEdicao", true);
         model.addAttribute("itemId", id);
-        return "pages/admin/glasgow-abertura-ocular/form";
+        return "pages/care/triage/admin/glasgow-abertura-ocular/form";
     }
 
     @PostMapping("/{id}")
@@ -72,7 +72,7 @@ public class GlasgowAberturaOcularAdminController {
         if (bindingResult.hasErrors()) {
             model.addAttribute("modoEdicao", true);
             model.addAttribute("itemId", id);
-            return "pages/admin/glasgow-abertura-ocular/form";
+            return "pages/care/triage/admin/glasgow-abertura-ocular/form";
         }
         service.atualizar(id, form);
         redirectAttributes.addFlashAttribute("successMessage", "Item da escala de Glasgow (abertura ocular) atualizado com sucesso");

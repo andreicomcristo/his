@@ -32,7 +32,7 @@ public class AreaAdminController {
     public String listar(@RequestParam(required = false) String q, Model model) {
         model.addAttribute("items", service.listar(q));
         model.addAttribute("q", q);
-        return "pages/admin/areas/list";
+        return "pages/care/inpatient/admin/areas/list";
     }
 
     @GetMapping("/novo")
@@ -42,7 +42,7 @@ public class AreaAdminController {
         }
         populateModel(model);
         model.addAttribute("modoEdicao", false);
-        return "pages/admin/areas/form";
+        return "pages/care/inpatient/admin/areas/form";
     }
 
     @PostMapping
@@ -53,7 +53,7 @@ public class AreaAdminController {
         if (bindingResult.hasErrors()) {
             populateModel(model);
             model.addAttribute("modoEdicao", false);
-            return "pages/admin/areas/form";
+            return "pages/care/inpatient/admin/areas/form";
         }
         service.criar(form);
         redirectAttributes.addFlashAttribute("successMessage", "Area cadastrada com sucesso");
@@ -66,7 +66,7 @@ public class AreaAdminController {
         populateModel(model);
         model.addAttribute("modoEdicao", true);
         model.addAttribute("itemId", id);
-        return "pages/admin/areas/form";
+        return "pages/care/inpatient/admin/areas/form";
     }
 
     @PostMapping("/{id}")
@@ -79,7 +79,7 @@ public class AreaAdminController {
             populateModel(model);
             model.addAttribute("modoEdicao", true);
             model.addAttribute("itemId", id);
-            return "pages/admin/areas/form";
+            return "pages/care/inpatient/admin/areas/form";
         }
         service.atualizar(id, form);
         redirectAttributes.addFlashAttribute("successMessage", "Area atualizada com sucesso");

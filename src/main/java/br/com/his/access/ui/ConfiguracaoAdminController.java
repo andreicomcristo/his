@@ -14,6 +14,6 @@ public class ConfiguracaoAdminController {
     @GetMapping
     public String index(Model model) {
         model.addAttribute("catalogosPaciente", PacienteCatalogoTipo.visiveis());
-        return "pages/admin/configuracoes/index";
+        return "pages/access/admin/configuracoes/index";
     }
 }

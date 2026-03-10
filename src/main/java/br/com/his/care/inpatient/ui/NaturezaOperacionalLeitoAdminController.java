@@ -29,7 +29,7 @@ public class NaturezaOperacionalLeitoAdminController {
     public String listar(@RequestParam(required = false) String q, Model model) {
         model.addAttribute("items", service.listar(q));
         model.addAttribute("q", q);
-        return "pages/admin/naturezas-operacionais-leito/list";
+        return "pages/care/inpatient/admin/naturezas-operacionais-leito/list";
     }
 
     @GetMapping("/novo")
@@ -38,7 +38,7 @@ public class NaturezaOperacionalLeitoAdminController {
             model.addAttribute("form", new NaturezaOperacionalLeitoForm());
         }
         model.addAttribute("modoEdicao", false);
-        return "pages/admin/naturezas-operacionais-leito/form";
+        return "pages/care/inpatient/admin/naturezas-operacionais-leito/form";
     }
 
     @PostMapping
@@ -48,7 +48,7 @@ public class NaturezaOperacionalLeitoAdminController {
                         RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
             model.addAttribute("modoEdicao", false);
-            return "pages/admin/naturezas-operacionais-leito/form";
+            return "pages/care/inpatient/admin/naturezas-operacionais-leito/form";
         }
         try {
             service.criar(form);
@@ -57,7 +57,7 @@ public class NaturezaOperacionalLeitoAdminController {
         } catch (IllegalArgumentException ex) {
             model.addAttribute("modoEdicao", false);
             model.addAttribute("errorMessage", ex.getMessage());
-            return "pages/admin/naturezas-operacionais-leito/form";
+            return "pages/care/inpatient/admin/naturezas-operacionais-leito/form";
         }
     }
 
@@ -66,7 +66,7 @@ public class NaturezaOperacionalLeitoAdminController {
         model.addAttribute("form", service.toForm(service.buscar(id)));
         model.addAttribute("modoEdicao", true);
         model.addAttribute("itemId", id);
-        return "pages/admin/naturezas-operacionais-leito/form";
+        return "pages/care/inpatient/admin/naturezas-operacionais-leito/form";
     }
 
     @PostMapping("/{id}")
@@ -78,7 +78,7 @@ public class NaturezaOperacionalLeitoAdminController {
         if (bindingResult.hasErrors()) {
             model.addAttribute("modoEdicao", true);
             model.addAttribute("itemId", id);
-            return "pages/admin/naturezas-operacionais-leito/form";
+            return "pages/care/inpatient/admin/naturezas-operacionais-leito/form";
         }
         try {
             service.atualizar(id, form);
@@ -88,7 +88,7 @@ public class NaturezaOperacionalLeitoAdminController {
             model.addAttribute("modoEdicao", true);
             model.addAttribute("itemId", id);
             model.addAttribute("errorMessage", ex.getMessage());
-            return "pages/admin/naturezas-operacionais-leito/form";
+            return "pages/care/inpatient/admin/naturezas-operacionais-leito/form";
         }
     }
 

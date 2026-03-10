@@ -29,7 +29,7 @@ public class GlasgowRespostaPupilarAdminController {
     public String listar(@RequestParam(required = false) String q, Model model) {
         model.addAttribute("items", service.listar(q));
         model.addAttribute("q", q);
-        return "pages/admin/glasgow-resposta-pupilar/list";
+        return "pages/care/triage/admin/glasgow-resposta-pupilar/list";
     }
 
     @GetMapping("/novo")
@@ -38,7 +38,7 @@ public class GlasgowRespostaPupilarAdminController {
             model.addAttribute("form", new GlasgowRespostaPupilarForm());
         }
         model.addAttribute("modoEdicao", false);
-        return "pages/admin/glasgow-resposta-pupilar/form";
+        return "pages/care/triage/admin/glasgow-resposta-pupilar/form";
     }
 
     @PostMapping
@@ -48,7 +48,7 @@ public class GlasgowRespostaPupilarAdminController {
                         RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
             model.addAttribute("modoEdicao", false);
-            return "pages/admin/glasgow-resposta-pupilar/form";
+            return "pages/care/triage/admin/glasgow-resposta-pupilar/form";
         }
         service.criar(form);
         redirectAttributes.addFlashAttribute("successMessage", "Item da escala de Glasgow (resposta pupilar) cadastrado com sucesso");
@@ -60,7 +60,7 @@ public class GlasgowRespostaPupilarAdminController {
         model.addAttribute("form", service.toForm(service.buscar(id)));
         model.addAttribute("modoEdicao", true);
         model.addAttribute("itemId", id);
-        return "pages/admin/glasgow-resposta-pupilar/form";
+        return "pages/care/triage/admin/glasgow-resposta-pupilar/form";
     }
 
     @PostMapping("/{id}")
@@ -72,7 +72,7 @@ public class GlasgowRespostaPupilarAdminController {
         if (bindingResult.hasErrors()) {
             model.addAttribute("modoEdicao", true);
             model.addAttribute("itemId", id);
-            return "pages/admin/glasgow-resposta-pupilar/form";
+            return "pages/care/triage/admin/glasgow-resposta-pupilar/form";
         }
         service.atualizar(id, form);
         redirectAttributes.addFlashAttribute("successMessage", "Item da escala de Glasgow (resposta pupilar) atualizado com sucesso");

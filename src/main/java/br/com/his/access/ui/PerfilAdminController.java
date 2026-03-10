@@ -31,7 +31,7 @@ public class PerfilAdminController {
     public String listar(@RequestParam(required = false) String q, Model model) {
         model.addAttribute("perfis", perfilAdminService.listar(q));
         model.addAttribute("q", q);
-        return "pages/admin/perfis/list";
+        return "pages/access/admin/perfis/list";
     }
 
     @GetMapping("/novo")
@@ -40,7 +40,7 @@ public class PerfilAdminController {
             model.addAttribute("form", new PerfilForm());
         }
         model.addAttribute("modoEdicao", false);
-        return "pages/admin/perfis/form";
+        return "pages/access/admin/perfis/form";
     }
 
     @PostMapping
@@ -50,7 +50,7 @@ public class PerfilAdminController {
                         RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
             model.addAttribute("modoEdicao", false);
-            return "pages/admin/perfis/form";
+            return "pages/access/admin/perfis/form";
         }
         try {
             perfilAdminService.criar(form);
@@ -59,7 +59,7 @@ public class PerfilAdminController {
         } catch (IllegalArgumentException ex) {
             bindingResult.reject("perfil", ex.getMessage());
             model.addAttribute("modoEdicao", false);
-            return "pages/admin/perfis/form";
+            return "pages/access/admin/perfis/form";
         }
     }
 
@@ -71,7 +71,7 @@ public class PerfilAdminController {
         model.addAttribute("form", form);
         model.addAttribute("modoEdicao", true);
         model.addAttribute("perfilId", id);
-        return "pages/admin/perfis/form";
+        return "pages/access/admin/perfis/form";
     }
 
     @PostMapping("/{id}")
@@ -83,7 +83,7 @@ public class PerfilAdminController {
         if (bindingResult.hasErrors()) {
             model.addAttribute("modoEdicao", true);
             model.addAttribute("perfilId", id);
-            return "pages/admin/perfis/form";
+            return "pages/access/admin/perfis/form";
         }
         try {
             perfilAdminService.atualizar(id, form);
@@ -93,7 +93,7 @@ public class PerfilAdminController {
             bindingResult.reject("perfil", ex.getMessage());
             model.addAttribute("modoEdicao", true);
             model.addAttribute("perfilId", id);
-            return "pages/admin/perfis/form";
+            return "pages/access/admin/perfis/form";
         }
     }
 
@@ -113,7 +113,7 @@ public class PerfilAdminController {
         model.addAttribute("perfil", perfilAdminService.buscarPorId(id));
         model.addAttribute("permissoes", perfilAdminService.listarPermissoes());
         model.addAttribute("selectedIds", perfilAdminService.listarIdsPermissoesPerfil(id));
-        return "pages/admin/perfis/permissoes";
+        return "pages/access/admin/perfis/permissoes";
     }
 
     @PostMapping("/{id}/permissoes")

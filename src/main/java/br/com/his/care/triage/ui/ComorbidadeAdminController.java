@@ -29,7 +29,7 @@ public class ComorbidadeAdminController {
     public String listar(@RequestParam(required = false) String q, Model model) {
         model.addAttribute("items", service.listar(q));
         model.addAttribute("q", q);
-        return "pages/admin/comorbidades/list";
+        return "pages/care/triage/admin/comorbidades/list";
     }
 
     @GetMapping("/novo")
@@ -38,7 +38,7 @@ public class ComorbidadeAdminController {
             model.addAttribute("form", new ComorbidadeForm());
         }
         model.addAttribute("modoEdicao", false);
-        return "pages/admin/comorbidades/form";
+        return "pages/care/triage/admin/comorbidades/form";
     }
 
     @PostMapping
@@ -48,7 +48,7 @@ public class ComorbidadeAdminController {
                         RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
             model.addAttribute("modoEdicao", false);
-            return "pages/admin/comorbidades/form";
+            return "pages/care/triage/admin/comorbidades/form";
         }
         service.criar(form);
         redirectAttributes.addFlashAttribute("successMessage", "Comorbidade cadastrada com sucesso");
@@ -60,7 +60,7 @@ public class ComorbidadeAdminController {
         model.addAttribute("form", service.toForm(service.buscar(id)));
         model.addAttribute("modoEdicao", true);
         model.addAttribute("itemId", id);
-        return "pages/admin/comorbidades/form";
+        return "pages/care/triage/admin/comorbidades/form";
     }
 
     @PostMapping("/{id}")
@@ -72,7 +72,7 @@ public class ComorbidadeAdminController {
         if (bindingResult.hasErrors()) {
             model.addAttribute("modoEdicao", true);
             model.addAttribute("itemId", id);
-            return "pages/admin/comorbidades/form";
+            return "pages/care/triage/admin/comorbidades/form";
         }
         service.atualizar(id, form);
         redirectAttributes.addFlashAttribute("successMessage", "Comorbidade atualizada com sucesso");
