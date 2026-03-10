@@ -14,7 +14,7 @@ import br.com.his.patient.api.dto.ApiErrorResponse;
 import br.com.his.patient.api.dto.ApiErrorResponse.FieldValidationError;
 import jakarta.servlet.http.HttpServletRequest;
 
-@RestControllerAdvice(basePackages = {"br.com.his.patient.api", "br.com.his.admin.api"})
+@RestControllerAdvice(basePackages = {"br.com.his.patient.api", "br.com.his.access.api"})
 public class ApiExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

@@ -1,0 +1,19 @@
+package br.com.his.access.api.dto;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+
+public class PerfilAdminRequest {
+
+    @NotBlank
+    @Size(max = 80)
+    private String nome;
+
+    public String getNome() {
+        return nome;
+    }
+
+    public void setNome(String nome) {
+        this.nome = nome;
+    }
+}
