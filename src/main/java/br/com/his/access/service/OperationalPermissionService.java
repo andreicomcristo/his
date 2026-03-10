@@ -11,11 +11,11 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import br.com.his.access.context.UnidadeContext;
-import br.com.his.assistencial.model.PrimeiroPassoFluxo;
-import br.com.his.assistencial.model.TipoAtendimento;
-import br.com.his.assistencial.model.UnidadeRegraTriagem;
-import br.com.his.assistencial.repository.UnidadeConfigFluxoRepository;
-import br.com.his.assistencial.repository.UnidadeRegraTriagemRepository;
+import br.com.his.care.attendance.model.PrimeiroPassoFluxo;
+import br.com.his.care.attendance.model.TipoAtendimento;
+import br.com.his.care.triage.model.UnidadeRegraTriagem;
+import br.com.his.care.attendance.repository.UnidadeConfigFluxoRepository;
+import br.com.his.care.triage.repository.UnidadeRegraTriagemRepository;
 import br.com.his.access.repository.UsuarioUnidadePerfilRepository;
 
 @Service

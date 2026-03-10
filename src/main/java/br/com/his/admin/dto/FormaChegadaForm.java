@@ -3,7 +3,7 @@ package br.com.his.admin.dto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import br.com.his.assistencial.model.PerfilChegada;
+import br.com.his.care.admission.model.PerfilChegada;
 
 public class FormaChegadaForm {
 

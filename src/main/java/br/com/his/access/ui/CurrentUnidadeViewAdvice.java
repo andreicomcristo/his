@@ -6,8 +6,8 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import br.com.his.access.context.UnidadeContext;
 import br.com.his.access.model.Unidade;
 import br.com.his.access.repository.UnidadeRepository;
-import br.com.his.assistencial.model.PrimeiroPassoFluxo;
-import br.com.his.assistencial.repository.UnidadeConfigFluxoRepository;
+import br.com.his.care.attendance.model.PrimeiroPassoFluxo;
+import br.com.his.care.attendance.repository.UnidadeConfigFluxoRepository;
 
 @ControllerAdvice
 public class CurrentUnidadeViewAdvice {

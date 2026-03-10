@@ -6,8 +6,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import br.com.his.admin.dto.DestinoRedeForm;
-import br.com.his.assistencial.model.DestinoRede;
-import br.com.his.assistencial.repository.DestinoRedeRepository;
+import br.com.his.care.attendance.model.DestinoRede;
+import br.com.his.care.attendance.repository.DestinoRedeRepository;
 
 @Service
 public class DestinoRedeAdminService {

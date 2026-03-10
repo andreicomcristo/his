@@ -6,8 +6,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import br.com.his.admin.dto.AlergiaSubstanciaForm;
-import br.com.his.assistencial.model.AlergiaSubstancia;
-import br.com.his.assistencial.repository.AlergiaSubstanciaRepository;
+import br.com.his.care.triage.model.AlergiaSubstancia;
+import br.com.his.care.triage.repository.AlergiaSubstanciaRepository;
 
 @Service
 public class AlergiaSubstanciaAdminService {

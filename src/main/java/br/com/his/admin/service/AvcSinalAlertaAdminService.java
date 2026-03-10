@@ -6,8 +6,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import br.com.his.admin.dto.AvcSinalAlertaForm;
-import br.com.his.assistencial.model.AvcSinalAlerta;
-import br.com.his.assistencial.repository.AvcSinalAlertaRepository;
+import br.com.his.care.triage.model.AvcSinalAlerta;
+import br.com.his.care.triage.repository.AvcSinalAlertaRepository;
 
 @Service
 public class AvcSinalAlertaAdminService {

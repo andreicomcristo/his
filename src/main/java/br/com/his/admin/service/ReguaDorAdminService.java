@@ -6,8 +6,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import br.com.his.admin.dto.ReguaDorForm;
-import br.com.his.assistencial.model.ReguaDor;
-import br.com.his.assistencial.repository.ReguaDorRepository;
+import br.com.his.care.triage.model.ReguaDor;
+import br.com.his.care.triage.repository.ReguaDorRepository;
 
 @Service
 public class ReguaDorAdminService {

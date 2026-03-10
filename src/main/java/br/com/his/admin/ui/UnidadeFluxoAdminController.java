@@ -13,7 +13,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import br.com.his.admin.dto.UnidadeFluxoForm;
 import br.com.his.admin.service.UnidadeAdminService;
 import br.com.his.admin.service.UnidadeFluxoAdminService;
-import br.com.his.assistencial.model.PrimeiroPassoFluxo;
+import br.com.his.care.attendance.model.PrimeiroPassoFluxo;
 import jakarta.validation.Valid;
 
 @Controller

@@ -13,21 +13,21 @@ import org.springframework.transaction.annotation.Transactional;
 import br.com.his.access.model.Unidade;
 import br.com.his.access.repository.UnidadeRepository;
 import br.com.his.admin.dto.LeitoForm;
-import br.com.his.assistencial.model.Area;
-import br.com.his.assistencial.model.Leito;
-import br.com.his.assistencial.model.LeitoModalidade;
-import br.com.his.assistencial.model.LeitoModalidadeTipo;
-import br.com.his.assistencial.model.NaturezaOperacionalLeito;
-import br.com.his.assistencial.model.PerfilLeito;
-import br.com.his.assistencial.model.TipoLeito;
-import br.com.his.assistencial.repository.AreaCapacidadeRepository;
-import br.com.his.assistencial.repository.AreaRepository;
-import br.com.his.assistencial.repository.LeitoModalidadeRepository;
-import br.com.his.assistencial.repository.LeitoModalidadeTipoRepository;
-import br.com.his.assistencial.repository.LeitoRepository;
-import br.com.his.assistencial.repository.NaturezaOperacionalLeitoRepository;
-import br.com.his.assistencial.repository.PerfilLeitoRepository;
-import br.com.his.assistencial.repository.TipoLeitoRepository;
+import br.com.his.care.inpatient.model.Area;
+import br.com.his.care.inpatient.model.Leito;
+import br.com.his.care.inpatient.model.LeitoModalidade;
+import br.com.his.care.inpatient.model.LeitoModalidadeTipo;
+import br.com.his.care.inpatient.model.NaturezaOperacionalLeito;
+import br.com.his.care.inpatient.model.PerfilLeito;
+import br.com.his.care.inpatient.model.TipoLeito;
+import br.com.his.care.inpatient.repository.AreaCapacidadeRepository;
+import br.com.his.care.inpatient.repository.AreaRepository;
+import br.com.his.care.inpatient.repository.LeitoModalidadeRepository;
+import br.com.his.care.inpatient.repository.LeitoModalidadeTipoRepository;
+import br.com.his.care.inpatient.repository.LeitoRepository;
+import br.com.his.care.inpatient.repository.NaturezaOperacionalLeitoRepository;
+import br.com.his.care.inpatient.repository.PerfilLeitoRepository;
+import br.com.his.care.inpatient.repository.TipoLeitoRepository;
 
 @Service
 public class LeitoAdminService {

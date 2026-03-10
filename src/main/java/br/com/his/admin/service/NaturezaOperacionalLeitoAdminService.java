@@ -6,9 +6,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import br.com.his.admin.dto.NaturezaOperacionalLeitoForm;
-import br.com.his.assistencial.model.NaturezaOperacionalLeito;
-import br.com.his.assistencial.repository.LeitoRepository;
-import br.com.his.assistencial.repository.NaturezaOperacionalLeitoRepository;
+import br.com.his.care.inpatient.model.NaturezaOperacionalLeito;
+import br.com.his.care.inpatient.repository.LeitoRepository;
+import br.com.his.care.inpatient.repository.NaturezaOperacionalLeitoRepository;
 
 @Service
 public class NaturezaOperacionalLeitoAdminService {

@@ -6,8 +6,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import br.com.his.admin.dto.MotivoEntradaForm;
-import br.com.his.assistencial.model.MotivoEntrada;
-import br.com.his.assistencial.repository.MotivoEntradaRepository;
+import br.com.his.care.admission.model.MotivoEntrada;
+import br.com.his.care.admission.repository.MotivoEntradaRepository;
 
 @Service
 public class MotivoEntradaAdminService {

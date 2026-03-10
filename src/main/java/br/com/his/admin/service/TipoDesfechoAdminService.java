@@ -6,8 +6,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import br.com.his.admin.dto.TipoDesfechoForm;
-import br.com.his.assistencial.model.TipoDesfecho;
-import br.com.his.assistencial.repository.TipoDesfechoRepository;
+import br.com.his.care.attendance.model.TipoDesfecho;
+import br.com.his.care.attendance.repository.TipoDesfechoRepository;
 
 @Service
 public class TipoDesfechoAdminService {

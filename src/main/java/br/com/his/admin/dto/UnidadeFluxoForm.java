@@ -1,6 +1,6 @@
 package br.com.his.admin.dto;
 
-import br.com.his.assistencial.model.PrimeiroPassoFluxo;
+import br.com.his.care.attendance.model.PrimeiroPassoFluxo;
 import jakarta.validation.constraints.NotNull;
 
 public class UnidadeFluxoForm {

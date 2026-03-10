@@ -6,8 +6,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import br.com.his.admin.dto.UnidadeFederativaForm;
-import br.com.his.configuracao.model.UnidadeFederativa;
-import br.com.his.configuracao.repository.UnidadeFederativaRepository;
+import br.com.his.reference.location.model.UnidadeFederativa;
+import br.com.his.reference.location.repository.UnidadeFederativaRepository;
 
 @Service
 public class UnidadeFederativaAdminService {

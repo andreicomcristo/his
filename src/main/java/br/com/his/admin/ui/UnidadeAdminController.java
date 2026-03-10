@@ -14,7 +14,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import br.com.his.admin.dto.UnidadeForm;
 import br.com.his.admin.service.UnidadeFederativaAdminService;
 import br.com.his.admin.service.UnidadeAdminService;
-import br.com.his.configuracao.repository.CidadeRepository;
+import br.com.his.reference.location.repository.CidadeRepository;
 import jakarta.validation.Valid;
 
 @Controller

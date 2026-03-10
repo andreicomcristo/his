@@ -17,8 +17,8 @@
                     <div class="form-group col-md-4">
                         <label>Perfil de chegada<span class="required-mark">*</span></label>
                         <select class="form-control" th:field="*{perfilChegada}">
-                            <option th:value="${T(br.com.his.assistencial.model.PerfilChegada).VERTICAL}">VERTICAL</option>
-                            <option th:value="${T(br.com.his.assistencial.model.PerfilChegada).HORIZONTAL}">HORIZONTAL</option>
+                            <option th:value="${T(br.com.his.care.admission.model.PerfilChegada).VERTICAL}">VERTICAL</option>
+                            <option th:value="${T(br.com.his.care.admission.model.PerfilChegada).HORIZONTAL}">HORIZONTAL</option>
                         </select>
                         <small class="text-danger" th:errors="*{perfilChegada}"></small>
                     </div>

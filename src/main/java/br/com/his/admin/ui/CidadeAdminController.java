@@ -17,8 +17,8 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import br.com.his.admin.dto.CidadeForm;
 import br.com.his.admin.service.CidadeAdminService;
 import br.com.his.admin.service.UnidadeFederativaAdminService;
-import br.com.his.configuracao.model.Cidade;
-import br.com.his.paciente.dto.PacienteLookupOption;
+import br.com.his.reference.location.model.Cidade;
+import br.com.his.patient.dto.PacienteLookupOption;
 import jakarta.validation.Valid;
 
 @Controller

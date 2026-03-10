@@ -2,7 +2,7 @@ package br.com.his.patient.api.dto;
 
 import java.time.LocalDate;
 
-import br.com.his.paciente.validation.Cpf;
+import br.com.his.patient.validation.Cpf;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.PastOrPresent;
 import jakarta.validation.constraints.Pattern;

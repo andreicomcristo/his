@@ -18,8 +18,8 @@ import br.com.his.admin.dto.BairroForm;
 import br.com.his.admin.service.BairroAdminService;
 import br.com.his.admin.service.CidadeAdminService;
 import br.com.his.admin.service.UnidadeFederativaAdminService;
-import br.com.his.configuracao.model.Bairro;
-import br.com.his.paciente.dto.PacienteLookupOption;
+import br.com.his.reference.location.model.Bairro;
+import br.com.his.patient.dto.PacienteLookupOption;
 import jakarta.validation.Valid;
 
 @Controller

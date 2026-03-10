@@ -31,8 +31,8 @@ import br.com.his.access.context.UnidadeContext;
 import br.com.his.access.repository.UnidadeRepository;
 import br.com.his.access.service.AccessContextService;
 import br.com.his.access.service.AdminAuthorizationService;
-import br.com.his.paciente.model.Paciente;
-import br.com.his.paciente.service.PacienteService;
+import br.com.his.patient.model.Paciente;
+import br.com.his.patient.service.PacienteService;
 import br.com.his.patient.api.error.ApiExceptionHandler;
 
 @WebMvcTest(

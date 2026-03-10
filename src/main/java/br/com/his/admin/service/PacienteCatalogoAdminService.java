@@ -10,7 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import br.com.his.admin.dto.PacienteCatalogoForm;
 import br.com.his.admin.dto.PacienteCatalogoItem;
 import br.com.his.admin.dto.PacienteCatalogoTipo;
-import br.com.his.paciente.dto.PacienteLookupOption;
+import br.com.his.patient.dto.PacienteLookupOption;
 
 @Service
 public class PacienteCatalogoAdminService {

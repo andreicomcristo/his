@@ -6,8 +6,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import br.com.his.admin.dto.GlasgowRespostaPupilarForm;
-import br.com.his.assistencial.model.GlasgowRespostaPupilar;
-import br.com.his.assistencial.repository.GlasgowRespostaPupilarRepository;
+import br.com.his.care.triage.model.GlasgowRespostaPupilar;
+import br.com.his.care.triage.repository.GlasgowRespostaPupilarRepository;
 
 @Service
 public class GlasgowRespostaPupilarAdminService {

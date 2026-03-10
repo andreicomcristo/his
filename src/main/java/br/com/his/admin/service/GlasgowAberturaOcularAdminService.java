@@ -6,8 +6,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import br.com.his.admin.dto.GlasgowAberturaOcularForm;
-import br.com.his.assistencial.model.GlasgowAberturaOcular;
-import br.com.his.assistencial.repository.GlasgowAberturaOcularRepository;
+import br.com.his.care.triage.model.GlasgowAberturaOcular;
+import br.com.his.care.triage.repository.GlasgowAberturaOcularRepository;
 
 @Service
 public class GlasgowAberturaOcularAdminService {

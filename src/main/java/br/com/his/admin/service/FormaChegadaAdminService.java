@@ -6,9 +6,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import br.com.his.admin.dto.FormaChegadaForm;
-import br.com.his.assistencial.model.FormaChegada;
-import br.com.his.assistencial.model.PerfilChegada;
-import br.com.his.assistencial.repository.FormaChegadaRepository;
+import br.com.his.care.admission.model.FormaChegada;
+import br.com.his.care.admission.model.PerfilChegada;
+import br.com.his.care.admission.repository.FormaChegadaRepository;
 
 @Service
 public class FormaChegadaAdminService {

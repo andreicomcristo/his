@@ -14,8 +14,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import br.com.his.paciente.model.Paciente;
-import br.com.his.paciente.service.PacienteService;
+import br.com.his.patient.model.Paciente;
+import br.com.his.patient.service.PacienteService;
 import br.com.his.patient.api.dto.PacienteMergeRequest;
 import br.com.his.patient.api.dto.PacienteRequest;
 import br.com.his.patient.api.dto.PacienteResponse;

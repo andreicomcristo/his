@@ -8,8 +8,8 @@ import org.springframework.transaction.annotation.Transactional;
 import br.com.his.access.model.Unidade;
 import br.com.his.access.repository.UnidadeRepository;
 import br.com.his.admin.dto.AreaForm;
-import br.com.his.assistencial.model.Area;
-import br.com.his.assistencial.repository.AreaRepository;
+import br.com.his.care.inpatient.model.Area;
+import br.com.his.care.inpatient.repository.AreaRepository;
 
 @Service
 public class AreaAdminService {

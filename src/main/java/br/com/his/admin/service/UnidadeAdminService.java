@@ -9,8 +9,8 @@ import org.springframework.transaction.annotation.Transactional;
 import br.com.his.access.model.Unidade;
 import br.com.his.access.repository.UnidadeRepository;
 import br.com.his.admin.dto.UnidadeForm;
-import br.com.his.configuracao.model.Cidade;
-import br.com.his.configuracao.repository.CidadeRepository;
+import br.com.his.reference.location.model.Cidade;
+import br.com.his.reference.location.repository.CidadeRepository;
 
 @Service
 public class UnidadeAdminService {

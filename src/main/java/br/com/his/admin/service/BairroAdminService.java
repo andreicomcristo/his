@@ -6,10 +6,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import br.com.his.admin.dto.BairroForm;
-import br.com.his.configuracao.model.Bairro;
-import br.com.his.configuracao.model.Cidade;
-import br.com.his.configuracao.repository.BairroRepository;
-import br.com.his.configuracao.repository.CidadeRepository;
+import br.com.his.reference.location.model.Bairro;
+import br.com.his.reference.location.model.Cidade;
+import br.com.his.reference.location.repository.BairroRepository;
+import br.com.his.reference.location.repository.CidadeRepository;
 
 @Service
 public class BairroAdminService {

@@ -6,8 +6,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import br.com.his.admin.dto.ClassificacaoCorForm;
-import br.com.his.assistencial.model.ClassificacaoCor;
-import br.com.his.assistencial.repository.ClassificacaoCorRepository;
+import br.com.his.care.triage.model.ClassificacaoCor;
+import br.com.his.care.triage.repository.ClassificacaoCorRepository;
 
 @Service
 public class ClassificacaoCorAdminService {

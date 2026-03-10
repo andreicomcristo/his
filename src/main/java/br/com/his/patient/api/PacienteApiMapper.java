@@ -2,8 +2,8 @@ package br.com.his.patient.api;
 
 import org.springframework.stereotype.Component;
 
-import br.com.his.paciente.dto.PacienteForm;
-import br.com.his.paciente.model.Paciente;
+import br.com.his.patient.dto.PacienteForm;
+import br.com.his.patient.model.Paciente;
 import br.com.his.patient.api.dto.PacienteRequest;
 import br.com.his.patient.api.dto.PacienteResponse;
 import br.com.his.patient.api.dto.PacienteTemporarioRequest;

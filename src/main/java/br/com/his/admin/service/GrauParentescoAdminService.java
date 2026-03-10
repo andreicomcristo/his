@@ -6,8 +6,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import br.com.his.admin.dto.GrauParentescoForm;
-import br.com.his.assistencial.model.GrauParentesco;
-import br.com.his.assistencial.repository.GrauParentescoRepository;
+import br.com.his.care.admission.model.GrauParentesco;
+import br.com.his.care.admission.repository.GrauParentescoRepository;
 
 @Service
 public class GrauParentescoAdminService {

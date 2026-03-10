@@ -6,8 +6,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import br.com.his.admin.dto.ComorbidadeForm;
-import br.com.his.assistencial.model.Comorbidade;
-import br.com.his.assistencial.repository.ComorbidadeRepository;
+import br.com.his.care.triage.model.Comorbidade;
+import br.com.his.care.triage.repository.ComorbidadeRepository;
 
 @Service
 public class ComorbidadeAdminService {

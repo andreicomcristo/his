@@ -6,8 +6,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import br.com.his.admin.dto.SexoForm;
-import br.com.his.paciente.model.lookup.Sexo;
-import br.com.his.paciente.repository.SexoRepository;
+import br.com.his.patient.model.lookup.Sexo;
+import br.com.his.patient.repository.SexoRepository;
 
 @Service
 public class SexoAdminService {

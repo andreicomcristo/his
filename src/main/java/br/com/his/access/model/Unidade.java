@@ -1,6 +1,6 @@
 package br.com.his.access.model;
 
-import br.com.his.configuracao.model.Cidade;
+import br.com.his.reference.location.model.Cidade;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;

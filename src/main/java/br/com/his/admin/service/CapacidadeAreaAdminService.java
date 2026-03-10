@@ -6,8 +6,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import br.com.his.admin.dto.CapacidadeAreaForm;
-import br.com.his.assistencial.model.CapacidadeArea;
-import br.com.his.assistencial.repository.CapacidadeAreaRepository;
+import br.com.his.care.inpatient.model.CapacidadeArea;
+import br.com.his.care.inpatient.repository.CapacidadeAreaRepository;
 
 @Service
 public class CapacidadeAreaAdminService {
