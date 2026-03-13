@@ -23,6 +23,7 @@ import br.com.his.care.timeline.repository.*;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.sql.Timestamp;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -328,6 +329,184 @@ public class IndicadorLeanService {
         return new LeanConsultaResponse(unidadeId, dataInicio, dataFim, indicadores);
     }
 
+    @Transactional(readOnly = true)
+    public LeanRecepcaoOperadoresResponse calcularRecepcaoOperadores(Long unidadeId,
+                                                                     LocalDate dataInicio,
+                                                                     LocalDate dataFim) {
+        validarParametros(unidadeId, dataInicio, dataFim);
+
+        LocalDateTime inicio = dataInicio.atStartOfDay();
+        LocalDateTime fimExclusivo = dataFim.plusDays(1).atStartOfDay();
+        OperadoresRecepcaoResultado resultadoOperadores = listarRecepcaoOperadores(
+                unidadeId,
+                inicio,
+                fimExclusivo);
+        List<LeanRecepcaoOperadorItemResponse> operadores = resultadoOperadores.operadores();
+        long totalOperadores = operadores.size();
+        long totalAtendimentos = operadores.stream()
+                .mapToLong(item -> item.quantidadeAtendimentos() == null ? 0L : item.quantidadeAtendimentos())
+                .sum();
+
+        Double mediaAtendimentosPorOperador = totalOperadores > 0
+                ? round2(totalAtendimentos / (double) totalOperadores)
+                : 0d;
+        Double mediaTempoRecepcaoMinutos = resultadoOperadores.totalRegistrosComTempo() > 0
+                ? round2(resultadoOperadores.somaMinutos() / resultadoOperadores.totalRegistrosComTempo())
+                : null;
+
+        return new LeanRecepcaoOperadoresResponse(
+                unidadeId,
+                dataInicio,
+                dataFim,
+                totalOperadores,
+                totalAtendimentos,
+                mediaAtendimentosPorOperador,
+                mediaTempoRecepcaoMinutos,
+                operadores);
+    }
+
+    @Transactional(readOnly = true)
+    public LeanClassificacaoOperadoresResponse calcularClassificacaoOperadores(Long unidadeId,
+                                                                               LocalDate dataInicio,
+                                                                               LocalDate dataFim) {
+        validarParametros(unidadeId, dataInicio, dataFim);
+
+        LocalDateTime inicio = dataInicio.atStartOfDay();
+        LocalDateTime fimExclusivo = dataFim.plusDays(1).atStartOfDay();
+        OperadoresClassificacaoResultado resultadoOperadores = listarClassificacaoOperadores(
+                unidadeId,
+                inicio,
+                fimExclusivo);
+        List<LeanClassificacaoOperadorItemResponse> operadores = resultadoOperadores.operadores();
+        long totalOperadores = operadores.size();
+        long totalClassificacoes = operadores.stream()
+                .mapToLong(item -> item.quantidadeClassificacoes() == null ? 0L : item.quantidadeClassificacoes())
+                .sum();
+
+        Double mediaClassificacoesPorOperador = totalOperadores > 0
+                ? round2(totalClassificacoes / (double) totalOperadores)
+                : 0d;
+        Double mediaTempoClassificacaoMinutos = resultadoOperadores.totalRegistrosComTempo() > 0
+                ? round2(resultadoOperadores.somaMinutos() / resultadoOperadores.totalRegistrosComTempo())
+                : null;
+
+        return new LeanClassificacaoOperadoresResponse(
+                unidadeId,
+                dataInicio,
+                dataFim,
+                totalOperadores,
+                totalClassificacoes,
+                mediaClassificacoesPorOperador,
+                mediaTempoClassificacaoMinutos,
+                operadores);
+    }
+
+    @Transactional(readOnly = true)
+    public List<LeanRecepcaoOperadorAtendimentoItemResponse> listarDetalhesRecepcaoPorOperador(Long unidadeId,
+                                                                                                 LocalDate dataInicio,
+                                                                                                 LocalDate dataFim,
+                                                                                                 Long operadorUsuarioId) {
+        validarParametros(unidadeId, dataInicio, dataFim);
+        if (operadorUsuarioId == null) {
+            throw new IllegalArgumentException("Operador e obrigatorio");
+        }
+
+        LocalDateTime inicio = dataInicio.atStartOfDay();
+        LocalDateTime fimExclusivo = dataFim.plusDays(1).atStartOfDay();
+
+        List<Map<String, Object>> rows = jdbcTemplate.queryForList("""
+                select
+                    a.id as atendimento_id,
+                    coalesce(nullif(trim(pm.nome), ''), nullif(trim(p.nome), ''), 'NAO INFORMADO') as paciente_nome,
+                    ap.inicio_em as inicio_em,
+                    ap.fim_em as fim_em,
+                    case
+                        when ap.fim_em is not null and ap.fim_em > ap.inicio_em
+                            then extract(epoch from (ap.fim_em - ap.inicio_em)) / 60.0
+                        else null
+                    end as tempo_minutos
+                from atendimento_periodo ap
+                join atendimento a on a.id = ap.atendimento_id
+                join paciente p on p.id = a.paciente_id
+                left join paciente pm on pm.id = p.merged_into_id
+                where a.unidade_id = ?
+                  and ap.tipo = 'RECEPCAO'
+                  and ap.usuario_inicio_id = ?
+                  and ap.inicio_em >= ?
+                  and ap.inicio_em < ?
+                order by ap.inicio_em desc, a.id desc
+                """, unidadeId, operadorUsuarioId, inicio, fimExclusivo);
+
+        List<LeanRecepcaoOperadorAtendimentoItemResponse> itens = new ArrayList<>();
+        for (Map<String, Object> row : rows) {
+            Long atendimentoId = row.get("atendimento_id") == null ? null : ((Number) row.get("atendimento_id")).longValue();
+            String pacienteNome = row.get("paciente_nome") == null ? "NAO INFORMADO" : row.get("paciente_nome").toString();
+            LocalDateTime inicioRecepcao = toLocalDateTime(row.get("inicio_em"));
+            LocalDateTime fimRecepcao = toLocalDateTime(row.get("fim_em"));
+            Double tempoMinutos = row.get("tempo_minutos") == null ? null : round2(((Number) row.get("tempo_minutos")).doubleValue());
+            itens.add(new LeanRecepcaoOperadorAtendimentoItemResponse(
+                    atendimentoId,
+                    pacienteNome,
+                    inicioRecepcao,
+                    fimRecepcao,
+                    tempoMinutos));
+        }
+        return itens;
+    }
+
+    @Transactional(readOnly = true)
+    public List<LeanClassificacaoOperadorAtendimentoItemResponse> listarDetalhesClassificacaoPorOperador(Long unidadeId,
+                                                                                                           LocalDate dataInicio,
+                                                                                                           LocalDate dataFim,
+                                                                                                           Long operadorUsuarioId) {
+        validarParametros(unidadeId, dataInicio, dataFim);
+        if (operadorUsuarioId == null) {
+            throw new IllegalArgumentException("Operador e obrigatorio");
+        }
+
+        LocalDateTime inicio = dataInicio.atStartOfDay();
+        LocalDateTime fimExclusivo = dataFim.plusDays(1).atStartOfDay();
+
+        List<Map<String, Object>> rows = jdbcTemplate.queryForList("""
+                select
+                    a.id as atendimento_id,
+                    coalesce(nullif(trim(pm.nome), ''), nullif(trim(p.nome), ''), 'NAO INFORMADO') as paciente_nome,
+                    ap.inicio_em as inicio_em,
+                    ap.fim_em as fim_em,
+                    case
+                        when ap.fim_em is not null and ap.fim_em > ap.inicio_em
+                            then extract(epoch from (ap.fim_em - ap.inicio_em)) / 60.0
+                        else null
+                    end as tempo_minutos
+                from atendimento_periodo ap
+                join atendimento a on a.id = ap.atendimento_id
+                join paciente p on p.id = a.paciente_id
+                left join paciente pm on pm.id = p.merged_into_id
+                where a.unidade_id = ?
+                  and ap.tipo = 'TRIAGEM'
+                  and ap.usuario_inicio_id = ?
+                  and ap.inicio_em >= ?
+                  and ap.inicio_em < ?
+                order by ap.inicio_em desc, a.id desc
+                """, unidadeId, operadorUsuarioId, inicio, fimExclusivo);
+
+        List<LeanClassificacaoOperadorAtendimentoItemResponse> itens = new ArrayList<>();
+        for (Map<String, Object> row : rows) {
+            Long atendimentoId = row.get("atendimento_id") == null ? null : ((Number) row.get("atendimento_id")).longValue();
+            String pacienteNome = row.get("paciente_nome") == null ? "NAO INFORMADO" : row.get("paciente_nome").toString();
+            LocalDateTime inicioClassificacao = toLocalDateTime(row.get("inicio_em"));
+            LocalDateTime fimClassificacao = toLocalDateTime(row.get("fim_em"));
+            Double tempoMinutos = row.get("tempo_minutos") == null ? null : round2(((Number) row.get("tempo_minutos")).doubleValue());
+            itens.add(new LeanClassificacaoOperadorAtendimentoItemResponse(
+                    atendimentoId,
+                    pacienteNome,
+                    inicioClassificacao,
+                    fimClassificacao,
+                    tempoMinutos));
+        }
+        return itens;
+    }
+
     private void validarParametros(Long unidadeId, LocalDate dataInicio, LocalDate dataFim) {
         if (unidadeId == null) {
             throw new IllegalArgumentException("Unidade e obrigatoria");
@@ -338,6 +517,176 @@ public class IndicadorLeanService {
         if (dataFim.isBefore(dataInicio)) {
             throw new IllegalArgumentException("Data fim nao pode ser anterior a data inicio");
         }
+    }
+
+    private OperadoresRecepcaoResultado listarRecepcaoOperadores(Long unidadeId,
+                                                                 LocalDateTime inicio,
+                                                                 LocalDateTime fimExclusivo) {
+        List<Map<String, Object>> rows = jdbcTemplate.queryForList("""
+                with operadores as (
+                    select distinct
+                        u.id as usuario_id,
+                        coalesce(nullif(trim(c.nome), ''), nullif(trim(u.username), ''), 'SEM OPERADOR') as operador_nome,
+                        u.username as username
+                    from colaborador_unidade_atuacao cua
+                    join colaborador_unidade_vinculo cuv on cuv.id = cua.colaborador_unidade_vinculo_id
+                    join usuario_colaborador uc on uc.colaborador_id = cuv.colaborador_id
+                    join usuario u on u.id = uc.usuario_id
+                    join perfil_permissao pp on pp.perfil_id = cua.perfil_id
+                    join permissao p on p.id = pp.permissao_id
+                    left join colaborador c on c.id = cuv.colaborador_id
+                    where cuv.unidade_id = ?
+                      and u.ativo = true
+                      and uc.ativo = true
+                      and cuv.ativo = true
+                      and cua.ativo = true
+                      and upper(p.nome) = 'RECEPCAO_EXECUTAR'
+                ),
+                quantidade_por_operador as (
+                    select
+                        ap.usuario_inicio_id as usuario_id,
+                        count(*) as quantidade,
+                        count(*) filter (where ap.fim_em is not null and ap.fim_em > ap.inicio_em) as quantidade_com_tempo,
+                        coalesce(sum(
+                            case
+                                when ap.fim_em is not null and ap.fim_em > ap.inicio_em
+                                    then extract(epoch from (ap.fim_em - ap.inicio_em)) / 60.0
+                                else 0
+                            end
+                        ), 0) as soma_minutos
+                    from atendimento_periodo ap
+                    join atendimento a on a.id = ap.atendimento_id
+                    where a.unidade_id = ?
+                      and ap.tipo = 'RECEPCAO'
+                      and ap.inicio_em >= ?
+                      and ap.inicio_em < ?
+                      and ap.usuario_inicio_id is not null
+                    group by ap.usuario_inicio_id
+                )
+                select
+                    o.usuario_id,
+                    o.operador_nome,
+                    o.username,
+                    coalesce(q.quantidade, 0) as quantidade,
+                    coalesce(q.quantidade_com_tempo, 0) as quantidade_com_tempo,
+                    coalesce(q.soma_minutos, 0) as soma_minutos
+                from operadores o
+                left join quantidade_por_operador q on q.usuario_id = o.usuario_id
+                order by quantidade desc, o.operador_nome
+                """, unidadeId, unidadeId, inicio, fimExclusivo);
+
+        List<LeanRecepcaoOperadorItemResponse> itens = new ArrayList<>();
+        double somaMinutos = 0d;
+        long totalRegistrosComTempo = 0L;
+        for (Map<String, Object> row : rows) {
+            Long usuarioId = row.get("usuario_id") == null ? null : ((Number) row.get("usuario_id")).longValue();
+            long quantidade = row.get("quantidade") == null ? 0L : ((Number) row.get("quantidade")).longValue();
+            long quantidadeComTempo = row.get("quantidade_com_tempo") == null
+                    ? 0L
+                    : ((Number) row.get("quantidade_com_tempo")).longValue();
+            double somaMinutosOperador = row.get("soma_minutos") == null
+                    ? 0d
+                    : ((Number) row.get("soma_minutos")).doubleValue();
+            String operador = row.get("operador_nome") == null ? "SEM OPERADOR" : row.get("operador_nome").toString();
+            String username = row.get("username") == null ? "-" : row.get("username").toString();
+            Double mediaTempoRecepcaoMinutos = quantidadeComTempo > 0
+                    ? round2(somaMinutosOperador / quantidadeComTempo)
+                    : null;
+            itens.add(new LeanRecepcaoOperadorItemResponse(
+                    usuarioId,
+                    operador,
+                    username,
+                    quantidade,
+                    mediaTempoRecepcaoMinutos));
+            somaMinutos += somaMinutosOperador;
+            totalRegistrosComTempo += quantidadeComTempo;
+        }
+        return new OperadoresRecepcaoResultado(itens, somaMinutos, totalRegistrosComTempo);
+    }
+
+    private OperadoresClassificacaoResultado listarClassificacaoOperadores(Long unidadeId,
+                                                                           LocalDateTime inicio,
+                                                                           LocalDateTime fimExclusivo) {
+        List<Map<String, Object>> rows = jdbcTemplate.queryForList("""
+                with operadores as (
+                    select distinct
+                        u.id as usuario_id,
+                        coalesce(nullif(trim(c.nome), ''), nullif(trim(u.username), ''), 'SEM OPERADOR') as operador_nome,
+                        u.username as username
+                    from colaborador_unidade_atuacao cua
+                    join colaborador_unidade_vinculo cuv on cuv.id = cua.colaborador_unidade_vinculo_id
+                    join usuario_colaborador uc on uc.colaborador_id = cuv.colaborador_id
+                    join usuario u on u.id = uc.usuario_id
+                    join perfil_permissao pp on pp.perfil_id = cua.perfil_id
+                    join permissao p on p.id = pp.permissao_id
+                    left join colaborador c on c.id = cuv.colaborador_id
+                    where cuv.unidade_id = ?
+                      and u.ativo = true
+                      and uc.ativo = true
+                      and cuv.ativo = true
+                      and cua.ativo = true
+                      and upper(p.nome) = 'TRIAGEM_EXECUTAR'
+                ),
+                quantidade_por_operador as (
+                    select
+                        ap.usuario_inicio_id as usuario_id,
+                        count(*) as quantidade,
+                        count(*) filter (where ap.fim_em is not null and ap.fim_em > ap.inicio_em) as quantidade_com_tempo,
+                        coalesce(sum(
+                            case
+                                when ap.fim_em is not null and ap.fim_em > ap.inicio_em
+                                    then extract(epoch from (ap.fim_em - ap.inicio_em)) / 60.0
+                                else 0
+                            end
+                        ), 0) as soma_minutos
+                    from atendimento_periodo ap
+                    join atendimento a on a.id = ap.atendimento_id
+                    where a.unidade_id = ?
+                      and ap.tipo = 'TRIAGEM'
+                      and ap.inicio_em >= ?
+                      and ap.inicio_em < ?
+                      and ap.usuario_inicio_id is not null
+                    group by ap.usuario_inicio_id
+                )
+                select
+                    o.usuario_id,
+                    o.operador_nome,
+                    o.username,
+                    coalesce(q.quantidade, 0) as quantidade,
+                    coalesce(q.quantidade_com_tempo, 0) as quantidade_com_tempo,
+                    coalesce(q.soma_minutos, 0) as soma_minutos
+                from operadores o
+                left join quantidade_por_operador q on q.usuario_id = o.usuario_id
+                order by quantidade desc, o.operador_nome
+                """, unidadeId, unidadeId, inicio, fimExclusivo);
+
+        List<LeanClassificacaoOperadorItemResponse> itens = new ArrayList<>();
+        double somaMinutos = 0d;
+        long totalRegistrosComTempo = 0L;
+        for (Map<String, Object> row : rows) {
+            Long usuarioId = row.get("usuario_id") == null ? null : ((Number) row.get("usuario_id")).longValue();
+            long quantidade = row.get("quantidade") == null ? 0L : ((Number) row.get("quantidade")).longValue();
+            long quantidadeComTempo = row.get("quantidade_com_tempo") == null
+                    ? 0L
+                    : ((Number) row.get("quantidade_com_tempo")).longValue();
+            double somaMinutosOperador = row.get("soma_minutos") == null
+                    ? 0d
+                    : ((Number) row.get("soma_minutos")).doubleValue();
+            String operador = row.get("operador_nome") == null ? "SEM OPERADOR" : row.get("operador_nome").toString();
+            String username = row.get("username") == null ? "-" : row.get("username").toString();
+            Double mediaTempoClassificacaoMinutos = quantidadeComTempo > 0
+                    ? round2(somaMinutosOperador / quantidadeComTempo)
+                    : null;
+            itens.add(new LeanClassificacaoOperadorItemResponse(
+                    usuarioId,
+                    operador,
+                    username,
+                    quantidade,
+                    mediaTempoClassificacaoMinutos));
+            somaMinutos += somaMinutosOperador;
+            totalRegistrosComTempo += quantidadeComTempo;
+        }
+        return new OperadoresClassificacaoResultado(itens, somaMinutos, totalRegistrosComTempo);
     }
 
     private long contarAtendimentosChegada(Long unidadeId, LocalDateTime inicio, LocalDateTime fimExclusivo) {
@@ -750,6 +1099,19 @@ public class IndicadorLeanService {
         return valor == null ? "N/A" : round2(valor).toString();
     }
 
+    private LocalDateTime toLocalDateTime(Object value) {
+        if (value == null) {
+            return null;
+        }
+        if (value instanceof LocalDateTime localDateTime) {
+            return localDateTime;
+        }
+        if (value instanceof Timestamp timestamp) {
+            return timestamp.toLocalDateTime();
+        }
+        throw new IllegalArgumentException("Tipo de data/hora inesperado: " + value.getClass().getName());
+    }
+
     private CalculoOcupacao calcularOcupacao(Long unidadeId,
                                              LocalDateTime inicio,
                                              LocalDateTime fimExclusivo,
@@ -905,6 +1267,16 @@ public class IndicadorLeanService {
                                    long minutosDisponiveisOperacional,
                                    Double taxaNominalPercentual,
                                    Double taxaOperacionalPercentual) {
+    }
+
+    private record OperadoresRecepcaoResultado(List<LeanRecepcaoOperadorItemResponse> operadores,
+                                               double somaMinutos,
+                                               long totalRegistrosComTempo) {
+    }
+
+    private record OperadoresClassificacaoResultado(List<LeanClassificacaoOperadorItemResponse> operadores,
+                                                    double somaMinutos,
+                                                    long totalRegistrosComTempo) {
     }
 
     private enum TaxaOcupacaoCategoria {

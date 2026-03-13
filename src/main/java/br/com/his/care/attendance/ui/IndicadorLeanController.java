@@ -37,6 +37,9 @@ import br.com.his.access.context.UnidadeContext;
 import br.com.his.access.service.OperationalPermissionService;
 import br.com.his.care.attendance.api.dto.LeanConsultaResponse;
 import br.com.his.care.attendance.api.dto.LeanPortaTriagemResponse;
+import br.com.his.care.attendance.api.dto.LeanClassificacaoOperadorItemResponse;
+import br.com.his.care.attendance.api.dto.LeanClassificacaoOperadoresResponse;
+import br.com.his.care.attendance.api.dto.LeanRecepcaoOperadoresResponse;
 import br.com.his.care.attendance.api.dto.TaxaOcupacaoLeanResponse;
 import br.com.his.care.attendance.service.IndicadorLeanService;
 
@@ -138,6 +141,86 @@ public class IndicadorLeanController {
         }
 
         return "pages/care/attendance/indicadores/lean-consulta";
+    }
+
+    @GetMapping("/recepcao-operadores")
+    public String recepcaoOperadores(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicio,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFim,
+            @RequestParam(required = false) Long operadorUsuarioId,
+            Authentication authentication,
+            Model model) {
+        requirePermission(authentication, OperationalPermissionService.PERM_ATENDIMENTO_ACESSAR);
+        Long unidadeId = unidadeContext.getUnidadeAtual()
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "Selecione uma unidade antes de consultar indicadores"));
+
+        LocalDate fim = dataFim != null ? dataFim : LocalDate.now();
+        LocalDate inicio = dataInicio != null ? dataInicio : fim.withDayOfMonth(1);
+
+        model.addAttribute("dataInicio", inicio);
+        model.addAttribute("dataFim", fim);
+
+        try {
+            LeanRecepcaoOperadoresResponse response = indicadorLeanService.calcularRecepcaoOperadores(unidadeId, inicio, fim);
+            model.addAttribute("resultado", response);
+            model.addAttribute("operadorUsuarioIdSelecionado", operadorUsuarioId);
+            if (operadorUsuarioId != null) {
+                model.addAttribute("detalhesOperador",
+                        indicadorLeanService.listarDetalhesRecepcaoPorOperador(unidadeId, inicio, fim, operadorUsuarioId));
+                String nomeOperadorSelecionado = response.operadores().stream()
+                        .filter(item -> operadorUsuarioId.equals(item.usuarioId()))
+                        .map(LeanRecepcaoOperadorItemResponse::operador)
+                        .findFirst()
+                        .orElse("OPERADOR");
+                model.addAttribute("operadorSelecionadoNome", nomeOperadorSelecionado);
+            }
+        } catch (IllegalArgumentException ex) {
+            model.addAttribute("errorMessage", ex.getMessage());
+        }
+
+        return "pages/care/attendance/indicadores/lean-recepcao-operadores";
+    }
+
+    @GetMapping("/classificacao-operadores")
+    public String classificacaoOperadores(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicio,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFim,
+            @RequestParam(required = false) Long operadorUsuarioId,
+            Authentication authentication,
+            Model model) {
+        requirePermission(authentication, OperationalPermissionService.PERM_ATENDIMENTO_ACESSAR);
+        Long unidadeId = unidadeContext.getUnidadeAtual()
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "Selecione uma unidade antes de consultar indicadores"));
+
+        LocalDate fim = dataFim != null ? dataFim : LocalDate.now();
+        LocalDate inicio = dataInicio != null ? dataInicio : fim.withDayOfMonth(1);
+
+        model.addAttribute("dataInicio", inicio);
+        model.addAttribute("dataFim", fim);
+
+        try {
+            LeanClassificacaoOperadoresResponse response = indicadorLeanService.calcularClassificacaoOperadores(unidadeId, inicio, fim);
+            model.addAttribute("resultado", response);
+            model.addAttribute("operadorUsuarioIdSelecionado", operadorUsuarioId);
+            if (operadorUsuarioId != null) {
+                model.addAttribute("detalhesOperador",
+                        indicadorLeanService.listarDetalhesClassificacaoPorOperador(unidadeId, inicio, fim, operadorUsuarioId));
+                String nomeOperadorSelecionado = response.operadores().stream()
+                        .filter(item -> operadorUsuarioId.equals(item.usuarioId()))
+                        .map(LeanClassificacaoOperadorItemResponse::operador)
+                        .findFirst()
+                        .orElse("OPERADOR");
+                model.addAttribute("operadorSelecionadoNome", nomeOperadorSelecionado);
+            }
+        } catch (IllegalArgumentException ex) {
+            model.addAttribute("errorMessage", ex.getMessage());
+        }
+
+        return "pages/care/attendance/indicadores/lean-classificacao-operadores";
     }
 
     private void requirePermission(Authentication authentication, String permission) {

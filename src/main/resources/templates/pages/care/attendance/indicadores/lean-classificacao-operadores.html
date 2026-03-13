@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:replace="~{layout/base :: layout('HIS | Indicadores Lean - Classificacao por Operador', ~{::section})}">
+    <section>
+        <style>
+            .filtro-label {
+                font-weight: 700;
+            }
+
+            .lean-page-title {
+                margin-bottom: 1rem;
+            }
+
+            .lean-page-title .title-main {
+                font-size: 1.2rem;
+                font-weight: 700;
+                color: #2f3542;
+            }
+
+            .lean-page-title .title-sub {
+                color: #6c757d;
+                font-size: .9rem;
+            }
+
+            .lean-filter-card,
+            .lean-table-card {
+                border: 1px solid #e7ebf0;
+                border-radius: .35rem;
+                background: #fff;
+                box-shadow: 0 .46875rem 2.1875rem rgba(31, 10, 6, .03),
+                            0 .9375rem 1.40625rem rgba(31, 10, 6, .03),
+                            0 .25rem .53125rem rgba(31, 10, 6, .05),
+                            0 .125rem .1875rem rgba(31, 10, 6, .03);
+            }
+
+            .lean-table-card .card-header {
+                background: #f8f9fb;
+                border-bottom: 1px solid #e9edf2;
+            }
+
+            .lean-table-card .table thead th {
+                text-transform: uppercase;
+                font-size: .73rem;
+                letter-spacing: .03em;
+                color: #6c757d;
+                border-top: 0;
+            }
+
+            .resumo-badge {
+                font-size: .73rem;
+                text-transform: uppercase;
+                letter-spacing: .03em;
+            }
+        </style>
+
+        <div class="lean-page-title d-flex justify-content-between align-items-start">
+            <div>
+                <div class="title-main">Indicadores Lean - Classificacao por operador</div>
+                <div class="title-sub">Quantidade e tempo medio de classificacao por operador</div>
+            </div>
+            <a class="btn btn-outline-secondary btn-sm"
+               th:href="@{/api/assistencial/indicadores/lean/classificacao-operadores(dataInicio=${dataInicio},dataFim=${dataFim})}">
+                Ver JSON
+            </a>
+        </div>
+
+        <div class="lean-filter-card card mb-3">
+            <div class="card-body">
+                <div class="alert alert-danger" th:if="${errorMessage}" th:text="${errorMessage}"></div>
+
+                <form th:action="@{/ui/indicadores/lean/classificacao-operadores}" method="get">
+                    <div class="form-row">
+                        <div class="form-group col-md-3">
+                            <label for="dataInicio" class="filtro-label">Data inicio</label>
+                            <input id="dataInicio" name="dataInicio" type="date" class="form-control" th:value="${dataInicio}">
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label for="dataFim" class="filtro-label">Data fim</label>
+                            <input id="dataFim" name="dataFim" type="date" class="form-control" th:value="${dataFim}">
+                        </div>
+                        <div class="form-group col-md-2 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary btn-block">Consultar</button>
+                        </div>
+                        <div class="form-group col-md-2 d-flex align-items-end">
+                            <a th:href="@{/ui/indicadores/lean/classificacao-operadores}" class="btn btn-outline-secondary btn-block">Limpar</a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="row" th:if="${resultado != null}">
+            <div class="col-md-6 col-xl-3 mb-3">
+                <div class="card card-btm-border border-primary">
+                    <div class="card-body">
+                        <span class="badge badge-primary resumo-badge">CLS-01</span>
+                        <div class="mt-2 text-muted">Operadores de classificacao</div>
+                        <h3 class="mb-0 mt-1" th:text="${resultado.totalOperadores}">0</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-xl-3 mb-3">
+                <div class="card card-btm-border border-success">
+                    <div class="card-body">
+                        <span class="badge badge-success resumo-badge">CLS-01</span>
+                        <div class="mt-2 text-muted">Classificacoes no periodo</div>
+                        <h3 class="mb-0 mt-1" th:text="${resultado.totalClassificacoes}">0</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-xl-3 mb-3">
+                <div class="card card-btm-border border-info">
+                    <div class="card-body">
+                        <span class="badge badge-info resumo-badge">CLS-02</span>
+                        <div class="mt-2 text-muted">Media por operador</div>
+                        <h3 class="mb-0 mt-1" th:text="${#numbers.formatDecimal(resultado.mediaClassificacoesPorOperador, 1, 2)}">0,00</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-xl-3 mb-3">
+                <div class="card card-btm-border border-warning">
+                    <div class="card-body">
+                        <span class="badge badge-warning resumo-badge">CLS-03</span>
+                        <div class="mt-2 text-muted">Tempo medio de classificacao (min)</div>
+                        <h3 class="mb-0 mt-1" th:text="${resultado.mediaTempoClassificacaoMinutos != null ? #numbers.formatDecimal(resultado.mediaTempoClassificacaoMinutos, 1, 2) : 'N/A'}">0,00</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="lean-table-card card" th:if="${resultado != null}">
+            <div class="card-header">
+                <strong>Detalhamento por operador</strong>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-sm table-striped mb-0">
+                        <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Operador</th>
+                            <th>Username</th>
+                            <th>Quantidade</th>
+                            <th>Tempo medio (min)</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:if="${#lists.isEmpty(resultado.operadores)}">
+                            <td colspan="5" class="text-center">Nenhum operador de classificacao encontrado para a unidade.</td>
+                        </tr>
+                        <tr th:each="item, stat : ${resultado.operadores}">
+                            <td th:text="${stat.index + 1}">1</td>
+                            <td>
+                                <a th:if="${item.usuarioId != null}"
+                                   th:href="@{/ui/indicadores/lean/classificacao-operadores(dataInicio=${dataInicio},dataFim=${dataFim},operadorUsuarioId=${item.usuarioId})}"
+                                   th:text="${item.operador}"
+                                   th:classappend="${operadorUsuarioIdSelecionado != null and operadorUsuarioIdSelecionado == item.usuarioId} ? 'font-weight-bold text-primary' : ''">
+                                    OPERADOR
+                                </a>
+                                <span th:if="${item.usuarioId == null}" th:text="${item.operador}">OPERADOR</span>
+                            </td>
+                            <td th:text="${item.username}">username</td>
+                            <td th:text="${item.quantidadeClassificacoes}">0</td>
+                            <td th:text="${item.mediaTempoClassificacaoMinutos != null ? #numbers.formatDecimal(item.mediaTempoClassificacaoMinutos, 1, 2) : 'N/A'}">0,00</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="lean-table-card card mt-3" id="detalhes-operador" th:if="${detalhesOperador != null}">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <strong th:text="${'Atendimentos/classificacao - ' + operadorSelecionadoNome}">Atendimentos/classificacao - Operador</strong>
+                <a class="btn btn-sm btn-outline-secondary"
+                   th:href="@{/ui/indicadores/lean/classificacao-operadores(dataInicio=${dataInicio},dataFim=${dataFim})}">
+                    Fechar detalhamento
+                </a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-sm table-striped mb-0">
+                        <thead>
+                        <tr>
+                            <th># Atendimento</th>
+                            <th>Paciente</th>
+                            <th>Inicio</th>
+                            <th>Fim</th>
+                            <th>Tempo (min)</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:if="${#lists.isEmpty(detalhesOperador)}">
+                            <td colspan="5" class="text-center">Nenhuma classificacao encontrada para este operador no periodo.</td>
+                        </tr>
+                        <tr th:each="item : ${detalhesOperador}">
+                            <td th:text="${item.atendimentoId}">0</td>
+                            <td th:text="${item.pacienteNome}">PACIENTE</td>
+                            <td th:text="${item.inicioClassificacao != null ? #temporals.format(item.inicioClassificacao, 'dd/MM/yyyy HH:mm:ss') : '-'}">-</td>
+                            <td th:text="${item.fimClassificacao != null ? #temporals.format(item.fimClassificacao, 'dd/MM/yyyy HH:mm:ss') : 'EM ABERTO'}">EM ABERTO</td>
+                            <td th:text="${item.tempoMinutos != null ? #numbers.formatDecimal(item.tempoMinutos, 1, 2) : 'N/A'}">0,00</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+</th:block>
+</body>
+</html>

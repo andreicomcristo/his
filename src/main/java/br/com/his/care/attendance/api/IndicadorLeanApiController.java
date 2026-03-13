@@ -34,8 +34,10 @@ import org.springframework.web.server.ResponseStatusException;
 
 import br.com.his.access.context.UnidadeContext;
 import br.com.his.access.service.OperationalPermissionService;
+import br.com.his.care.attendance.api.dto.LeanClassificacaoOperadoresResponse;
 import br.com.his.care.attendance.api.dto.LeanConsultaResponse;
 import br.com.his.care.attendance.api.dto.LeanPortaTriagemResponse;
+import br.com.his.care.attendance.api.dto.LeanRecepcaoOperadoresResponse;
 import br.com.his.care.attendance.api.dto.TaxaOcupacaoLeanResponse;
 import br.com.his.care.attendance.service.IndicadorLeanService;
 
@@ -101,6 +103,40 @@ public class IndicadorLeanApiController {
                         "Selecione uma unidade antes de consultar indicadores"));
         try {
             return indicadorLeanService.calcularConsulta(unidadeId, dataInicio, dataFim);
+        } catch (IllegalArgumentException ex) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, ex.getMessage(), ex);
+        }
+    }
+
+    @GetMapping("/recepcao-operadores")
+    public LeanRecepcaoOperadoresResponse recepcaoOperadores(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicio,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFim,
+            Authentication authentication) {
+        requirePermission(authentication, OperationalPermissionService.PERM_ATENDIMENTO_ACESSAR);
+        Long unidadeId = unidadeContext.getUnidadeAtual()
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "Selecione uma unidade antes de consultar indicadores"));
+        try {
+            return indicadorLeanService.calcularRecepcaoOperadores(unidadeId, dataInicio, dataFim);
+        } catch (IllegalArgumentException ex) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, ex.getMessage(), ex);
+        }
+    }
+
+    @GetMapping("/classificacao-operadores")
+    public LeanClassificacaoOperadoresResponse classificacaoOperadores(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicio,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFim,
+            Authentication authentication) {
+        requirePermission(authentication, OperationalPermissionService.PERM_ATENDIMENTO_ACESSAR);
+        Long unidadeId = unidadeContext.getUnidadeAtual()
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "Selecione uma unidade antes de consultar indicadores"));
+        try {
+            return indicadorLeanService.calcularClassificacaoOperadores(unidadeId, dataInicio, dataFim);
         } catch (IllegalArgumentException ex) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, ex.getMessage(), ex);
         }
