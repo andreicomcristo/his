@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(${modoEdicao} ? 'Administracao - Editar Colaborador' : 'Administracao - Novo Colaborador', ~{::content})}">
+<th:block th:fragment="content">
+    <div class="main-card mb-3 card">
+        <div class="card-body">
+            <h5 class="card-title" th:text="${modoEdicao} ? 'Editar colaborador' : 'Novo colaborador'">Colaborador</h5>
+
+            <div class="alert alert-danger" th:if="${errorMessage}" th:text="${errorMessage}"></div>
+
+            <form method="post"
+                  th:object="${form}"
+                  th:action="${modoEdicao} ? @{'/ui/admin/colaboradores/' + ${itemId}} : @{/ui/admin/colaboradores}">
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label>Nome<span class="required-mark">*</span></label>
+                        <input type="text" class="form-control" th:field="*{nome}">
+                        <small class="text-danger" th:errors="*{nome}"></small>
+                    </div>
+                    <div class="form-group col-md-3">
+                        <label>CPF</label>
+                        <input type="text" class="form-control" th:field="*{cpf}">
+                        <small class="text-danger" th:errors="*{cpf}"></small>
+                    </div>
+                    <div class="form-group col-md-3">
+                        <label>Cargo base</label>
+                        <select class="form-control" th:field="*{cargoColaboradorId}">
+                            <option value="">Selecione</option>
+                            <option th:each="cargo : ${cargos}"
+                                    th:value="${cargo.id}"
+                                    th:text="${cargo.descricao + ' (' + (cargo.tipoCargo != null ? cargo.tipoCargo.descricao : '-') + ')'}">COLABORADOR GERAL</option>
+                        </select>
+                        <small class="text-danger" th:errors="*{cargoColaboradorId}"></small>
+                    </div>
+                    <div class="form-group col-md-2 d-flex align-items-center">
+                        <div class="form-check mt-4">
+                            <input type="checkbox" class="form-check-input" th:field="*{ativo}">
+                            <label class="form-check-label" for="ativo">Ativo</label>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-sm">Salvar</button>
+                <a th:href="@{/ui/admin/colaboradores}" class="btn btn-secondary btn-sm">Voltar</a>
+            </form>
+        </div>
+    </div>
+</th:block>
+</html>

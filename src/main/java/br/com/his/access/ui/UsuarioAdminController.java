@@ -11,11 +11,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import br.com.his.access.dto.UsuarioAtuacaoForm;
+import br.com.his.access.dto.UsuarioEdicaoForm;
+import br.com.his.access.dto.UsuarioNovoForm;
+import br.com.his.access.repository.FuncaoUnidadeRepository;
 import br.com.his.access.repository.PerfilRepository;
 import br.com.his.access.repository.UnidadeRepository;
-import br.com.his.access.dto.UsuarioNovoForm;
-import br.com.his.access.dto.UsuarioVinculoForm;
 import br.com.his.care.maintenance.service.AssistencialMaintenanceService;
+import br.com.his.care.scheduling.service.EspecialidadeAdminService;
 import br.com.his.access.service.UsuarioAdminService;
 import jakarta.validation.Valid;
 
@@ -26,16 +29,22 @@ public class UsuarioAdminController {
     private final UsuarioAdminService usuarioAdminService;
     private final AssistencialMaintenanceService assistencialMaintenanceService;
     private final UnidadeRepository unidadeRepository;
+    private final FuncaoUnidadeRepository funcaoUnidadeRepository;
     private final PerfilRepository perfilRepository;
+    private final EspecialidadeAdminService especialidadeAdminService;
 
     public UsuarioAdminController(UsuarioAdminService usuarioAdminService,
                                   AssistencialMaintenanceService assistencialMaintenanceService,
                                   UnidadeRepository unidadeRepository,
-                                  PerfilRepository perfilRepository) {
+                                  FuncaoUnidadeRepository funcaoUnidadeRepository,
+                                  PerfilRepository perfilRepository,
+                                  EspecialidadeAdminService especialidadeAdminService) {
         this.usuarioAdminService = usuarioAdminService;
         this.assistencialMaintenanceService = assistencialMaintenanceService;
         this.unidadeRepository = unidadeRepository;
+        this.funcaoUnidadeRepository = funcaoUnidadeRepository;
         this.perfilRepository = perfilRepository;
+        this.especialidadeAdminService = especialidadeAdminService;
     }
 
     @GetMapping
@@ -74,63 +83,78 @@ public class UsuarioAdminController {
 
     @GetMapping("/{id}")
     public String detalhe(@PathVariable Long id, Model model) {
-        model.addAttribute("usuario", usuarioAdminService.buscarPorId(id));
-        model.addAttribute("vinculos", usuarioAdminService.listarVinculos(id));
-        if (!model.containsAttribute("vinculoForm")) {
-            model.addAttribute("vinculoForm", new UsuarioVinculoForm());
-        }
-        model.addAttribute("unidades", unidadeRepository.findAll());
-        model.addAttribute("perfis", perfilRepository.findAll());
+        popularTelaDetalhe(id, model);
         return "pages/access/admin/usuarios/detail";
     }
 
-    @PostMapping("/{id}/vinculos")
-    public String adicionarVinculo(@PathVariable Long id,
-                                   @Valid @ModelAttribute("vinculoForm") UsuarioVinculoForm vinculoForm,
-                                   BindingResult bindingResult,
-                                   RedirectAttributes redirectAttributes,
-                                   Model model) {
+    @PostMapping("/{id}/dados")
+    public String atualizarDados(@PathVariable Long id,
+                                 @Valid @ModelAttribute("usuarioForm") UsuarioEdicaoForm usuarioForm,
+                                 BindingResult bindingResult,
+                                 Model model,
+                                 RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
-            model.addAttribute("usuario", usuarioAdminService.buscarPorId(id));
-            model.addAttribute("vinculos", usuarioAdminService.listarVinculos(id));
-            model.addAttribute("unidades", unidadeRepository.findAll());
-            model.addAttribute("perfis", perfilRepository.findAll());
+            popularTelaDetalhe(id, model);
+            if (!model.containsAttribute("atuacaoForm")) {
+                model.addAttribute("atuacaoForm", new UsuarioAtuacaoForm());
+            }
             return "pages/access/admin/usuarios/detail";
         }
         try {
-            usuarioAdminService.adicionarVinculo(id, vinculoForm);
-            redirectAttributes.addFlashAttribute("successMessage", "Vinculo salvo com sucesso");
+            usuarioAdminService.atualizarDados(id, usuarioForm);
+            redirectAttributes.addFlashAttribute("successMessage", "Dados do usuario atualizados");
         } catch (IllegalArgumentException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
         }
         return "redirect:/ui/admin/usuarios/" + id;
     }
 
-    @PostMapping("/{usuarioId}/vinculos/{vinculoId}/remover")
-    public String removerVinculo(@PathVariable Long usuarioId,
-                                 @PathVariable Long vinculoId,
-                                 RedirectAttributes redirectAttributes) {
+    @PostMapping("/{id}/colaborador")
+    public String atualizarVinculoColaborador(@PathVariable Long id,
+                                              @RequestParam(required = false) Long colaboradorId,
+                                              RedirectAttributes redirectAttributes) {
         try {
-            usuarioAdminService.removerVinculo(vinculoId);
-            redirectAttributes.addFlashAttribute("successMessage", "Vinculo removido");
+            usuarioAdminService.atualizarVinculoColaborador(id, colaboradorId);
+            redirectAttributes.addFlashAttribute("successMessage", "Vinculo usuario-colaborador atualizado");
         } catch (IllegalArgumentException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
         }
-        return "redirect:/ui/admin/usuarios/" + usuarioId;
+        return "redirect:/ui/admin/usuarios/" + id;
     }
 
-    @PostMapping("/{usuarioId}/vinculos/{vinculoId}/perfil")
-    public String trocarPerfil(@PathVariable Long usuarioId,
-                               @PathVariable Long vinculoId,
-                               @RequestParam Long perfilId,
-                               RedirectAttributes redirectAttributes) {
+    @PostMapping("/{id}/atuacoes")
+    public String adicionarAtuacao(@PathVariable Long id,
+                                   @Valid @ModelAttribute("atuacaoForm") UsuarioAtuacaoForm atuacaoForm,
+                                   BindingResult bindingResult,
+                                   Model model,
+                                   RedirectAttributes redirectAttributes) {
+        if (bindingResult.hasErrors()) {
+            popularTelaDetalhe(id, model);
+            if (!model.containsAttribute("usuarioForm")) {
+                model.addAttribute("usuarioForm", usuarioAdminService.toEdicaoForm(id));
+            }
+            return "pages/access/admin/usuarios/detail";
+        }
         try {
-            usuarioAdminService.atualizarPerfilVinculo(vinculoId, perfilId);
-            redirectAttributes.addFlashAttribute("successMessage", "Perfil do vinculo atualizado");
+            usuarioAdminService.adicionarAtuacaoDoUsuario(id, atuacaoForm);
+            redirectAttributes.addFlashAttribute("successMessage", "Atuacao adicionada com sucesso");
         } catch (IllegalArgumentException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
         }
-        return "redirect:/ui/admin/usuarios/" + usuarioId;
+        return "redirect:/ui/admin/usuarios/" + id;
+    }
+
+    @PostMapping("/{id}/atuacoes/{atuacaoId}/remover")
+    public String removerAtuacao(@PathVariable Long id,
+                                 @PathVariable Long atuacaoId,
+                                 RedirectAttributes redirectAttributes) {
+        try {
+            usuarioAdminService.removerAtuacaoDoUsuario(id, atuacaoId);
+            redirectAttributes.addFlashAttribute("successMessage", "Atuacao removida");
+        } catch (IllegalArgumentException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+        }
+        return "redirect:/ui/admin/usuarios/" + id;
     }
 
     @PostMapping("/{id}/provisionar-keycloak")
@@ -157,5 +181,35 @@ public class UsuarioAdminController {
                     "Falha ao resetar fluxo assistencial: " + ex.getMessage());
         }
         return "redirect:/ui/admin/usuarios";
+    }
+
+    @PostMapping("/reset-fluxo-agendamento")
+    public String resetFluxoAgendamento(RedirectAttributes redirectAttributes) {
+        try {
+            assistencialMaintenanceService.resetFluxoAgendamento();
+            redirectAttributes.addFlashAttribute("successMessage",
+                    "Fluxo de agendamento resetado com sucesso (especialidades preservadas).");
+        } catch (Exception ex) {
+            redirectAttributes.addFlashAttribute("errorMessage",
+                    "Falha ao resetar fluxo de agendamento: " + ex.getMessage());
+        }
+        return "redirect:/ui/admin/usuarios";
+    }
+
+    private void popularTelaDetalhe(Long usuarioId, Model model) {
+        model.addAttribute("usuario", usuarioAdminService.buscarPorId(usuarioId));
+        model.addAttribute("vinculoColaborador", usuarioAdminService.buscarVinculoColaborador(usuarioId).orElse(null));
+        model.addAttribute("colaboradores", usuarioAdminService.listarColaboradoresParaVinculo(usuarioId));
+        model.addAttribute("atuacoes", usuarioAdminService.listarAtuacoesDoUsuario(usuarioId));
+        model.addAttribute("unidades", unidadeRepository.findByAtivoTrueOrderByNomeAsc());
+        model.addAttribute("funcoes", funcaoUnidadeRepository.findByAtivoOrderByDescricaoAsc(true));
+        model.addAttribute("perfis", perfilRepository.findAllByOrderByNomeAsc());
+        model.addAttribute("especialidades", especialidadeAdminService.listarAtivas());
+        if (!model.containsAttribute("usuarioForm")) {
+            model.addAttribute("usuarioForm", usuarioAdminService.toEdicaoForm(usuarioId));
+        }
+        if (!model.containsAttribute("atuacaoForm")) {
+            model.addAttribute("atuacaoForm", new UsuarioAtuacaoForm());
+        }
     }
 }

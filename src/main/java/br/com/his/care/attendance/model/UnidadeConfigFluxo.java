@@ -60,6 +60,9 @@ public class UnidadeConfigFluxo implements Persistable<Long> {
     @Column(name = "cria_episodio_automatico", nullable = false)
     private boolean criaEpisodioAutomatico;
 
+    @Column(name = "permite_agendamento", nullable = false)
+    private boolean permiteAgendamento;
+
     @Transient
     private boolean newEntity = true;
 
@@ -101,6 +104,14 @@ public class UnidadeConfigFluxo implements Persistable<Long> {
 
     public void setCriaEpisodioAutomatico(boolean criaEpisodioAutomatico) {
         this.criaEpisodioAutomatico = criaEpisodioAutomatico;
+    }
+
+    public boolean isPermiteAgendamento() {
+        return permiteAgendamento;
+    }
+
+    public void setPermiteAgendamento(boolean permiteAgendamento) {
+        this.permiteAgendamento = permiteAgendamento;
     }
 
     @Override

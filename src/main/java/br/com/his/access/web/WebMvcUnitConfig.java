@@ -20,19 +20,15 @@ public class WebMvcUnitConfig implements WebMvcConfigurer {
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(operationalUnitInterceptor)
                 .addPathPatterns(
-                        "/ui/home",
-                        "/ui/pacientes/**",
-                        "/ui/atendimentos/**",
-                        "/ui/episodios/**",
-                        "/ui/triagem/**",
-                        "/ui/entradas/**",
-                        "/ui/transferencias-externas/**",
-                        "/ui/internacoes/**")
+                        "/ui/**")
                 .excludePathPatterns(
                         "/ui/admin/**",
                         "/ui/escolher-unidade",
                         "/ui/escolher-unidade/**",
+                        "/ui/escolher-atuacao",
+                        "/ui/escolher-atuacao/**",
                         "/ui/sem-unidade",
+                        "/ui/sem-atuacao",
                         "/login/**",
                         "/oauth2/**",
                         "/error",

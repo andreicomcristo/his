@@ -26,5 +26,16 @@ public class AssistencialMaintenanceService {
                 RESTART IDENTITY CASCADE
                 """);
     }
-}
 
+    @Transactional
+    public void resetFluxoAgendamento() {
+        jdbcTemplate.execute("""
+                TRUNCATE TABLE
+                    agenda_especialidade_paciente_hist,
+                    agenda_especialidade_paciente,
+                    agenda_especialidade_slot,
+                    agenda_especialidade
+                RESTART IDENTITY CASCADE
+                """);
+    }
+}

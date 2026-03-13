@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(${modoEdicao} ? 'Administracao - Editar Vinculo' : 'Administracao - Novo Vinculo', ~{::content})}">
+<th:block th:fragment="content">
+    <div class="main-card mb-3 card">
+        <div class="card-body">
+            <h5 class="card-title" th:text="${modoEdicao} ? 'Editar vinculo de unidade' : 'Novo vinculo de unidade'">Vinculo</h5>
+
+            <div class="alert alert-danger" th:if="${errorMessage}" th:text="${errorMessage}"></div>
+
+            <form method="post"
+                  th:object="${form}"
+                  th:action="${modoEdicao} ? @{'/ui/admin/colaboradores-vinculos/' + ${itemId}} : @{/ui/admin/colaboradores-vinculos}">
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label>Colaborador<span class="required-mark">*</span></label>
+                        <select class="form-control" th:field="*{colaboradorId}">
+                            <option value="">Selecione</option>
+                            <option th:each="colaborador : ${colaboradores}"
+                                    th:value="${colaborador.id}"
+                                    th:text="${colaborador.nome + (colaborador.cpf != null ? ' - ' + colaborador.cpf : '')}">
+                                COLABORADOR
+                            </option>
+                        </select>
+                        <small class="text-danger" th:errors="*{colaboradorId}"></small>
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label>Unidade<span class="required-mark">*</span></label>
+                        <select class="form-control" th:field="*{unidadeId}">
+                            <option value="">Selecione</option>
+                            <option th:each="unidade : ${unidades}"
+                                    th:value="${unidade.id}"
+                                    th:text="${unidade.nome + (unidade.cnes != null ? ' - ' + unidade.cnes : '')}">
+                                UNIDADE
+                            </option>
+                        </select>
+                        <small class="text-danger" th:errors="*{unidadeId}"></small>
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label>Tipo de vinculo trabalhista</label>
+                        <select class="form-control" th:field="*{tipoVinculoTrabalhistaId}">
+                            <option value="">Nao informado</option>
+                            <option th:each="tipo : ${tiposVinculoTrabalhista}"
+                                    th:value="${tipo.id}"
+                                    th:text="${tipo.descricao + ' (' + tipo.codigo + ')'}">
+                                TIPO
+                            </option>
+                        </select>
+                        <small class="text-danger" th:errors="*{tipoVinculoTrabalhistaId}"></small>
+                    </div>
+                    <div class="form-group col-md-3">
+                        <label>Inicio da vigencia</label>
+                        <input type="date" class="form-control" th:field="*{inicioVigencia}">
+                        <small class="text-danger" th:errors="*{inicioVigencia}"></small>
+                    </div>
+                    <div class="form-group col-md-3">
+                        <label>Fim da vigencia</label>
+                        <input type="date" class="form-control" th:field="*{fimVigencia}">
+                        <small class="text-danger" th:errors="*{fimVigencia}"></small>
+                    </div>
+                    <div class="form-group col-md-2 d-flex align-items-center">
+                        <div class="form-check mt-4">
+                            <input type="checkbox" class="form-check-input" th:field="*{ativo}">
+                            <label class="form-check-label" for="ativo">Ativo</label>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-sm">Salvar</button>
+                <a th:href="@{/ui/admin/colaboradores-vinculos}" class="btn btn-secondary btn-sm">Voltar</a>
+            </form>
+        </div>
+    </div>
+</th:block>
+</html>

@@ -11,9 +11,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 import br.com.his.access.context.UnidadeContext;
-import br.com.his.access.model.Unidade;
 import br.com.his.access.service.AccessContextService;
 import br.com.his.access.service.AdminAuthorizationService;
+import br.com.his.access.service.ColaboradorAtuacaoService;
 import br.com.his.access.service.UserIdentity;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -22,13 +22,16 @@ import jakarta.servlet.http.HttpServletResponse;
 public class AdminAccessInterceptor implements HandlerInterceptor {
 
     private final AccessContextService accessContextService;
+    private final ColaboradorAtuacaoService colaboradorAtuacaoService;
     private final UnidadeContext unidadeContext;
     private final AdminAuthorizationService adminAuthorizationService;
 
     public AdminAccessInterceptor(AccessContextService accessContextService,
+                                  ColaboradorAtuacaoService colaboradorAtuacaoService,
                                   UnidadeContext unidadeContext,
                                   AdminAuthorizationService adminAuthorizationService) {
         this.accessContextService = accessContextService;
+        this.colaboradorAtuacaoService = colaboradorAtuacaoService;
         this.unidadeContext = unidadeContext;
         this.adminAuthorizationService = adminAuthorizationService;
     }
@@ -42,13 +45,22 @@ public class AdminAccessInterceptor implements HandlerInterceptor {
             return true;
         }
 
-        if (unidadeContext.getUnidadeAtual().isEmpty()) {
-            List<Unidade> unidades = accessContextService.listUnidadesAtivasDoUsuario(userOpt.get().keycloakId());
-            if (unidades.isEmpty()) {
-                return handleNoUnit(request, response);
+        String keycloakId = userOpt.get().keycloakId();
+        Long unidadeId = unidadeContext.getUnidadeAtual().orElse(null);
+        Long colaboradorUnidadeAtuacaoId = unidadeContext.getAtuacaoAtual().orElse(null);
+        if (unidadeId == null
+                || colaboradorUnidadeAtuacaoId == null
+                || !colaboradorAtuacaoService.usuarioPossuiAtuacaoAtiva(keycloakId, unidadeId, colaboradorUnidadeAtuacaoId)) {
+            unidadeContext.clear();
+            List<ColaboradorAtuacaoService.AtuacaoResumo> contextos =
+                    colaboradorAtuacaoService.listarContextosAtivosDoUsuario(keycloakId);
+            if (contextos.isEmpty()) {
+                return handleNoAtuacao(request, response);
             }
-            if (unidades.size() == 1) {
-                unidadeContext.setUnidadeAtual(unidades.getFirst().getId());
+            if (contextos.size() == 1) {
+                ColaboradorAtuacaoService.AtuacaoResumo unico = contextos.getFirst();
+                unidadeContext.setUnidadeAtual(unico.unidadeId());
+                unidadeContext.setAtuacaoAtual(unico.id());
             } else {
                 return redirectToChooseUnit(request, response);
             }
@@ -61,19 +73,19 @@ public class AdminAccessInterceptor implements HandlerInterceptor {
         return true;
     }
 
-    private boolean handleNoUnit(HttpServletRequest request, HttpServletResponse response) throws Exception {
+    private boolean handleNoAtuacao(HttpServletRequest request, HttpServletResponse response) throws Exception {
         if (isApi(request)) {
-            writeApiForbidden(response, "Usuario sem unidade vinculada");
+            writeApiForbidden(response, "Usuario sem atuacao vinculada na unidade");
             return false;
         }
         response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-        request.getRequestDispatcher("/ui/sem-unidade").forward(request, response);
+        request.getRequestDispatcher("/ui/sem-atuacao").forward(request, response);
         return false;
     }
 
     private boolean redirectToChooseUnit(HttpServletRequest request, HttpServletResponse response) throws IOException {
         if (isApi(request)) {
-            writeApiForbidden(response, "Selecione a unidade atual antes de acessar administracao");
+            writeApiForbidden(response, "Selecione unidade e atuacao antes de acessar administracao");
             return false;
         }
         response.sendRedirect(request.getContextPath() + "/ui/escolher-unidade");

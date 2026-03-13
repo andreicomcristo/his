@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout('Agendamento - Pacientes', ~{::content})}">
+<th:block th:fragment="content">
+    <div class="main-card mb-3 card">
+        <div class="card-body">
+            <h5 class="card-title mb-2">Pacientes agendados</h5>
+            <p class="text-muted mb-3">
+                <strong th:text="${agenda.cargoColaborador.descricao}">CARGO</strong>
+                <span th:text="${' | ' + (agenda.especialidade != null ? agenda.especialidade.descricao : 'NAO SE APLICA')}"></span>
+                <span th:text="${' | ' + #temporals.format(agenda.dataAgenda, 'dd/MM/yyyy') + ' ' + #temporals.format(agenda.horaInicio, 'HH:mm') + ' - ' + #temporals.format(agenda.horaFim, 'HH:mm')}"></span>
+            </p>
+
+            <div class="alert alert-success" th:if="${successMessage}" th:text="${successMessage}"></div>
+            <div class="alert alert-danger" th:if="${errorMessage}" th:text="${errorMessage}"></div>
+
+            <div class="mb-3">
+                <span class="badge badge-primary mr-2" th:text="${'Vagas totais: ' + agenda.vagasTotais}"></span>
+                <span class="badge badge-info mr-2" th:text="${'Vagas retorno: ' + agenda.vagasRetorno}"></span>
+                <span class="badge badge-success mr-2" th:text="${'Disponiveis: ' + vagasDisponiveis}"></span>
+                <span class="badge badge-warning mr-2" th:text="${'Retorno disponiveis: ' + vagasRetornoDisponiveis}"></span>
+                <span class="badge badge-secondary" th:text="${'Horarios livres: ' + #lists.size(horariosDisponiveis)}"></span>
+            </div>
+
+            <div class="alert alert-warning" th:if="${#lists.isEmpty(horariosDisponiveis)}">
+                Nao existem horarios disponiveis para esta agenda.
+            </div>
+
+            <form method="post"
+                  th:object="${pacienteForm}"
+                  th:action="@{'/ui/agendamentos/' + ${agenda.id} + '/pacientes'}"
+                  class="mb-4">
+                <div class="form-row">
+                    <div class="form-group col-md-4">
+                        <label>Paciente<span class="required-mark">*</span></label>
+                        <select class="form-control" th:field="*{pacienteId}">
+                            <option value="">Selecione</option>
+                            <option th:each="p : ${pacientesDisponiveis}"
+                                    th:value="${p.id}"
+                                    th:text="${p.nomeExibicao + (p.cpf != null ? ' | CPF: ' + p.cpf : '')}"></option>
+                        </select>
+                        <small class="text-danger" th:errors="*{pacienteId}"></small>
+                    </div>
+                    <div class="form-group col-md-2">
+                        <label>Tipo da vaga<span class="required-mark">*</span></label>
+                        <select class="form-control" th:field="*{tipoVaga}">
+                            <option th:each="t : ${tiposVaga}" th:value="${t}" th:text="${t}"></option>
+                        </select>
+                        <small class="text-danger" th:errors="*{tipoVaga}"></small>
+                    </div>
+                    <div class="form-group col-md-2">
+                        <label>Horario<span class="required-mark">*</span></label>
+                        <select class="form-control" th:field="*{horaAtendimento}" th:disabled="${#lists.isEmpty(horariosDisponiveis)}">
+                            <option value="">Selecione</option>
+                            <option th:each="h : ${horariosDisponiveis}"
+                                    th:value="${h}"
+                                    th:text="${#temporals.format(h, 'HH:mm')}"></option>
+                        </select>
+                        <small class="text-danger" th:errors="*{horaAtendimento}"></small>
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label>Observacao</label>
+                        <input type="text" class="form-control" th:field="*{observacao}">
+                        <small class="text-danger" th:errors="*{observacao}"></small>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-sm" th:disabled="${#lists.isEmpty(horariosDisponiveis)}">Vincular paciente</button>
+                <a th:href="@{/ui/agendamentos}" class="btn btn-secondary btn-sm">Voltar</a>
+            </form>
+
+            <table class="table table-sm table-striped">
+                <thead>
+                <tr>
+                    <th>Paciente</th>
+                    <th>CPF</th>
+                    <th>Tipo vaga</th>
+                    <th>Horario</th>
+                    <th>Status</th>
+                    <th>Observacao</th>
+                    <th>Criado em</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:if="${#lists.isEmpty(pacientesAgendados)}">
+                    <td colspan="8" class="text-center">Nenhum paciente vinculado</td>
+                </tr>
+                <tr th:each="item : ${pacientesAgendados}">
+                    <td th:text="${item.paciente.nomeExibicao}"></td>
+                    <td th:text="${item.paciente.cpf != null ? item.paciente.cpf : '-'}"></td>
+                    <td th:text="${item.tipoVaga}"></td>
+                    <td th:text="${#temporals.format(item.horaAtendimento, 'HH:mm')}"></td>
+                    <td>
+                        <span class="badge"
+                              th:text="${item.status}"
+                              th:classappend="${
+                                  item.status.name() == 'PENDENTE' ? 'badge-secondary' :
+                                  item.status.name() == 'CONFIRMADO' ? 'badge-primary' :
+                                  item.status.name() == 'ATENDIDO' ? 'badge-success' :
+                                  item.status.name() == 'FALTOU' ? 'badge-warning' :
+                                  'badge-danger'
+                              }"></span>
+                    </td>
+                    <td th:text="${item.observacao != null ? item.observacao : '-'}"></td>
+                    <td th:text="${#temporals.format(item.criadoEm, 'dd/MM/yyyy HH:mm')}"></td>
+                    <td class="text-right">
+                        <div class="btn-group btn-group-sm" role="group" th:if="${item.status.name() != 'CANCELADO'}">
+                            <form method="post" class="d-inline"
+                                  th:if="${item.status.name() != 'CONFIRMADO'}"
+                                  th:action="@{'/ui/agendamentos/' + ${agenda.id} + '/pacientes/' + ${item.id} + '/confirmar'}">
+                                <button type="submit" class="btn btn-outline-primary">Confirmar</button>
+                            </form>
+                            <form method="post" class="d-inline"
+                                  th:if="${item.status.name() != 'FALTOU'}"
+                                  th:action="@{'/ui/agendamentos/' + ${agenda.id} + '/pacientes/' + ${item.id} + '/falta'}">
+                                <button type="submit" class="btn btn-outline-warning">Faltou</button>
+                            </form>
+                            <form method="post" class="d-inline"
+                                  th:if="${item.status.name() != 'ATENDIDO'}"
+                                  th:action="@{'/ui/agendamentos/' + ${agenda.id} + '/pacientes/' + ${item.id} + '/atendido'}">
+                                <button type="submit" class="btn btn-outline-success">Atendido</button>
+                            </form>
+                            <a class="btn btn-outline-info"
+                               th:href="@{'/ui/agendamentos/' + ${agenda.id} + '/pacientes/' + ${item.id} + '/reagendar'}">Reagendar</a>
+                            <form method="post" class="d-inline"
+                                  th:action="@{'/ui/agendamentos/' + ${agenda.id} + '/pacientes/' + ${item.id} + '/excluir'}">
+                                <button type="submit"
+                                        class="btn btn-outline-danger"
+                                        onclick="return confirm('Cancelar agendamento?');">Cancelar</button>
+                            </form>
+                        </div>
+                        <span th:if="${item.status.name() == 'CANCELADO'}" class="text-muted">-</span>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+
+            <div class="mt-4">
+                <h6 class="mb-2">Formato agenda (por horario)</h6>
+                <table class="table table-sm table-bordered">
+                    <thead>
+                    <tr>
+                        <th style="width: 120px;">Horario</th>
+                        <th style="width: 130px;">Situacao</th>
+                        <th>Paciente</th>
+                        <th style="width: 140px;">Tipo vaga</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:if="${#maps.isEmpty(ocupacaoPorHorario)}">
+                        <td colspan="4" class="text-center">Nenhum horario configurado na agenda</td>
+                    </tr>
+                    <tr th:each="entry : ${ocupacaoPorHorario.entrySet()}" th:with="ocupacao=${entry.value}">
+                        <td th:text="${#temporals.format(entry.key, 'HH:mm')}"></td>
+                        <td>
+                            <span th:if="${ocupacao != null}" class="badge badge-danger">OCUPADO</span>
+                            <span th:if="${ocupacao == null}" class="badge badge-success">LIVRE</span>
+                        </td>
+                        <td th:text="${ocupacao != null ? ocupacao.paciente.nomeExibicao : '-'}"></td>
+                        <td th:text="${ocupacao != null ? ocupacao.tipoVaga : '-'}"></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</th:block>
+</html>

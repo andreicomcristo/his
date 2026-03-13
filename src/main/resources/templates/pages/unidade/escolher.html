@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, shrink-to-fit=no">
-    <title>HIS | Escolher Unidade</title>
+    <title>HIS | Escolher Contexto</title>
     <link rel="icon" type="image/x-icon" th:href="@{/kero/assets/images/favicon.ico}">
     <link rel="stylesheet" th:href="@{/kero/assets/css/base.min.css}">
     <link rel="stylesheet" th:href="@{/css/app-shell.css}">
@@ -114,9 +114,41 @@
         }
 
         .unidade-card .btn {
-            margin-top: auto;
             width: 100%;
             font-weight: 600;
+        }
+
+        .atuacao-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 4px;
+        }
+
+        .atuacao-item {
+            border: 1px solid #e7ebf2;
+            border-radius: 10px;
+            padding: 10px;
+            background: #f9fbff;
+        }
+
+        .atuacao-item.atual {
+            border-color: #c8d8ff;
+            background: #eef4ff;
+        }
+
+        .atuacao-titulo {
+            margin: 0 0 2px;
+            font-size: 15px;
+            font-weight: 700;
+            color: #2f3542;
+        }
+
+        .atuacao-meta {
+            margin: 0 0 6px;
+            color: #5f6775;
+            font-size: 13px;
+            line-height: 1.4;
         }
     </style>
 </head>
@@ -126,8 +158,8 @@
         <header class="unidade-select-header">
             <div class="unidade-select-header-row">
                 <div>
-                    <h1 class="unidade-select-title">Escolha a unidade de trabalho</h1>
-                    <p class="unidade-select-subtitle">Selecione a unidade para iniciar seu fluxo de atendimento.</p>
+                    <h1 class="unidade-select-title">Escolha o contexto de trabalho</h1>
+                    <p class="unidade-select-subtitle">Selecione a unidade e a atuacao para iniciar o fluxo.</p>
                 </div>
                 <div class="unidade-select-header-actions" th:if="${unidadeAtualId != null}">
                     <a th:href="@{/ui/home}" class="btn btn-outline-secondary btn-sm">
@@ -142,26 +174,38 @@
 
             <div class="unidade-grid">
                 <article class="unidade-card"
-                         th:classappend="${unidadeAtualId != null and unidadeAtualId == u.id} ? ' atual'"
+                         th:classappend="${unidadeAtualId != null and unidadeAtualId == u.unidadeId} ? ' atual'"
                          th:each="u : ${unidades}">
                     <span class="unidade-badge-atual"
-                          th:if="${unidadeAtualId != null and unidadeAtualId == u.id}">UNIDADE ATUAL</span>
-                    <h2 class="unidade-nome" th:text="${u.nome}">Unidade</h2>
+                          th:if="${unidadeAtualId != null and unidadeAtualId == u.unidadeId}">UNIDADE ATUAL</span>
+                    <h2 class="unidade-nome" th:text="${u.unidadeNome}">Unidade</h2>
                     <p class="unidade-meta">
-                        <strong>Tipo:</strong> <span th:text="${u.tipoEstabelecimento}">Tipo</span>
+                        <strong>Tipo:</strong> <span th:text="${u.unidadeTipoEstabelecimento}">Tipo</span>
                     </p>
                     <p class="unidade-meta">
-                        <strong>CNES:</strong> <span th:text="${u.cnes}">0000000</span>
+                        <strong>CNES:</strong> <span th:text="${u.unidadeCnes}">0000000</span>
                     </p>
-                    <form th:action="@{/ui/escolher-unidade}" method="post">
-                        <input type="hidden" name="unidadeId" th:value="${u.id}">
-                        <button type="submit"
-                                class="btn btn-primary"
-                                th:disabled="${unidadeAtualId != null and unidadeAtualId == u.id}"
-                                th:text="${unidadeAtualId != null and unidadeAtualId == u.id} ? 'Já selecionada' : 'Entrar nesta unidade'">
-                            Entrar nesta unidade
-                        </button>
-                    </form>
+
+                    <div class="atuacao-list">
+                        <div class="atuacao-item"
+                             th:classappend="${unidadeAtualId != null and colaboradorUnidadeAtuacaoId != null and unidadeAtualId == u.unidadeId and colaboradorUnidadeAtuacaoId == a.id} ? ' atual'"
+                             th:each="a : ${u.atuacoes}">
+                            <p class="atuacao-titulo" th:text="${a.descricaoCompleta()}">RECEPCAO</p>
+                            <p class="atuacao-meta">
+                                <strong>Perfil:</strong> <span th:text="${a.perfilNome}">PERFIL</span>
+                            </p>
+                            <form th:action="@{/ui/escolher-unidade}" method="post">
+                                <input type="hidden" name="unidadeId" th:value="${u.unidadeId}">
+                                <input type="hidden" name="colaboradorUnidadeAtuacaoId" th:value="${a.id}">
+                                <button type="submit"
+                                        class="btn btn-primary btn-sm"
+                                        th:disabled="${unidadeAtualId != null and colaboradorUnidadeAtuacaoId != null and unidadeAtualId == u.unidadeId and colaboradorUnidadeAtuacaoId == a.id}"
+                                        th:text="${unidadeAtualId != null and colaboradorUnidadeAtuacaoId != null and unidadeAtualId == u.unidadeId and colaboradorUnidadeAtuacaoId == a.id} ? 'Ja selecionada' : 'Entrar com esta atuacao'">
+                                    Entrar com esta atuacao
+                                </button>
+                            </form>
+                        </div>
+                    </div>
                 </article>
             </div>
         </div>

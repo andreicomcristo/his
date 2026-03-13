@@ -9,8 +9,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 import br.com.his.access.context.UnidadeContext;
-import br.com.his.access.model.Unidade;
 import br.com.his.access.service.AccessContextService;
+import br.com.his.access.service.ColaboradorAtuacaoService;
 import br.com.his.access.service.UserIdentity;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -19,11 +19,14 @@ import jakarta.servlet.http.HttpServletResponse;
 public class OperationalUnitInterceptor implements HandlerInterceptor {
 
     private final AccessContextService accessContextService;
+    private final ColaboradorAtuacaoService colaboradorAtuacaoService;
     private final UnidadeContext unidadeContext;
 
     public OperationalUnitInterceptor(AccessContextService accessContextService,
+                                      ColaboradorAtuacaoService colaboradorAtuacaoService,
                                       UnidadeContext unidadeContext) {
         this.accessContextService = accessContextService;
+        this.colaboradorAtuacaoService = colaboradorAtuacaoService;
         this.unidadeContext = unidadeContext;
     }
 
@@ -36,20 +39,30 @@ public class OperationalUnitInterceptor implements HandlerInterceptor {
             return true;
         }
 
-        if (unidadeContext.getUnidadeAtual().isPresent()) {
+        String keycloakId = userOpt.get().keycloakId();
+        Long unidadeId = unidadeContext.getUnidadeAtual().orElse(null);
+        Long atuacaoId = unidadeContext.getAtuacaoAtual().orElse(null);
+        if (unidadeId != null
+                && atuacaoId != null
+                && colaboradorAtuacaoService.usuarioPossuiAtuacaoAtiva(keycloakId, unidadeId, atuacaoId)) {
             return true;
         }
+        if (unidadeId != null || atuacaoId != null) {
+            unidadeContext.clear();
+        }
 
-        List<Unidade> unidades = accessContextService.listUnidadesAtivasDoUsuario(userOpt.get().keycloakId());
-
-        if (unidades.isEmpty()) {
+        List<ColaboradorAtuacaoService.AtuacaoResumo> contextos =
+                colaboradorAtuacaoService.listarContextosAtivosDoUsuario(keycloakId);
+        if (contextos.isEmpty()) {
             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-            request.getRequestDispatcher("/ui/sem-unidade").forward(request, response);
+            request.getRequestDispatcher("/ui/sem-atuacao").forward(request, response);
             return false;
         }
 
-        if (unidades.size() == 1) {
-            unidadeContext.setUnidadeAtual(unidades.getFirst().getId());
+        if (contextos.size() == 1) {
+            ColaboradorAtuacaoService.AtuacaoResumo unico = contextos.getFirst();
+            unidadeContext.setUnidadeAtual(unico.unidadeId());
+            unidadeContext.setAtuacaoAtual(unico.id());
             return true;
         }
 

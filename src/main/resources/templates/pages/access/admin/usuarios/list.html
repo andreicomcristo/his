@@ -13,6 +13,12 @@
                           onsubmit="return confirm('Confirmar reset do fluxo assistencial? Isso apagará atendimentos, triagens, episodios, entradas e timeline. Pacientes serão preservados.');">
                         <button class="btn btn-outline-danger btn-sm mr-2" type="submit">Reset fluxo assistencial</button>
                     </form>
+                    <form th:action="@{/ui/admin/usuarios/reset-fluxo-agendamento}"
+                          method="post"
+                          class="d-inline"
+                          onsubmit="return confirm('Confirmar reset do fluxo de agendamento? Isso apagará agendas, slots, vinculos, historicos e status de agendamento. Especialidades serão preservadas.');">
+                        <button class="btn btn-outline-danger btn-sm mr-2" type="submit">Reset fluxo agendamento</button>
+                    </form>
                     <a class="btn btn-primary btn-sm" th:href="@{/ui/admin/usuarios/novo}">Novo usuario</a>
                 </div>
             </div>

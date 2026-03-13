@@ -1,20 +1,68 @@
 <!DOCTYPE html>
 <html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contexto nao selecionado</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Arial, sans-serif;
+            background: #f4f6f9;
+            color: #2f3640;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+        .card {
+            width: 100%;
+            max-width: 520px;
+            background: #ffffff;
+            border: 1px solid #e3e8ee;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(31, 45, 61, 0.08);
+            padding: 28px;
+            text-align: center;
+        }
+        .title {
+            margin: 0 0 12px;
+            font-size: 28px;
+            font-weight: 700;
+            color: #1f2d3d;
+        }
+        .message {
+            margin: 0 0 20px;
+            color: #5f6b7a;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+        .btn-login {
+            display: inline-block;
+            text-decoration: none;
+            background: #e05a3f;
+            color: #fff;
+            border-radius: 8px;
+            padding: 10px 18px;
+            font-weight: 600;
+            border: 0;
+            cursor: pointer;
+        }
+        .btn-login:hover {
+            background: #cc4d34;
+        }
+    </style>
+</head>
 <body>
-<th:block th:replace="~{layout/base :: layout('HIS | Sem Unidade', ~{::section})}">
-    <section>
-        <div class="row">
-            <div class="col-md-12">
-                <div class="main-card card border-danger">
-                    <div class="card-body">
-                        <h5 class="card-title text-danger">Usuario sem unidade vinculada</h5>
-                        <p th:text="${mensagem}">Usuario sem unidade vinculada.</p>
-                        <p class="mb-0">Contate um administrador para vincular sua conta a uma unidade ativa.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-</th:block>
+<div class="card">
+    <h1 class="title">Contexto de acesso indisponivel</h1>
+    <p class="message" th:text="${mensagem}">
+        Nao foi possivel identificar uma unidade/atuacao valida para o usuario logado.
+    </p>
+    <form th:action="@{/logout}" method="post">
+        <button type="submit" class="btn-login">Voltar para o login</button>
+    </form>
+</div>
 </body>
 </html>

@@ -9,6 +9,7 @@ public class UnidadeFluxoForm {
     private PrimeiroPassoFluxo primeiroPasso;
 
     private boolean exigeFichaParaMedico;
+    private boolean permiteAgendamento;
 
     private boolean triagemObrigatoriaUrgencia;
     private boolean triagemObrigatoriaAmbulatorial;
@@ -29,6 +30,14 @@ public class UnidadeFluxoForm {
 
     public void setExigeFichaParaMedico(boolean exigeFichaParaMedico) {
         this.exigeFichaParaMedico = exigeFichaParaMedico;
+    }
+
+    public boolean isPermiteAgendamento() {
+        return permiteAgendamento;
+    }
+
+    public void setPermiteAgendamento(boolean permiteAgendamento) {
+        this.permiteAgendamento = permiteAgendamento;
     }
 
     public boolean isTriagemObrigatoriaUrgencia() {

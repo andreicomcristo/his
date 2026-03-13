@@ -1,6 +1,5 @@
 package br.com.his.access.service;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -13,21 +12,16 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import br.com.his.access.model.Unidade;
 import br.com.his.access.model.Usuario;
 import br.com.his.access.repository.UsuarioRepository;
-import br.com.his.access.repository.UsuarioUnidadePerfilRepository;
 
 @Service
 public class AccessContextService {
 
     private final UsuarioRepository usuarioRepository;
-    private final UsuarioUnidadePerfilRepository usuarioUnidadePerfilRepository;
 
-    public AccessContextService(UsuarioRepository usuarioRepository,
-                                UsuarioUnidadePerfilRepository usuarioUnidadePerfilRepository) {
+    public AccessContextService(UsuarioRepository usuarioRepository) {
         this.usuarioRepository = usuarioRepository;
-        this.usuarioUnidadePerfilRepository = usuarioUnidadePerfilRepository;
     }
 
     @Transactional
@@ -45,22 +39,6 @@ public class AccessContextService {
 
         ensureUsuario(identity);
         return Optional.of(identity);
-    }
-
-    @Transactional(readOnly = true)
-    public List<Unidade> listUnidadesAtivasDoUsuario(String keycloakId) {
-        if (isBlank(keycloakId)) {
-            return List.of();
-        }
-        return usuarioUnidadePerfilRepository.findUnidadesAtivasByKeycloakId(keycloakId);
-    }
-
-    @Transactional(readOnly = true)
-    public boolean usuarioPossuiVinculoAtivo(String keycloakId, Long unidadeId) {
-        if (isBlank(keycloakId) || unidadeId == null) {
-            return false;
-        }
-        return usuarioUnidadePerfilRepository.existsVinculoAtivo(keycloakId, unidadeId);
     }
 
     private void ensureUsuario(UserIdentity identity) {

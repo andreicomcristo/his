@@ -44,15 +44,24 @@ public class KeycloakAdminClient {
         Map<String, Object> payload = buildUserPayload(
                 username, email, firstName, lastName, forceUpdatePassword);
 
-        URI location = restClient.post()
-                .uri(adminUsersUrl())
-                .contentType(MediaType.APPLICATION_JSON)
-                .header("Authorization", "Bearer " + token)
-                .body(payload)
-                .retrieve()
-                .toBodilessEntity()
-                .getHeaders()
-                .getLocation();
+        URI location;
+        try {
+            location = restClient.post()
+                    .uri(adminUsersUrl())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .header("Authorization", "Bearer " + token)
+                    .body(payload)
+                    .retrieve()
+                    .toBodilessEntity()
+                    .getHeaders()
+                    .getLocation();
+        } catch (HttpClientErrorException.Conflict ex) {
+            throw new IllegalArgumentException("Ja existe usuario no Keycloak com este username.", ex);
+        } catch (HttpClientErrorException ex) {
+            throw new IllegalArgumentException(
+                    "Falha ao criar usuario no Keycloak: " + extrairMensagemErro(ex),
+                    ex);
+        }
 
         if (location == null) {
             throw new IllegalArgumentException("Falha ao criar usuario no Keycloak: Location nao retornada");
@@ -88,15 +97,24 @@ public class KeycloakAdminClient {
         } else {
             Map<String, Object> payload = buildUserPayload(
                     username, email, firstName, lastName, forceUpdatePassword);
-            URI location = restClient.post()
-                    .uri(adminUsersUrl())
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .header("Authorization", "Bearer " + token)
-                    .body(payload)
-                    .retrieve()
-                    .toBodilessEntity()
-                    .getHeaders()
-                    .getLocation();
+            URI location;
+            try {
+                location = restClient.post()
+                        .uri(adminUsersUrl())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("Authorization", "Bearer " + token)
+                        .body(payload)
+                        .retrieve()
+                        .toBodilessEntity()
+                        .getHeaders()
+                        .getLocation();
+            } catch (HttpClientErrorException.Conflict ex) {
+                throw new IllegalArgumentException("Ja existe usuario no Keycloak com este username.", ex);
+            } catch (HttpClientErrorException ex) {
+                throw new IllegalArgumentException(
+                        "Falha ao criar usuario no Keycloak: " + extrairMensagemErro(ex),
+                        ex);
+            }
             if (location == null) {
                 throw new IllegalArgumentException("Falha ao criar usuario no Keycloak: Location nao retornada");
             }
@@ -229,5 +247,22 @@ public class KeycloakAdminClient {
             return "";
         }
         return value.endsWith("/") ? value.substring(0, value.length() - 1) : value;
+    }
+
+    private static String extrairMensagemErro(HttpClientErrorException ex) {
+        String body = ex.getResponseBodyAsString();
+        if (body == null || body.isBlank()) {
+            return ex.getStatusCode().toString();
+        }
+        int idx = body.indexOf("\"errorMessage\"");
+        if (idx >= 0) {
+            int start = body.indexOf(':', idx);
+            int firstQuote = body.indexOf('"', start + 1);
+            int secondQuote = body.indexOf('"', firstQuote + 1);
+            if (firstQuote >= 0 && secondQuote > firstQuote) {
+                return body.substring(firstQuote + 1, secondQuote);
+            }
+        }
+        return body;
     }
 }

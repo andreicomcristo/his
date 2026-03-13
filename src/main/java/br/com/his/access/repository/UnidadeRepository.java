@@ -9,6 +9,8 @@ import br.com.his.access.model.Unidade;
 
 public interface UnidadeRepository extends JpaRepository<Unidade, Long> {
 
+    List<Unidade> findByAtivoTrueOrderByNomeAsc();
+
     List<Unidade> findAllByOrderByNomeAsc();
 
     List<Unidade> findByNomeContainingIgnoreCaseOrCnesContainingIgnoreCaseOrderByNomeAsc(String nome, String cnes);

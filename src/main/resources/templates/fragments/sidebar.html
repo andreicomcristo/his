@@ -72,6 +72,21 @@
                         </li>
                     </ul>
                 </li>
+                <li th:if="${canRecepcaoExecutar and currentUnidadePermiteAgendamento}">
+                    <a href="#">
+                        <i class="metismenu-icon pe-7s-date"></i>
+                        Agendamento
+                        <i class="metismenu-state-icon pe-7s-angle-down caret-left"></i>
+                    </a>
+                    <ul>
+                        <li>
+                            <a th:href="@{/ui/agendamentos}">Lista de agendas</a>
+                        </li>
+                        <li>
+                            <a th:href="@{/ui/agendamentos/calendario}">Calendario</a>
+                        </li>
+                    </ul>
+                </li>
                 <li th:if="${canRecepcaoExecutar}">
                     <a th:href="@{/ui/transferencias-externas/recebidas}">
                         <i class="metismenu-icon pe-7s-repeat"></i>
@@ -193,6 +208,38 @@
                         </li>
                         <li>
                             <a href="#">
+                                Forca de trabalho
+                                <i class="metismenu-state-icon pe-7s-angle-down caret-left"></i>
+                            </a>
+                            <ul>
+                                <li>
+                                    <a th:href="@{/ui/admin/tipos-cargo}">Tipo de cargo</a>
+                                </li>
+                                <li>
+                                    <a th:href="@{/ui/admin/cargos-colaborador}">Cargo de colaborador</a>
+                                </li>
+                                <li>
+                                    <a th:href="@{/ui/admin/colaboradores}">Colaborador</a>
+                                </li>
+                                <li>
+                                    <a th:href="@{/ui/admin/tipos-vinculo-trabalhista}">Tipo vinculo trabalhista</a>
+                                </li>
+                                <li>
+                                    <a th:href="@{/ui/admin/colaboradores-vinculos}">Vinculo por unidade</a>
+                                </li>
+                                <li>
+                                    <a th:href="@{/ui/admin/colaboradores-atuacoes}">Atuacao por unidade</a>
+                                </li>
+                                <li>
+                                    <a th:href="@{/ui/admin/funcoes-unidade}">Funcao de unidade</a>
+                                </li>
+                                <li>
+                                    <a th:href="@{/ui/admin/especialidades}">Especialidade</a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <a href="#">
                                 Recepcao
                                 <i class="metismenu-state-icon pe-7s-angle-down caret-left"></i>
                             </a>
@@ -301,6 +348,17 @@
                                             <a th:href="@{/ui/admin/glasgow-resposta-pupilar}">Resposta pupilar</a>
                                         </li>
                                     </ul>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <a href="#">
+                                Agendamento
+                                <i class="metismenu-state-icon pe-7s-angle-down caret-left"></i>
+                            </a>
+                            <ul>
+                                <li>
+                                    <a th:href="@{/ui/admin/especialidades}">Especialidade</a>
                                 </li>
                             </ul>
                         </li>

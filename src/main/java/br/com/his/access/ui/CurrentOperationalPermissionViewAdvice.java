@@ -54,4 +54,9 @@ public class CurrentOperationalPermissionViewAdvice {
     public boolean canBurocrataExecutar(Authentication authentication) {
         return operationalPermissionService.has(authentication, OperationalPermissionService.PERM_BUROCRATA_EXECUTAR);
     }
+
+    @ModelAttribute("currentUnidadePermiteAgendamento")
+    public boolean currentUnidadePermiteAgendamento() {
+        return operationalPermissionService.unidadePermiteAgendamento();
+    }
 }

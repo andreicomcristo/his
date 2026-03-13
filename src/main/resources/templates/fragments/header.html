@@ -59,11 +59,14 @@
                                                         <div class="widget-content-left">
                                                             <div class="widget-heading" th:text="${currentUser.name}">USER</div>
                                                             <div class="widget-subheading" th:text="${currentUser.company}">Default Company</div>
+                                                            <div class="widget-subheading"
+                                                                 th:if="${currentAtuacao != null}"
+                                                                 th:text="${currentAtuacao.descricaoCompleta()}">ATUACAO</div>
                                                         </div>
                                                         <div class="widget-content-right mr-2">
                                                             <div class="d-flex flex-column align-items-end">
                                                                 <a th:href="@{/ui/escolher-unidade}" class="btn-pill btn-shadow btn btn-light mb-2">
-                                                                    <i class="fa fa-exchange mr-1"></i> Trocar unidade
+                                                                    <i class="fa fa-exchange mr-1"></i> Trocar unidade e atuacao
                                                                 </a>
                                                                 <form th:action="@{/logout}" method="post" class="d-inline">
                                                                     <button type="submit" class="btn-pill btn-shadow btn-shine btn btn-focus">
@@ -83,6 +86,9 @@
                         <div class="widget-content-left ml-2">
                             <div class="widget-heading" th:text="${currentUser.name}">USER</div>
                             <div class="widget-subheading" th:text="${currentUser.company}">Default Company</div>
+                            <div class="widget-subheading"
+                                 th:if="${currentAtuacao != null}"
+                                 th:text="${currentAtuacao.descricaoCompleta()}">ATUACAO</div>
                         </div>
                     </div>
                 </div>

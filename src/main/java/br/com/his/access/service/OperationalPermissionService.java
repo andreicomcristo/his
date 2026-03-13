@@ -11,12 +11,12 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import br.com.his.access.context.UnidadeContext;
+import br.com.his.access.repository.ColaboradorUnidadeAtuacaoRepository;
 import br.com.his.care.attendance.model.PrimeiroPassoFluxo;
 import br.com.his.care.attendance.model.TipoAtendimento;
 import br.com.his.care.triage.model.UnidadeRegraTriagem;
 import br.com.his.care.attendance.repository.UnidadeConfigFluxoRepository;
 import br.com.his.care.triage.repository.UnidadeRegraTriagemRepository;
-import br.com.his.access.repository.UsuarioUnidadePerfilRepository;
 
 @Service
 public class OperationalPermissionService {
@@ -31,18 +31,18 @@ public class OperationalPermissionService {
 
     private final AccessContextService accessContextService;
     private final UnidadeContext unidadeContext;
-    private final UsuarioUnidadePerfilRepository usuarioUnidadePerfilRepository;
+    private final ColaboradorUnidadeAtuacaoRepository colaboradorUnidadeAtuacaoRepository;
     private final UnidadeConfigFluxoRepository unidadeConfigFluxoRepository;
     private final UnidadeRegraTriagemRepository unidadeRegraTriagemRepository;
 
     public OperationalPermissionService(AccessContextService accessContextService,
                                         UnidadeContext unidadeContext,
-                                        UsuarioUnidadePerfilRepository usuarioUnidadePerfilRepository,
+                                        ColaboradorUnidadeAtuacaoRepository colaboradorUnidadeAtuacaoRepository,
                                         UnidadeConfigFluxoRepository unidadeConfigFluxoRepository,
                                         UnidadeRegraTriagemRepository unidadeRegraTriagemRepository) {
         this.accessContextService = accessContextService;
         this.unidadeContext = unidadeContext;
-        this.usuarioUnidadePerfilRepository = usuarioUnidadePerfilRepository;
+        this.colaboradorUnidadeAtuacaoRepository = colaboradorUnidadeAtuacaoRepository;
         this.unidadeConfigFluxoRepository = unidadeConfigFluxoRepository;
         this.unidadeRegraTriagemRepository = unidadeRegraTriagemRepository;
     }
@@ -57,9 +57,14 @@ public class OperationalPermissionService {
             var combined = new java.util.HashSet<>(requested);
             combined.addAll(AdminAuthorizationService.ADMIN_PERMISSIONS);
             return accessContextService.resolveAuthenticatedUser(authentication)
-                    .flatMap(identity -> unidadeContext.getUnidadeAtual().map(unidadeId ->
-                            usuarioUnidadePerfilRepository.hasAnyPermissionAtUnidade(
-                                    identity.keycloakId(), unidadeId, combined)))
+                    .flatMap(identity -> unidadeContext.getUnidadeAtual()
+                            .flatMap(unidadeId -> unidadeContext.getAtuacaoAtual()
+                                    .map(colaboradorUnidadeAtuacaoId ->
+                                            colaboradorUnidadeAtuacaoRepository.hasAnyPermissionAtAtuacao(
+                                                    identity.keycloakId(),
+                                                    unidadeId,
+                                                    colaboradorUnidadeAtuacaoId,
+                                                    combined))))
                     .orElse(false);
         }
         return false;
@@ -71,6 +76,13 @@ public class OperationalPermissionService {
 
     public boolean canGerirPermanencia(Authentication authentication) {
         return hasAny(authentication, Set.of(PERM_RECEPCAO_EXECUTAR, PERM_BUROCRATA_EXECUTAR));
+    }
+
+    public boolean unidadePermiteAgendamento() {
+        return unidadeContext.getUnidadeAtual()
+                .flatMap(unidadeConfigFluxoRepository::findById)
+                .map(config -> config.isPermiteAgendamento())
+                .orElse(false);
     }
 
     public boolean canCriarAtendimento(Authentication authentication, TipoAtendimento tipoAtendimento) {

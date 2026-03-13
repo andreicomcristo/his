@@ -38,6 +38,7 @@ public class UnidadeFluxoAdminService {
 
         form.setPrimeiroPasso(config == null ? PrimeiroPassoFluxo.RECEPCAO : config.getPrimeiroPasso());
         form.setExigeFichaParaMedico(config != null && config.isExigeFichaParaMedico());
+        form.setPermiteAgendamento(config != null && config.isPermiteAgendamento());
 
         Map<TipoAtendimento, Boolean> triagemPorTipo = new EnumMap<>(TipoAtendimento.class);
         for (TipoAtendimento tipo : TipoAtendimento.values()) {
@@ -68,6 +69,7 @@ public class UnidadeFluxoAdminService {
         config.setPrimeiroPasso(form.getPrimeiroPasso());
         config.setExigeFichaParaMedico(form.isExigeFichaParaMedico());
         config.setCriaEpisodioAutomatico(true);
+        config.setPermiteAgendamento(form.isPermiteAgendamento());
         unidadeConfigFluxoRepository.save(config);
 
         salvarRegra(unidade, TipoAtendimento.URGENCIA, form.isTriagemObrigatoriaUrgencia());

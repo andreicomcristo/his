@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(${modoEdicao} ? 'Agendamento - Editar agenda' : 'Agendamento - Nova agenda', ~{::content})}">
+<th:block th:fragment="content">
+    <div class="main-card mb-3 card">
+        <div class="card-body">
+            <h5 class="card-title" th:text="${modoEdicao} ? 'Editar agenda de atendimento' : 'Nova agenda de atendimento'">Agenda</h5>
+
+            <div class="alert alert-warning" th:if="${!agendamentoHabilitado}">
+                Agendamento nao habilitado para esta unidade.
+            </div>
+            <div class="alert alert-danger" th:if="${errorMessage}" th:text="${errorMessage}"></div>
+
+            <form method="post"
+                  th:object="${form}"
+                  th:action="${modoEdicao} ? @{'/ui/agendamentos/' + ${itemId}} : @{/ui/agendamentos}">
+                <div class="form-row">
+                    <div class="form-group col-md-3">
+                        <label>Cargo assistencial<span class="required-mark">*</span></label>
+                        <select class="form-control"
+                                id="cargoColaboradorId"
+                                th:field="*{cargoColaboradorId}"
+                                th:attr="data-especialidades-url-base=@{/ui/agendamentos/especialidades-por-cargo/}">
+                            <option value="">Selecione</option>
+                            <option th:each="cargo : ${cargos}"
+                                    th:value="${cargo.id}"
+                                    th:attr="data-exige-especialidade=${cargo.exigeEspecialidadeAgendamento}"
+                                    th:text="${cargo.descricao}"></option>
+                        </select>
+                        <small class="text-danger" th:errors="*{cargoColaboradorId}"></small>
+                    </div>
+                    <div class="form-group col-md-3">
+                        <label>Especialidade</label>
+                        <select class="form-control" id="especialidadeId" th:field="*{especialidadeId}">
+                            <option value="">Nao se aplica</option>
+                            <option th:each="esp : ${especialidades}"
+                                    th:value="${esp.id}"
+                                    th:text="${esp.descricao}"></option>
+                        </select>
+                        <small id="especialidadeHint" class="text-muted d-block">Selecione uma especialidade somente quando aplicavel ao cargo.</small>
+                        <small class="text-danger" th:errors="*{especialidadeId}"></small>
+                    </div>
+                    <div class="form-group col-md-2">
+                        <label>Data<span class="required-mark">*</span></label>
+                        <input type="date" class="form-control" th:field="*{dataAgenda}">
+                        <small class="text-danger" th:errors="*{dataAgenda}"></small>
+                    </div>
+                    <div class="form-group col-md-2">
+                        <label>Hora inicio<span class="required-mark">*</span></label>
+                        <input type="time" class="form-control" th:field="*{horaInicio}">
+                        <small class="text-danger" th:errors="*{horaInicio}"></small>
+                    </div>
+                    <div class="form-group col-md-2">
+                        <label>Hora fim<span class="required-mark">*</span></label>
+                        <input type="time" class="form-control" th:field="*{horaFim}">
+                        <small class="text-danger" th:errors="*{horaFim}"></small>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group col-md-2">
+                        <label>Vagas totais<span class="required-mark">*</span></label>
+                        <input type="number" class="form-control" min="1" th:field="*{vagasTotais}">
+                        <small class="text-danger" th:errors="*{vagasTotais}"></small>
+                    </div>
+                    <div class="form-group col-md-2">
+                        <label>Vagas retorno<span class="required-mark">*</span></label>
+                        <input type="number" class="form-control" min="0" th:field="*{vagasRetorno}">
+                        <small class="text-danger" th:errors="*{vagasRetorno}"></small>
+                    </div>
+                    <div class="form-group col-md-2">
+                        <label>Intervalo (min)<span class="required-mark">*</span></label>
+                        <input type="number" class="form-control" min="1" max="240" th:field="*{intervaloMinutos}">
+                        <small class="text-danger" th:errors="*{intervaloMinutos}"></small>
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label>Observacao</label>
+                        <input type="text" class="form-control" th:field="*{observacao}">
+                        <small class="text-danger" th:errors="*{observacao}"></small>
+                    </div>
+                    <div class="form-group col-md-2 d-flex align-items-center">
+                        <div class="form-check mt-4">
+                            <input type="checkbox" class="form-check-input" th:field="*{ativo}">
+                            <label class="form-check-label" for="ativo">Ativo</label>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-sm">Salvar</button>
+                <a th:href="@{/ui/agendamentos}" class="btn btn-secondary btn-sm">Voltar</a>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            var cargoSelect = document.getElementById('cargoColaboradorId');
+            var especialidadeSelect = document.getElementById('especialidadeId');
+            var hint = document.getElementById('especialidadeHint');
+            if (!cargoSelect || !hint || !especialidadeSelect) {
+                return;
+            }
+
+            var urlBase = cargoSelect.getAttribute('data-especialidades-url-base') || '/ui/agendamentos/especialidades-por-cargo/';
+            var especialidadeInicial = especialidadeSelect.value;
+
+            function preencherEspecialidades(items, selectedId) {
+                especialidadeSelect.innerHTML = '';
+                var optionPadrao = document.createElement('option');
+                optionPadrao.value = '';
+                optionPadrao.textContent = 'Nao se aplica';
+                especialidadeSelect.appendChild(optionPadrao);
+                items.forEach(function (item) {
+                    var option = document.createElement('option');
+                    option.value = item.id;
+                    option.textContent = item.descricao;
+                    if (selectedId && String(selectedId) === String(item.id)) {
+                        option.selected = true;
+                    }
+                    especialidadeSelect.appendChild(option);
+                });
+            }
+
+            function refreshHint(totalEspecialidades) {
+                var option = cargoSelect.options[cargoSelect.selectedIndex];
+                var exige = option && option.dataset && option.dataset.exigeEspecialidade === 'true';
+                if (!cargoSelect.value) {
+                    hint.textContent = 'Selecione o cargo para carregar as especialidades permitidas.';
+                    return;
+                }
+                if (exige && totalEspecialidades === 0) {
+                    hint.textContent = 'Este cargo exige especialidade, mas nao ha especialidade vinculada a ele.';
+                    return;
+                }
+                hint.textContent = exige
+                    ? 'Este cargo exige especialidade para o agendamento.'
+                    : 'Este cargo permite agenda sem especialidade (Nao se aplica).';
+            }
+
+            function carregarEspecialidades(cargoId, selectedId) {
+                preencherEspecialidades([], null);
+                if (!cargoId) {
+                    refreshHint(0);
+                    return;
+                }
+                fetch(urlBase + cargoId)
+                    .then(function (response) { return response.json(); })
+                    .then(function (items) {
+                        preencherEspecialidades(items, selectedId);
+                        if (selectedId && especialidadeSelect.value === '' && items.length > 0) {
+                            especialidadeSelect.selectedIndex = 0;
+                        }
+                        refreshHint(items.length);
+                    })
+                    .catch(function () {
+                        preencherEspecialidades([], null);
+                        refreshHint(0);
+                    });
+            }
+
+            cargoSelect.addEventListener('change', function () {
+                carregarEspecialidades(this.value, null);
+            });
+            carregarEspecialidades(cargoSelect.value, especialidadeInicial);
+        }());
+    </script>
+</th:block>
+</html>

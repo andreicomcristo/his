@@ -36,7 +36,7 @@ public class UnidadeFluxoAdminController {
         }
         model.addAttribute("unidade", unidadeAdminService.buscarPorId(unidadeId));
         model.addAttribute("primeirosPassos", PrimeiroPassoFluxo.values());
-        return "pages/access/admin/unidades/fluxo";
+        return "pages/care/attendance/admin/unidades/fluxo";
     }
 
     @PostMapping
@@ -48,7 +48,7 @@ public class UnidadeFluxoAdminController {
         if (bindingResult.hasErrors()) {
             model.addAttribute("unidade", unidadeAdminService.buscarPorId(unidadeId));
             model.addAttribute("primeirosPassos", PrimeiroPassoFluxo.values());
-            return "pages/access/admin/unidades/fluxo";
+            return "pages/care/attendance/admin/unidades/fluxo";
         }
         try {
             unidadeFluxoAdminService.salvar(unidadeId, form);
@@ -59,8 +59,7 @@ public class UnidadeFluxoAdminController {
             bindingResult.reject("fluxo", ex.getMessage());
             model.addAttribute("unidade", unidadeAdminService.buscarPorId(unidadeId));
             model.addAttribute("primeirosPassos", PrimeiroPassoFluxo.values());
-            return "pages/access/admin/unidades/fluxo";
+            return "pages/care/attendance/admin/unidades/fluxo";
         }
     }
 }
-

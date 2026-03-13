@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout('Agendamento - Reagendar paciente', ~{::content})}">
+<th:block th:fragment="content">
+    <div class="main-card mb-3 card">
+        <div class="card-body">
+            <h5 class="card-title mb-2">Reagendar paciente</h5>
+            <p class="text-muted mb-3">
+                <strong th:text="${agenda.cargoColaborador.descricao}">CARGO</strong>
+                <span th:text="${' | ' + (agenda.especialidade != null ? agenda.especialidade.descricao : 'NAO SE APLICA')}"></span>
+                <span th:text="${' | agenda origem: ' + #temporals.format(agenda.dataAgenda, 'dd/MM/yyyy') + ' ' + #temporals.format(agenda.horaInicio, 'HH:mm') + ' - ' + #temporals.format(agenda.horaFim, 'HH:mm')}"></span>
+            </p>
+
+            <div class="alert alert-danger" th:if="${errorMessage}" th:text="${errorMessage}"></div>
+
+            <div class="mb-4">
+                <div><strong>Paciente:</strong> <span th:text="${agendaPaciente.paciente.nomeExibicao}"></span></div>
+                <div><strong>Status atual:</strong> <span th:text="${agendaPaciente.status}"></span></div>
+                <div><strong>Horario atual:</strong> <span th:text="${#temporals.format(agendaPaciente.horaAtendimento, 'HH:mm')}"></span></div>
+            </div>
+
+            <form method="post"
+                  th:object="${reagendamentoForm}"
+                  th:action="@{'/ui/agendamentos/' + ${agenda.id} + '/pacientes/' + ${agendaPaciente.id} + '/reagendar'}">
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label>Agenda destino<span class="required-mark">*</span></label>
+                        <select class="form-control"
+                                id="agendaDestinoId"
+                                th:field="*{agendaDestinoId}"
+                                th:attr="data-reload-url=@{'/ui/agendamentos/' + ${agenda.id} + '/pacientes/' + ${agendaPaciente.id} + '/reagendar'}">
+                            <option th:each="a : ${agendasDestino}"
+                                    th:value="${a.id}"
+                                    th:text="${#temporals.format(a.dataAgenda, 'dd/MM/yyyy') + ' | ' + #temporals.format(a.horaInicio, 'HH:mm') + ' - ' + #temporals.format(a.horaFim, 'HH:mm')}"></option>
+                        </select>
+                        <small class="text-muted">Ao trocar a agenda, os horarios disponiveis serao recarregados.</small>
+                        <small class="text-danger d-block" th:errors="*{agendaDestinoId}"></small>
+                    </div>
+                    <div class="form-group col-md-3">
+                        <label>Horario destino<span class="required-mark">*</span></label>
+                        <select class="form-control" th:field="*{horarioDestino}" th:disabled="${#lists.isEmpty(horariosDestino)}">
+                            <option value="">Selecione</option>
+                            <option th:each="h : ${horariosDestino}"
+                                    th:value="${h}"
+                                    th:text="${#temporals.format(h, 'HH:mm')}"></option>
+                        </select>
+                        <small class="text-danger d-block" th:errors="*{horarioDestino}"></small>
+                    </div>
+                    <div class="form-group col-md-3">
+                        <label>Observacao</label>
+                        <input type="text" class="form-control" th:field="*{observacao}">
+                        <small class="text-danger d-block" th:errors="*{observacao}"></small>
+                    </div>
+                </div>
+
+                <div class="alert alert-warning" th:if="${#lists.isEmpty(horariosDestino)}">
+                    A agenda selecionada nao possui horario disponivel.
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-sm" th:disabled="${#lists.isEmpty(horariosDestino)}">Salvar reagendamento</button>
+                <a th:href="@{'/ui/agendamentos/' + ${agenda.id} + '/pacientes'}" class="btn btn-secondary btn-sm">Voltar</a>
+            </form>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        (function () {
+            var select = document.getElementById('agendaDestinoId');
+            if (!select) {
+                return;
+            }
+            select.addEventListener('change', function () {
+                if (!this.value) {
+                    return;
+                }
+                var url = this.dataset.reloadUrl + '?agendaDestinoId=' + encodeURIComponent(this.value);
+                window.location.assign(url);
+            });
+        }());
+    </script>
+</th:block>
+</html>

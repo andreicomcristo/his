@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout('Agendamento - Calendario', ~{::content})}">
+<th:block th:fragment="content">
+    <div class="main-card mb-3 card">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="card-title mb-0">Calendario de agendamentos por cargo/especialidade</h5>
+                <div class="btn-group btn-group-sm" role="group">
+                    <a class="btn btn-outline-secondary" th:href="@{/ui/agendamentos}">Lista de agendas</a>
+                    <a class="btn btn-primary" th:href="@{/ui/agendamentos/novo}">Nova agenda</a>
+                </div>
+            </div>
+
+            <form method="get" class="mb-3">
+                <div class="form-row">
+                    <div class="form-group col-md-3">
+                        <label class="filtro-label">Cargo assistencial</label>
+                        <select name="cargoColaboradorId"
+                                id="cargoColaboradorFiltroId"
+                                class="form-control"
+                                th:attr="data-especialidades-url-base=@{/ui/agendamentos/especialidades-por-cargo/}">
+                            <option value="">TODOS</option>
+                            <option th:each="cargo : ${cargos}"
+                                    th:value="${cargo.id}"
+                                    th:selected="${cargoColaboradorSelecionadoId == cargo.id}"
+                                    th:text="${cargo.descricao}"></option>
+                        </select>
+                    </div>
+                    <div class="form-group col-md-3">
+                        <label class="filtro-label">Especialidade</label>
+                        <select name="especialidadeId" id="especialidadeFiltroId" class="form-control">
+                            <option value="">TODAS</option>
+                            <option th:each="esp : ${especialidades}"
+                                    th:value="${esp.id}"
+                                    th:selected="${especialidadeSelecionadaId == esp.id}"
+                                    th:text="${esp.descricao}"></option>
+                        </select>
+                    </div>
+                    <div class="form-group col-md-2">
+                        <label class="filtro-label">Data inicio</label>
+                        <input type="date" name="dataInicio" class="form-control" th:value="${dataInicio}">
+                    </div>
+                    <div class="form-group col-md-2">
+                        <label class="filtro-label">Data fim</label>
+                        <input type="date" name="dataFim" class="form-control" th:value="${dataFim}">
+                    </div>
+                    <div class="form-group col-md-1 d-flex align-items-end">
+                        <div class="custom-control custom-checkbox mb-2">
+                            <input type="checkbox" class="custom-control-input" id="mostrarLivres" name="mostrarLivres" value="true"
+                                   th:checked="${mostrarLivres}">
+                            <label class="custom-control-label filtro-label mb-0" for="mostrarLivres">Livres</label>
+                        </div>
+                    </div>
+                    <div class="form-group col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary btn-block">Filtrar</button>
+                    </div>
+                    <div class="form-group col-md-2 d-flex align-items-end">
+                        <a th:href="@{/ui/agendamentos/calendario}" class="btn btn-outline-secondary btn-block">Limpar</a>
+                    </div>
+                </div>
+            </form>
+
+            <div th:if="${infoMessage}" class="alert alert-info py-2" th:text="${infoMessage}"></div>
+
+            <div class="mb-3">
+                <span class="badge badge-secondary mr-2"
+                      th:text="${'Eventos no periodo: ' + #lists.size(eventosCalendario)}">Eventos no periodo</span>
+                <span class="badge badge-success mr-2"
+                      th:if="${mostrarLivres}"
+                      th:text="${'Horarios livres: ' + #lists.size(horariosLivresCalendario)}">Horarios livres</span>
+                <span class="badge badge-secondary mr-1">PENDENTE</span>
+                <span class="badge badge-primary mr-1">CONFIRMADO</span>
+                <span class="badge badge-success mr-1">ATENDIDO</span>
+                <span class="badge badge-warning mr-1">FALTOU</span>
+                <span class="badge badge-danger">CANCELADO</span>
+                <span class="badge badge-light border ml-1" th:if="${mostrarLivres}">LIVRE</span>
+            </div>
+
+            <ul class="body-tabs body-tabs-layout tabs-animated body-tabs-animated nav mb-3">
+                <li class="nav-item">
+                    <a role="tab" class="nav-link active" data-toggle="tab" href="#agendamento-calendar-pane">
+                        <span>Calendario visual</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a role="tab" class="nav-link" data-toggle="tab" href="#agendamento-list-pane">
+                        <span>Lista</span>
+                    </a>
+                </li>
+            </ul>
+
+            <div class="tab-content">
+                <div class="tab-pane tabs-animation fade show active" id="agendamento-calendar-pane" role="tabpanel">
+                    <div class="main-card mb-3 card">
+                        <div class="card-body">
+                            <div id="agendamento-calendar"></div>
+                            <div id="agendamento-calendar-events" class="d-none">
+                                <div th:each="evento : ${eventosCalendario}"
+                                     class="agendamento-event"
+                                     th:attr="data-id=${evento.agendaPacienteId},
+                                              data-title=${evento.paciente + ' | ' + evento.cargo + ' | ' + evento.especialidade + ' | ' + evento.tipoVaga},
+                                              data-start=${#temporals.format(evento.inicio, 'yyyy-MM-dd''T''HH:mm:ss')},
+                                              data-end=${#temporals.format(evento.fim, 'yyyy-MM-dd''T''HH:mm:ss')},
+                                              data-url=@{'/ui/agendamentos/' + ${evento.agendaId} + '/pacientes'},
+                                              data-status=${#strings.toLowerCase(evento.status.name())},
+                                              data-description=${evento.observacao != null ? evento.observacao : ''}">
+                                </div>
+                            </div>
+                            <div id="agendamento-calendar-free-events" class="d-none" th:if="${mostrarLivres}">
+                                <div th:each="livre : ${horariosLivresCalendario}"
+                                     class="agendamento-event-free"
+                                     th:attr="data-id=${livre.agendaSlotId},
+                                              data-title=${'LIVRE | ' + livre.cargo + ' | ' + livre.especialidade},
+                                              data-start=${#temporals.format(livre.inicio, 'yyyy-MM-dd''T''HH:mm:ss')},
+                                              data-end=${#temporals.format(livre.fim, 'yyyy-MM-dd''T''HH:mm:ss')},
+                                              data-url=@{'/ui/agendamentos/' + ${livre.agendaId} + '/pacientes'},
+                                              data-description=${'Horario livre para agendamento'}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane tabs-animation fade" id="agendamento-list-pane" role="tabpanel">
+                    <table class="table table-sm table-striped">
+                        <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Horario</th>
+                            <th>Cargo</th>
+                            <th>Especialidade</th>
+                            <th>Paciente</th>
+                            <th>Tipo vaga</th>
+                            <th>Status</th>
+                            <th>Observacao</th>
+                            <th></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:if="${#lists.isEmpty(eventosCalendario)}">
+                            <td colspan="9" class="text-center">Nenhum evento encontrado para o periodo informado</td>
+                        </tr>
+                        <tr th:each="evento : ${eventosCalendario}">
+                            <td th:text="${#temporals.format(evento.inicio, 'dd/MM/yyyy')}"></td>
+                            <td th:text="${#temporals.format(evento.inicio, 'HH:mm') + ' - ' + #temporals.format(evento.fim, 'HH:mm')}"></td>
+                            <td th:text="${evento.cargo}"></td>
+                            <td th:text="${evento.especialidade}"></td>
+                            <td th:text="${evento.paciente}"></td>
+                            <td th:text="${evento.tipoVaga}"></td>
+                            <td>
+                                <span class="badge"
+                                      th:text="${evento.status}"
+                                      th:classappend="${
+                                          evento.status.name() == 'PENDENTE' ? 'badge-secondary' :
+                                          evento.status.name() == 'CONFIRMADO' ? 'badge-primary' :
+                                          evento.status.name() == 'ATENDIDO' ? 'badge-success' :
+                                          evento.status.name() == 'FALTOU' ? 'badge-warning' :
+                                          'badge-danger'
+                                      }"></span>
+                            </td>
+                            <td th:text="${evento.observacao != null ? evento.observacao : '-'}"></td>
+                            <td class="text-right">
+                                <a class="btn btn-sm btn-outline-info"
+                                   th:href="@{'/ui/agendamentos/' + ${evento.agendaId} + '/pacientes'}">Abrir agenda</a>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            var cargoSelect = document.getElementById('cargoColaboradorFiltroId');
+            var especialidadeSelect = document.getElementById('especialidadeFiltroId');
+            if (!cargoSelect || !especialidadeSelect) {
+                return;
+            }
+
+            var urlBase = cargoSelect.getAttribute('data-especialidades-url-base') || '/ui/agendamentos/especialidades-por-cargo/';
+            var especialidadeSelecionadaInicial = especialidadeSelect.value;
+            var opcoesTodasEspecialidades = Array.from(especialidadeSelect.options).map(function (option) {
+                return { value: option.value, text: option.text };
+            });
+
+            function preencherEspecialidades(opcoes, selectedId) {
+                especialidadeSelect.innerHTML = '';
+                opcoes.forEach(function (opcao) {
+                    var option = document.createElement('option');
+                    option.value = opcao.value;
+                    option.textContent = opcao.text;
+                    if (selectedId && String(selectedId) === String(opcao.value)) {
+                        option.selected = true;
+                    }
+                    especialidadeSelect.appendChild(option);
+                });
+            }
+
+            function carregarEspecialidades(cargoId, selectedId) {
+                if (!cargoId) {
+                    preencherEspecialidades(opcoesTodasEspecialidades, selectedId);
+                    return;
+                }
+                fetch(urlBase + cargoId)
+                    .then(function (response) { return response.json(); })
+                    .then(function (items) {
+                        var opcoes = [{ value: '', text: 'TODAS' }];
+                        items.forEach(function (item) {
+                            opcoes.push({ value: String(item.id), text: item.descricao });
+                        });
+                        preencherEspecialidades(opcoes, selectedId);
+                    })
+                    .catch(function () {
+                        preencherEspecialidades([{ value: '', text: 'TODAS' }], null);
+                    });
+            }
+
+            cargoSelect.addEventListener('change', function () {
+                carregarEspecialidades(this.value, null);
+            });
+
+            carregarEspecialidades(cargoSelect.value, especialidadeSelecionadaInicial);
+        }());
+    </script>
+
+    <style>
+        #agendamento-calendar .fc-event.ev-status-pendente {
+            background-color: #6c757d;
+            border-color: #6c757d;
+        }
+        #agendamento-calendar .fc-event.ev-status-confirmado {
+            background-color: #3f6ad8;
+            border-color: #3f6ad8;
+        }
+        #agendamento-calendar .fc-event.ev-status-atendido {
+            background-color: #3ac47d;
+            border-color: #3ac47d;
+        }
+        #agendamento-calendar .fc-event.ev-status-faltou {
+            background-color: #f7b924;
+            border-color: #f7b924;
+            color: #212529;
+        }
+        #agendamento-calendar .fc-event.ev-status-cancelado {
+            background-color: #d92550;
+            border-color: #d92550;
+        }
+        #agendamento-calendar .fc-event.ev-status-livre {
+            background-color: #e8f5ee;
+            border-color: #3ac47d;
+            color: #1e7e34;
+        }
+    </style>
+
+    <script th:inline="javascript">
+        (function () {
+            function showCalendarError(message) {
+                var calendarContainer = document.getElementById('agendamento-calendar');
+                if (!calendarContainer) {
+                    return;
+                }
+                calendarContainer.innerHTML = '<div class="alert alert-warning mb-0">' + message + '</div>';
+            }
+
+            function loadScript(src, onDone) {
+                var script = document.createElement('script');
+                script.src = src;
+                script.onload = function () {
+                    onDone(true);
+                };
+                script.onerror = function () {
+                    onDone(false);
+                };
+                document.body.appendChild(script);
+            }
+
+            function initCalendar() {
+                var $ = window.jQuery;
+                if (!$ || !$.fn || !$.fn.fullCalendar) {
+                    showCalendarError('Componente de calendario indisponivel no momento.');
+                    return;
+                }
+
+                var calendarEl = $('#agendamento-calendar');
+                if (!calendarEl.length) {
+                    return;
+                }
+
+                var eventos = [];
+                $('#agendamento-calendar-events .agendamento-event').each(function () {
+                    var item = $(this);
+                    eventos.push({
+                        id: item.data('id'),
+                        title: item.data('title'),
+                        start: item.data('start'),
+                        end: item.data('end'),
+                        url: item.data('url'),
+                        className: 'ev-status-' + item.data('status'),
+                        description: item.data('description')
+                    });
+                });
+                $('#agendamento-calendar-free-events .agendamento-event-free').each(function () {
+                    var item = $(this);
+                    eventos.push({
+                        id: 'livre-' + item.data('id'),
+                        title: item.data('title'),
+                        start: item.data('start'),
+                        end: item.data('end'),
+                        url: item.data('url'),
+                        className: 'ev-status-livre',
+                        description: item.data('description')
+                    });
+                });
+
+                calendarEl.fullCalendar({
+                    header: {
+                        left: 'prev,next today',
+                        center: 'title',
+                        right: 'month,basicWeek,basicDay,listWeek'
+                    },
+                    themeSystem: 'bootstrap4',
+                    bootstrapFontAwesome: true,
+                    navLinks: true,
+                    editable: false,
+                    eventLimit: true,
+                    defaultView: 'month',
+                    defaultDate: /*[[${#temporals.format(dataInicio, 'yyyy-MM-dd')}]]*/ '',
+                    events: eventos,
+                    eventRender: function (event, element) {
+                        if (event.description) {
+                            element.attr('title', event.description);
+                        }
+                    }
+                });
+
+                $('a[data-toggle="tab"][href="#agendamento-calendar-pane"]').on('shown.bs.tab', function () {
+                    calendarEl.fullCalendar('render');
+                });
+            }
+
+            function bootstrapCalendar() {
+                var base = /*[[@{/}]]*/ '/';
+                var ensureMoment = function (next) {
+                    if (window.moment) {
+                        next(true);
+                        return;
+                    }
+                    loadScript(base + 'kero/assets/js/vendors/form-components/moment.js', next);
+                };
+                var ensureFullCalendar = function (next) {
+                    var $ = window.jQuery;
+                    if ($ && $.fn && $.fn.fullCalendar) {
+                        next(true);
+                        return;
+                    }
+                    loadScript(base + 'kero/assets/js/vendors/calendar.js', next);
+                };
+
+                ensureMoment(function (momentLoaded) {
+                    if (!momentLoaded) {
+                        showCalendarError('Falha ao carregar dependencias do calendario (moment).');
+                        return;
+                    }
+                    ensureFullCalendar(function (calendarLoaded) {
+                        if (!calendarLoaded) {
+                            showCalendarError('Falha ao carregar dependencias do calendario (fullcalendar).');
+                            return;
+                        }
+                        initCalendar();
+                    });
+                });
+            }
+
+            if (document.readyState === 'complete') {
+                bootstrapCalendar();
+            } else {
+                window.addEventListener('load', bootstrapCalendar);
+            }
+        }());
+    </script>
+</th:block>
+</html>

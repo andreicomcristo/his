@@ -12,10 +12,10 @@ import br.com.his.access.model.Perfil;
 import br.com.his.access.model.PerfilPermissao;
 import br.com.his.access.model.PerfilPermissaoId;
 import br.com.his.access.model.Permissao;
+import br.com.his.access.repository.ColaboradorUnidadeAtuacaoRepository;
 import br.com.his.access.repository.PerfilPermissaoRepository;
 import br.com.his.access.repository.PerfilRepository;
 import br.com.his.access.repository.PermissaoRepository;
-import br.com.his.access.repository.UsuarioUnidadePerfilRepository;
 import br.com.his.access.dto.PerfilForm;
 
 @Service
@@ -24,16 +24,16 @@ public class PerfilAdminService {
     private final PerfilRepository perfilRepository;
     private final PermissaoRepository permissaoRepository;
     private final PerfilPermissaoRepository perfilPermissaoRepository;
-    private final UsuarioUnidadePerfilRepository usuarioUnidadePerfilRepository;
+    private final ColaboradorUnidadeAtuacaoRepository colaboradorUnidadeAtuacaoRepository;
 
     public PerfilAdminService(PerfilRepository perfilRepository,
                               PermissaoRepository permissaoRepository,
                               PerfilPermissaoRepository perfilPermissaoRepository,
-                              UsuarioUnidadePerfilRepository usuarioUnidadePerfilRepository) {
+                              ColaboradorUnidadeAtuacaoRepository colaboradorUnidadeAtuacaoRepository) {
         this.perfilRepository = perfilRepository;
         this.permissaoRepository = permissaoRepository;
         this.perfilPermissaoRepository = perfilPermissaoRepository;
-        this.usuarioUnidadePerfilRepository = usuarioUnidadePerfilRepository;
+        this.colaboradorUnidadeAtuacaoRepository = colaboradorUnidadeAtuacaoRepository;
     }
 
     @Transactional(readOnly = true)
@@ -78,7 +78,7 @@ public class PerfilAdminService {
     @Transactional
     public void remover(Long id) {
         Perfil perfil = buscarPorId(id);
-        if (usuarioUnidadePerfilRepository.countByPerfil(perfil) > 0) {
+        if (colaboradorUnidadeAtuacaoRepository.countByPerfil(perfil) > 0) {
             throw new IllegalArgumentException("Perfil possui vinculos ativos/inativos e nao pode ser removido");
         }
         perfilPermissaoRepository.deleteByPerfilId(id);

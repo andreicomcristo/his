@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(${modoEdicao} ? 'Administracao - Editar Atuacao' : 'Administracao - Nova Atuacao', ~{::content})}">
+<th:block th:fragment="content">
+    <div class="main-card mb-3 card">
+        <div class="card-body">
+            <h5 class="card-title" th:text="${modoEdicao} ? 'Editar atuacao de unidade' : 'Nova atuacao de unidade'">Atuacao</h5>
+
+            <div class="alert alert-danger" th:if="${errorMessage}" th:text="${errorMessage}"></div>
+
+            <form method="post"
+                  th:object="${form}"
+                  th:action="${modoEdicao} ? @{'/ui/admin/colaboradores-atuacoes/' + ${itemId}} : @{/ui/admin/colaboradores-atuacoes}">
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label>Vinculo unidade/colaborador<span class="required-mark">*</span></label>
+                        <select class="form-control" th:field="*{colaboradorUnidadeVinculoId}">
+                            <option value="">Selecione</option>
+                            <option th:each="vinculo : ${vinculos}"
+                                    th:value="${vinculo.id}"
+                                    th:text="${vinculo.colaborador.nome + ' | ' + vinculo.unidade.nome}">
+                                VINCULO
+                            </option>
+                        </select>
+                        <small class="text-danger" th:errors="*{colaboradorUnidadeVinculoId}"></small>
+                    </div>
+                    <div class="form-group col-md-3">
+                        <label>Funcao<span class="required-mark">*</span></label>
+                        <select class="form-control" th:field="*{funcaoUnidadeId}">
+                            <option value="">Selecione</option>
+                            <option th:each="funcao : ${funcoes}"
+                                    th:value="${funcao.id}"
+                                    th:text="${funcao.descricao + ' (' + funcao.tipoFuncao + ')'}">
+                                FUNCAO
+                            </option>
+                        </select>
+                        <small class="text-danger" th:errors="*{funcaoUnidadeId}"></small>
+                    </div>
+                    <div class="form-group col-md-3">
+                        <label>Perfil<span class="required-mark">*</span></label>
+                        <select class="form-control" th:field="*{perfilId}">
+                            <option value="">Selecione</option>
+                            <option th:each="perfil : ${perfis}" th:value="${perfil.id}" th:text="${perfil.nome}">PERFIL</option>
+                        </select>
+                        <small class="text-danger" th:errors="*{perfilId}"></small>
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label>Especialidade (obrigatoria se a funcao exigir)</label>
+                        <select class="form-control" th:field="*{especialidadeId}">
+                            <option value="">Sem especialidade</option>
+                            <option th:each="especialidade : ${especialidades}"
+                                    th:value="${especialidade.id}"
+                                    th:text="${especialidade.descricao}">
+                                ESPECIALIDADE
+                            </option>
+                        </select>
+                        <small class="text-danger" th:errors="*{especialidadeId}"></small>
+                    </div>
+                    <div class="form-group col-md-2">
+                        <label>Inicio da vigencia</label>
+                        <input type="date" class="form-control" th:field="*{inicioVigencia}">
+                        <small class="text-danger" th:errors="*{inicioVigencia}"></small>
+                    </div>
+                    <div class="form-group col-md-2">
+                        <label>Fim da vigencia</label>
+                        <input type="date" class="form-control" th:field="*{fimVigencia}">
+                        <small class="text-danger" th:errors="*{fimVigencia}"></small>
+                    </div>
+                    <div class="form-group col-md-2 d-flex align-items-center">
+                        <div class="form-check mt-4">
+                            <input type="checkbox" class="form-check-input" th:field="*{ativo}">
+                            <label class="form-check-label" for="ativo">Ativo</label>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-sm">Salvar</button>
+                <a th:href="@{/ui/admin/colaboradores-atuacoes}" class="btn btn-secondary btn-sm">Voltar</a>
+            </form>
+        </div>
+    </div>
+</th:block>
+</html>
