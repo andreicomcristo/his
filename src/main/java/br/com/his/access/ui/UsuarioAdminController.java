@@ -3,22 +3,26 @@ package br.com.his.access.ui;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import br.com.his.access.dto.UsuarioAtuacaoForm;
 import br.com.his.access.dto.UsuarioEdicaoForm;
 import br.com.his.access.dto.UsuarioNovoForm;
+import br.com.his.access.repository.CargoColaboradorRepository;
 import br.com.his.access.repository.FuncaoUnidadeRepository;
 import br.com.his.access.repository.PerfilRepository;
 import br.com.his.access.repository.UnidadeRepository;
 import br.com.his.care.maintenance.service.AssistencialMaintenanceService;
 import br.com.his.care.scheduling.service.EspecialidadeAdminService;
+import br.com.his.access.service.AccessContextService;
 import br.com.his.access.service.UsuarioAdminService;
 import jakarta.validation.Valid;
 
@@ -28,20 +32,26 @@ public class UsuarioAdminController {
 
     private final UsuarioAdminService usuarioAdminService;
     private final AssistencialMaintenanceService assistencialMaintenanceService;
+    private final AccessContextService accessContextService;
     private final UnidadeRepository unidadeRepository;
+    private final CargoColaboradorRepository cargoColaboradorRepository;
     private final FuncaoUnidadeRepository funcaoUnidadeRepository;
     private final PerfilRepository perfilRepository;
     private final EspecialidadeAdminService especialidadeAdminService;
 
     public UsuarioAdminController(UsuarioAdminService usuarioAdminService,
                                   AssistencialMaintenanceService assistencialMaintenanceService,
+                                  AccessContextService accessContextService,
                                   UnidadeRepository unidadeRepository,
+                                  CargoColaboradorRepository cargoColaboradorRepository,
                                   FuncaoUnidadeRepository funcaoUnidadeRepository,
                                   PerfilRepository perfilRepository,
                                   EspecialidadeAdminService especialidadeAdminService) {
         this.usuarioAdminService = usuarioAdminService;
         this.assistencialMaintenanceService = assistencialMaintenanceService;
+        this.accessContextService = accessContextService;
         this.unidadeRepository = unidadeRepository;
+        this.cargoColaboradorRepository = cargoColaboradorRepository;
         this.funcaoUnidadeRepository = funcaoUnidadeRepository;
         this.perfilRepository = perfilRepository;
         this.especialidadeAdminService = especialidadeAdminService;
@@ -59,6 +69,7 @@ public class UsuarioAdminController {
         if (!model.containsAttribute("form")) {
             model.addAttribute("form", new UsuarioNovoForm());
         }
+        popularCombosNovoUsuario(model);
         return "pages/access/admin/usuarios/novo";
     }
 
@@ -66,8 +77,9 @@ public class UsuarioAdminController {
     public String criar(@Valid @ModelAttribute("form") UsuarioNovoForm form,
                         BindingResult bindingResult,
                         Model model,
-                        RedirectAttributes redirectAttributes) {
+        RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
+            popularCombosNovoUsuario(model);
             return "pages/access/admin/usuarios/novo";
         }
         try {
@@ -77,8 +89,15 @@ public class UsuarioAdminController {
         } catch (IllegalArgumentException ex) {
             bindingResult.reject("usuario", ex.getMessage());
             model.addAttribute("form", form);
+            popularCombosNovoUsuario(model);
             return "pages/access/admin/usuarios/novo";
         }
+    }
+
+    @GetMapping("/colaborador-por-cpf")
+    @ResponseBody
+    public UsuarioAdminService.ColaboradorCpfLookup consultarColaboradorPorCpf(@RequestParam String cpf) {
+        return usuarioAdminService.consultarColaboradorPorCpf(cpf);
     }
 
     @GetMapping("/{id}")
@@ -170,6 +189,35 @@ public class UsuarioAdminController {
         return "redirect:/ui/admin/usuarios";
     }
 
+    @PostMapping("/{id}/status")
+    public String alterarStatus(@PathVariable Long id,
+                                @RequestParam boolean ativo,
+                                Authentication authentication,
+                                RedirectAttributes redirectAttributes) {
+        try {
+            usuarioAdminService.alterarStatus(id, ativo, keycloakIdAutenticado(authentication));
+            redirectAttributes.addFlashAttribute("successMessage",
+                    ativo ? "Usuario reativado com sucesso" : "Usuario desativado com sucesso");
+        } catch (IllegalArgumentException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+        }
+        return "redirect:/ui/admin/usuarios/" + id;
+    }
+
+    @PostMapping("/{id}/excluir-definitivo")
+    public String excluirDefinitivo(@PathVariable Long id,
+                                    Authentication authentication,
+                                    RedirectAttributes redirectAttributes) {
+        try {
+            usuarioAdminService.excluirDefinitivamente(id, keycloakIdAutenticado(authentication));
+            redirectAttributes.addFlashAttribute("successMessage", "Usuario excluido definitivamente com sucesso");
+            return "redirect:/ui/admin/usuarios";
+        } catch (IllegalArgumentException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+            return "redirect:/ui/admin/usuarios/" + id;
+        }
+    }
+
     @PostMapping("/reset-fluxo-assistencial")
     public String resetFluxoAssistencial(RedirectAttributes redirectAttributes) {
         try {
@@ -211,5 +259,15 @@ public class UsuarioAdminController {
         if (!model.containsAttribute("atuacaoForm")) {
             model.addAttribute("atuacaoForm", new UsuarioAtuacaoForm());
         }
+    }
+
+    private void popularCombosNovoUsuario(Model model) {
+        model.addAttribute("cargosColaborador", cargoColaboradorRepository.findByAtivoOrderByDescricaoAsc(true));
+    }
+
+    private String keycloakIdAutenticado(Authentication authentication) {
+        return accessContextService.resolveAuthenticatedUser(authentication)
+                .map(identity -> identity.keycloakId())
+                .orElse(null);
     }
 }

@@ -14,12 +14,27 @@
             <div class="alert alert-success" th:if="${successMessage}" th:text="${successMessage}"></div>
             <div class="alert alert-danger" th:if="${errorMessage}" th:text="${errorMessage}"></div>
 
-            <div class="mb-3">
-                <span class="badge badge-primary mr-2" th:text="${'Vagas totais: ' + agenda.vagasTotais}"></span>
-                <span class="badge badge-info mr-2" th:text="${'Vagas retorno: ' + agenda.vagasRetorno}"></span>
-                <span class="badge badge-success mr-2" th:text="${'Disponiveis: ' + vagasDisponiveis}"></span>
-                <span class="badge badge-warning mr-2" th:text="${'Retorno disponiveis: ' + vagasRetornoDisponiveis}"></span>
-                <span class="badge badge-secondary" th:text="${'Horarios livres: ' + #lists.size(horariosDisponiveis)}"></span>
+            <div class="row agenda-metricas mb-3">
+                <div class="col-12 col-sm-6 col-lg mb-2">
+                    <span class="badge badge-primary d-block py-2"
+                          th:text="${'Vagas totais: ' + agenda.vagasTotais}"></span>
+                </div>
+                <div class="col-12 col-sm-6 col-lg mb-2">
+                    <span class="badge badge-info d-block py-2"
+                          th:text="${'Vagas retorno: ' + agenda.vagasRetorno}"></span>
+                </div>
+                <div class="col-12 col-sm-6 col-lg mb-2">
+                    <span class="badge badge-success d-block py-2"
+                          th:text="${'Disponiveis: ' + vagasDisponiveis}"></span>
+                </div>
+                <div class="col-12 col-sm-6 col-lg mb-2">
+                    <span class="badge badge-warning d-block py-2"
+                          th:text="${'Retorno disponiveis: ' + vagasRetornoDisponiveis}"></span>
+                </div>
+                <div class="col-12 col-sm-6 col-lg mb-2">
+                    <span class="badge badge-danger d-block py-2"
+                          th:text="${'Ocupados: ' + vagasOcupadas}"></span>
+                </div>
             </div>
 
             <div class="alert alert-warning" th:if="${#lists.isEmpty(horariosDisponiveis)}">
@@ -29,11 +44,11 @@
             <form method="post"
                   th:object="${pacienteForm}"
                   th:action="@{'/ui/agendamentos/' + ${agenda.id} + '/pacientes'}"
-                  class="mb-4">
+                  class="mb-4 agenda-paciente-form">
                 <div class="form-row">
-                    <div class="form-group col-md-4">
+                    <div class="form-group col-12 col-lg-5">
                         <label>Paciente<span class="required-mark">*</span></label>
-                        <select class="form-control" th:field="*{pacienteId}">
+                        <select class="multiselect-dropdown form-control" th:field="*{pacienteId}">
                             <option value="">Selecione</option>
                             <option th:each="p : ${pacientesDisponiveis}"
                                     th:value="${p.id}"
@@ -41,16 +56,16 @@
                         </select>
                         <small class="text-danger" th:errors="*{pacienteId}"></small>
                     </div>
-                    <div class="form-group col-md-2">
+                    <div class="form-group col-12 col-md-6 col-lg-3">
                         <label>Tipo da vaga<span class="required-mark">*</span></label>
-                        <select class="form-control" th:field="*{tipoVaga}">
+                        <select class="multiselect-dropdown form-control" th:field="*{tipoVaga}">
                             <option th:each="t : ${tiposVaga}" th:value="${t}" th:text="${t}"></option>
                         </select>
                         <small class="text-danger" th:errors="*{tipoVaga}"></small>
                     </div>
-                    <div class="form-group col-md-2">
+                    <div class="form-group col-12 col-md-6 col-lg-2">
                         <label>Horario<span class="required-mark">*</span></label>
-                        <select class="form-control" th:field="*{horaAtendimento}" th:disabled="${#lists.isEmpty(horariosDisponiveis)}">
+                        <select class="multiselect-dropdown form-control" th:field="*{horaAtendimento}" th:disabled="${#lists.isEmpty(horariosDisponiveis)}">
                             <option value="">Selecione</option>
                             <option th:each="h : ${horariosDisponiveis}"
                                     th:value="${h}"
@@ -58,97 +73,55 @@
                         </select>
                         <small class="text-danger" th:errors="*{horaAtendimento}"></small>
                     </div>
-                    <div class="form-group col-md-4">
+                    <div class="form-group col-12 col-md-6 col-lg-2">
+                        <label>Recorrencia</label>
+                        <select class="multiselect-dropdown form-control" th:field="*{periodicidadeRecorrencia}" id="periodicidadeRecorrencia">
+                            <option th:each="p : ${periodicidadesRecorrencia}"
+                                    th:value="${p}"
+                                    th:text="${p.name() == 'SEMANAL' ? 'Semanal' : 'Nao recorrente'}"></option>
+                        </select>
+                        <small class="text-danger" th:errors="*{periodicidadeRecorrencia}"></small>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-12 col-md-4 col-lg-2" id="quantidadeSessoesGroup">
+                        <label>Qtd. sessoes</label>
+                        <input type="number" class="form-control" min="1" max="52" th:field="*{quantidadeSessoes}" id="quantidadeSessoes">
+                        <small class="text-danger" th:errors="*{quantidadeSessoes}"></small>
+                    </div>
+                    <div class="form-group col-12 col-md-8 col-lg-10">
                         <label>Observacao</label>
                         <input type="text" class="form-control" th:field="*{observacao}">
                         <small class="text-danger" th:errors="*{observacao}"></small>
                     </div>
                 </div>
-                <button type="submit" class="btn btn-primary btn-sm" th:disabled="${#lists.isEmpty(horariosDisponiveis)}">Vincular paciente</button>
-                <a th:href="@{/ui/agendamentos}" class="btn btn-secondary btn-sm">Voltar</a>
+                <div class="d-flex flex-wrap">
+                    <button type="submit" class="btn btn-primary btn-sm mr-2 mb-2"
+                            th:disabled="${#lists.isEmpty(horariosDisponiveis)}">Vincular paciente</button>
+                    <a th:href="@{/ui/agendamentos}" class="btn btn-secondary btn-sm mb-2">Voltar</a>
+                </div>
             </form>
 
-            <table class="table table-sm table-striped">
-                <thead>
-                <tr>
-                    <th>Paciente</th>
-                    <th>CPF</th>
-                    <th>Tipo vaga</th>
-                    <th>Horario</th>
-                    <th>Status</th>
-                    <th>Observacao</th>
-                    <th>Criado em</th>
-                    <th></th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr th:if="${#lists.isEmpty(pacientesAgendados)}">
-                    <td colspan="8" class="text-center">Nenhum paciente vinculado</td>
-                </tr>
-                <tr th:each="item : ${pacientesAgendados}">
-                    <td th:text="${item.paciente.nomeExibicao}"></td>
-                    <td th:text="${item.paciente.cpf != null ? item.paciente.cpf : '-'}"></td>
-                    <td th:text="${item.tipoVaga}"></td>
-                    <td th:text="${#temporals.format(item.horaAtendimento, 'HH:mm')}"></td>
-                    <td>
-                        <span class="badge"
-                              th:text="${item.status}"
-                              th:classappend="${
-                                  item.status.name() == 'PENDENTE' ? 'badge-secondary' :
-                                  item.status.name() == 'CONFIRMADO' ? 'badge-primary' :
-                                  item.status.name() == 'ATENDIDO' ? 'badge-success' :
-                                  item.status.name() == 'FALTOU' ? 'badge-warning' :
-                                  'badge-danger'
-                              }"></span>
-                    </td>
-                    <td th:text="${item.observacao != null ? item.observacao : '-'}"></td>
-                    <td th:text="${#temporals.format(item.criadoEm, 'dd/MM/yyyy HH:mm')}"></td>
-                    <td class="text-right">
-                        <div class="btn-group btn-group-sm" role="group" th:if="${item.status.name() != 'CANCELADO'}">
-                            <form method="post" class="d-inline"
-                                  th:if="${item.status.name() != 'CONFIRMADO'}"
-                                  th:action="@{'/ui/agendamentos/' + ${agenda.id} + '/pacientes/' + ${item.id} + '/confirmar'}">
-                                <button type="submit" class="btn btn-outline-primary">Confirmar</button>
-                            </form>
-                            <form method="post" class="d-inline"
-                                  th:if="${item.status.name() != 'FALTOU'}"
-                                  th:action="@{'/ui/agendamentos/' + ${agenda.id} + '/pacientes/' + ${item.id} + '/falta'}">
-                                <button type="submit" class="btn btn-outline-warning">Faltou</button>
-                            </form>
-                            <form method="post" class="d-inline"
-                                  th:if="${item.status.name() != 'ATENDIDO'}"
-                                  th:action="@{'/ui/agendamentos/' + ${agenda.id} + '/pacientes/' + ${item.id} + '/atendido'}">
-                                <button type="submit" class="btn btn-outline-success">Atendido</button>
-                            </form>
-                            <a class="btn btn-outline-info"
-                               th:href="@{'/ui/agendamentos/' + ${agenda.id} + '/pacientes/' + ${item.id} + '/reagendar'}">Reagendar</a>
-                            <form method="post" class="d-inline"
-                                  th:action="@{'/ui/agendamentos/' + ${agenda.id} + '/pacientes/' + ${item.id} + '/excluir'}">
-                                <button type="submit"
-                                        class="btn btn-outline-danger"
-                                        onclick="return confirm('Cancelar agendamento?');">Cancelar</button>
-                            </form>
-                        </div>
-                        <span th:if="${item.status.name() == 'CANCELADO'}" class="text-muted">-</span>
-                    </td>
-                </tr>
-                </tbody>
-            </table>
-
             <div class="mt-4">
-                <h6 class="mb-2">Formato agenda (por horario)</h6>
-                <table class="table table-sm table-bordered">
+                <h6 class="mb-2">Agenda por horario</h6>
+                <div class="table-responsive">
+                <table class="table table-sm table-bordered agenda-horario-table">
                     <thead>
                     <tr>
                         <th style="width: 120px;">Horario</th>
                         <th style="width: 130px;">Situacao</th>
                         <th>Paciente</th>
-                        <th style="width: 140px;">Tipo vaga</th>
+                        <th style="width: 130px;">CPF</th>
+                        <th style="width: 120px;">Tipo vaga</th>
+                        <th style="width: 140px;">Status</th>
+                        <th>Observacao</th>
+                        <th style="width: 160px;">Criado em</th>
+                        <th style="width: 130px;">Acoes</th>
                     </tr>
                     </thead>
                     <tbody>
                     <tr th:if="${#maps.isEmpty(ocupacaoPorHorario)}">
-                        <td colspan="4" class="text-center">Nenhum horario configurado na agenda</td>
+                        <td colspan="9" class="text-center">Nenhum horario configurado na agenda</td>
                     </tr>
                     <tr th:each="entry : ${ocupacaoPorHorario.entrySet()}" th:with="ocupacao=${entry.value}">
                         <td th:text="${#temporals.format(entry.key, 'HH:mm')}"></td>
@@ -157,12 +130,114 @@
                             <span th:if="${ocupacao == null}" class="badge badge-success">LIVRE</span>
                         </td>
                         <td th:text="${ocupacao != null ? ocupacao.paciente.nomeExibicao : '-'}"></td>
+                        <td th:text="${ocupacao != null && ocupacao.paciente.cpf != null ? ocupacao.paciente.cpf : '-'}"></td>
                         <td th:text="${ocupacao != null ? ocupacao.tipoVaga : '-'}"></td>
+                        <td>
+                            <span th:if="${ocupacao != null}" class="badge"
+                                  th:text="${ocupacao.status}"
+                                  th:classappend="${
+                                  ocupacao.status.name() == 'PENDENTE' ? 'badge-secondary' :
+                                  ocupacao.status.name() == 'CONFIRMADO' ? 'badge-primary' :
+                                  ocupacao.status.name() == 'ATENDIDO' ? 'badge-success' :
+                                  ocupacao.status.name() == 'FALTOU' ? 'badge-warning' :
+                                  'badge-danger'
+                              }"></span>
+                            <span th:if="${ocupacao == null}" class="text-muted">-</span>
+                        </td>
+                        <td th:text="${ocupacao != null && ocupacao.observacao != null ? ocupacao.observacao : '-'}"></td>
+                        <td th:text="${ocupacao != null ? #temporals.format(ocupacao.criadoEm, 'dd/MM/yyyy HH:mm') : '-'}"></td>
+                        <td class="text-right">
+                            <div class="dropdown" th:if="${ocupacao != null}">
+                                <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-toggle="dropdown">
+                                    Acoes
+                                </button>
+                                <div class="dropdown-menu dropdown-menu-right">
+                                    <form method="post"
+                                          class="m-0"
+                                          th:if="${ocupacao.status.name() != 'CONFIRMADO'}"
+                                          th:action="@{'/ui/agendamentos/' + ${agenda.id} + '/pacientes/' + ${ocupacao.id} + '/confirmar'}">
+                                        <button type="submit" class="dropdown-item">Confirmar</button>
+                                    </form>
+                                    <form method="post"
+                                          class="m-0"
+                                          th:if="${ocupacao.status.name() != 'FALTOU'}"
+                                          th:action="@{'/ui/agendamentos/' + ${agenda.id} + '/pacientes/' + ${ocupacao.id} + '/falta'}">
+                                        <button type="submit" class="dropdown-item">Faltou</button>
+                                    </form>
+                                    <form method="post"
+                                          class="m-0"
+                                          th:if="${ocupacao.status.name() != 'ATENDIDO'}"
+                                          th:action="@{'/ui/agendamentos/' + ${agenda.id} + '/pacientes/' + ${ocupacao.id} + '/atendido'}">
+                                        <button type="submit" class="dropdown-item">Atendido</button>
+                                    </form>
+                                    <a class="dropdown-item"
+                                       th:href="@{'/ui/agendamentos/' + ${agenda.id} + '/pacientes/' + ${ocupacao.id} + '/reagendar'}">Reagendar</a>
+                                    <div class="dropdown-divider"></div>
+                                    <form method="post"
+                                          class="m-0"
+                                          th:action="@{'/ui/agendamentos/' + ${agenda.id} + '/pacientes/' + ${ocupacao.id} + '/excluir'}">
+                                        <button type="submit"
+                                                class="dropdown-item text-danger"
+                                                onclick="return confirm('Cancelar agendamento?');">Cancelar</button>
+                                    </form>
+                                </div>
+                            </div>
+                            <span th:if="${ocupacao == null}" class="text-muted">-</span>
+                        </td>
                     </tr>
                     </tbody>
                 </table>
+                </div>
             </div>
         </div>
     </div>
+
+    <style>
+        .agenda-metricas .badge {
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+        }
+
+        .agenda-paciente-form .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .agenda-paciente-form .multiselect-dropdown,
+        .agenda-paciente-form .btn-group,
+        .agenda-paciente-form .btn-group .btn,
+        .agenda-paciente-form .multiselect-native-select,
+        .agenda-paciente-form .multiselect-native-select .btn-group {
+            width: 100% !important;
+        }
+
+        .agenda-horario-table .dropdown-item {
+            font-size: 0.85rem;
+        }
+    </style>
+
+    <script>
+        (function () {
+            var periodicidade = document.getElementById('periodicidadeRecorrencia');
+            var quantidadeGroup = document.getElementById('quantidadeSessoesGroup');
+            var quantidadeInput = document.getElementById('quantidadeSessoes');
+            if (!periodicidade || !quantidadeGroup || !quantidadeInput) {
+                return;
+            }
+
+            function refreshRecorrencia() {
+                var semanal = periodicidade.value === 'SEMANAL';
+                quantidadeGroup.style.display = semanal ? '' : 'none';
+                if (!semanal) {
+                    quantidadeInput.value = '1';
+                } else if (!quantidadeInput.value || parseInt(quantidadeInput.value, 10) < 1) {
+                    quantidadeInput.value = '2';
+                }
+            }
+
+            periodicidade.addEventListener('change', refreshRecorrencia);
+            refreshRecorrencia();
+        }());
+    </script>
 </th:block>
 </html>

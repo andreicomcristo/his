@@ -80,4 +80,6 @@ public interface UsuarioUnidadePerfilRepository extends JpaRepository<UsuarioUni
     Optional<UsuarioUnidadePerfil> findByUsuarioIdAndUnidadeIdAndPerfilId(Long usuarioId, Long unidadeId, Long perfilId);
 
     long countByPerfil(Perfil perfil);
+
+    void deleteByUsuarioId(Long usuarioId);
 }

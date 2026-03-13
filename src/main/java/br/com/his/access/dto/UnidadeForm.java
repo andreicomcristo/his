@@ -10,8 +10,11 @@ public class UnidadeForm {
     @Size(max = 150)
     private String nome;
 
-    @Size(max = 80)
-    private String tipoEstabelecimento;
+    @NotNull(message = "Tipo de unidade e obrigatorio")
+    private Long tipoUnidadeId;
+
+    @Size(max = 20)
+    private String sigla;
 
     @Size(max = 20)
     private String cnes;
@@ -30,12 +33,20 @@ public class UnidadeForm {
         this.nome = nome;
     }
 
-    public String getTipoEstabelecimento() {
-        return tipoEstabelecimento;
+    public Long getTipoUnidadeId() {
+        return tipoUnidadeId;
     }
 
-    public void setTipoEstabelecimento(String tipoEstabelecimento) {
-        this.tipoEstabelecimento = tipoEstabelecimento;
+    public void setTipoUnidadeId(Long tipoUnidadeId) {
+        this.tipoUnidadeId = tipoUnidadeId;
+    }
+
+    public String getSigla() {
+        return sigla;
+    }
+
+    public void setSigla(String sigla) {
+        this.sigla = sigla;
     }
 
     public String getCnes() {

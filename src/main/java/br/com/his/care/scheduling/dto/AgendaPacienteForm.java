@@ -5,6 +5,8 @@ import java.time.LocalTime;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import br.com.his.care.scheduling.model.TipoVagaAgenda;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
@@ -22,6 +24,14 @@ public class AgendaPacienteForm {
 
     @Size(max = 255, message = "Observacao deve ter no maximo 255 caracteres")
     private String observacao;
+
+    @NotNull(message = "Periodicidade da recorrencia e obrigatoria")
+    private PeriodicidadeRecorrenciaAgendamento periodicidadeRecorrencia = PeriodicidadeRecorrenciaAgendamento.NENHUMA;
+
+    @NotNull(message = "Quantidade de sessoes e obrigatoria")
+    @Min(value = 1, message = "Quantidade de sessoes deve ser maior que zero")
+    @Max(value = 52, message = "Quantidade de sessoes deve ser no maximo 52")
+    private Integer quantidadeSessoes = 1;
 
     public Long getPacienteId() {
         return pacienteId;
@@ -53,5 +63,21 @@ public class AgendaPacienteForm {
 
     public void setObservacao(String observacao) {
         this.observacao = observacao;
+    }
+
+    public PeriodicidadeRecorrenciaAgendamento getPeriodicidadeRecorrencia() {
+        return periodicidadeRecorrencia;
+    }
+
+    public void setPeriodicidadeRecorrencia(PeriodicidadeRecorrenciaAgendamento periodicidadeRecorrencia) {
+        this.periodicidadeRecorrencia = periodicidadeRecorrencia;
+    }
+
+    public Integer getQuantidadeSessoes() {
+        return quantidadeSessoes;
+    }
+
+    public void setQuantidadeSessoes(Integer quantidadeSessoes) {
+        this.quantidadeSessoes = quantidadeSessoes;
     }
 }

@@ -1,6 +1,7 @@
 package br.com.his.care.scheduling.ui;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.format.annotation.DateTimeFormat;
@@ -18,14 +19,18 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.util.UriComponentsBuilder;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import br.com.his.access.context.UnidadeContext;
 import br.com.his.access.repository.CargoColaboradorRepository;
 import br.com.his.access.service.OperationalPermissionService;
 import br.com.his.care.scheduling.dto.AgendaEspecialidadeForm;
+import br.com.his.care.scheduling.dto.AgendaCalendarioEventoDto;
 import br.com.his.care.scheduling.dto.AgendaPacienteForm;
 import br.com.his.care.scheduling.dto.AgendaReagendamentoForm;
+import br.com.his.care.scheduling.dto.PeriodicidadeRecorrenciaAgendamento;
+import br.com.his.care.scheduling.model.AgendaEspecialidade;
 import br.com.his.care.scheduling.model.Especialidade;
 import br.com.his.care.scheduling.model.StatusAgendamentoPaciente;
 import br.com.his.care.scheduling.model.TipoVagaAgenda;
@@ -38,6 +43,8 @@ import jakarta.validation.Valid;
 @Controller
 @RequestMapping("/ui/agendamentos")
 public class AgendaEspecialidadeController {
+
+    private static final List<Integer> INTERVALOS_PADRAO_MINUTOS = List.of(15, 30, 45, 60, 90, 120);
 
     private final AgendaEspecialidadeService agendaService;
     private final EspecialidadeAdminService especialidadeAdminService;
@@ -78,11 +85,14 @@ public class AgendaEspecialidadeController {
 
         boolean habilitado = agendaService.unidadePermiteAgendamento(unidadeId);
         model.addAttribute("agendamentoHabilitado", habilitado);
+        List<AgendaEspecialidade> items;
         if (habilitado) {
-            model.addAttribute("items", agendaService.listar(unidadeId, cargoColaboradorId, especialidadeId, inicio, fim));
+            items = agendaService.listar(unidadeId, cargoColaboradorId, especialidadeId, inicio, fim);
         } else {
-            model.addAttribute("items", java.util.List.of());
+            items = java.util.List.of();
         }
+        model.addAttribute("items", items);
+        model.addAttribute("vagasDisponiveisPorAgenda", agendaService.calcularVagasDisponiveisPorAgendas(items));
         model.addAttribute("cargos", cargoColaboradorRepository.findAssistenciaisAtivosOrderByDescricaoAsc());
         model.addAttribute("especialidades", especialidadeAdminService.listarAtivas());
         model.addAttribute("cargoColaboradorSelecionadoId", cargoColaboradorId);
@@ -122,15 +132,30 @@ public class AgendaEspecialidadeController {
         model.addAttribute("dataInicio", inicio);
         model.addAttribute("dataFim", fim);
         model.addAttribute("mostrarLivres", mostrarLivres);
-        model.addAttribute("eventosCalendario", agendaService.listarEventosCalendario(unidadeId, cargoColaboradorId, especialidadeId, inicio, fim));
+        model.addAttribute("pacientesDisponiveis", pacienteService.listarAtivosNaoMergeadosParaSelecao());
+        model.addAttribute("tiposVaga", TipoVagaAgenda.values());
+        model.addAttribute("periodicidadesRecorrencia", PeriodicidadeRecorrenciaAgendamento.values());
+        var eventosCalendario = agendaService.listarEventosCalendario(unidadeId, cargoColaboradorId, especialidadeId, inicio, fim);
+        model.addAttribute("eventosCalendario", eventosCalendario);
+        model.addAttribute("qtdPendente", contarStatus(eventosCalendario, StatusAgendamentoPaciente.PENDENTE));
+        model.addAttribute("qtdConfirmado", contarStatus(eventosCalendario, StatusAgendamentoPaciente.CONFIRMADO));
+        model.addAttribute("qtdAtendido", contarStatus(eventosCalendario, StatusAgendamentoPaciente.ATENDIDO));
+        model.addAttribute("qtdFaltou", contarStatus(eventosCalendario, StatusAgendamentoPaciente.FALTOU));
+        model.addAttribute("qtdCancelado", contarStatus(eventosCalendario, StatusAgendamentoPaciente.CANCELADO));
+
+        boolean horariosLivresDisponiveis = mostrarLivres && cargoColaboradorId != null;
         if (mostrarLivres && cargoColaboradorId != null) {
-            model.addAttribute("horariosLivresCalendario", agendaService.listarHorariosLivresParaCalendario(unidadeId, cargoColaboradorId, especialidadeId, inicio, fim));
+            var horariosLivres = agendaService.listarHorariosLivresParaCalendario(unidadeId, cargoColaboradorId, especialidadeId, inicio, fim);
+            model.addAttribute("horariosLivresCalendario", horariosLivres);
+            model.addAttribute("qtdHorariosLivres", horariosLivres.size());
         } else {
             model.addAttribute("horariosLivresCalendario", java.util.List.of());
+            model.addAttribute("qtdHorariosLivres", null);
             if (mostrarLivres) {
                 model.addAttribute("infoMessage", "Selecione um cargo para visualizar os horarios livres.");
             }
         }
+        model.addAttribute("horariosLivresDisponiveis", horariosLivresDisponiveis);
         return "pages/care/scheduling/agendas/calendario";
     }
 
@@ -145,16 +170,15 @@ public class AgendaEspecialidadeController {
         if (!model.containsAttribute("form")) {
             AgendaEspecialidadeForm form = new AgendaEspecialidadeForm();
             form.setDataAgenda(LocalDate.now());
-            form.setVagasTotais(1);
+            form.setDataFim(LocalDate.now());
+            form.setVagasTotais(0);
             form.setVagasRetorno(0);
             model.addAttribute("form", form);
         }
         model.addAttribute("modoEdicao", false);
         model.addAttribute("agendamentoHabilitado", true);
-        model.addAttribute("cargos", cargoColaboradorRepository.findAssistenciaisAtivosOrderByDescricaoAsc());
         AgendaEspecialidadeForm form = (AgendaEspecialidadeForm) model.getAttribute("form");
-        model.addAttribute("especialidades", listarEspecialidadesParaFormulario(
-                form == null ? null : form.getCargoColaboradorId()));
+        popularCombosFormulario(model, form);
         return "pages/care/scheduling/agendas/form";
     }
 
@@ -168,19 +192,20 @@ public class AgendaEspecialidadeController {
         if (bindingResult.hasErrors()) {
             model.addAttribute("modoEdicao", false);
             model.addAttribute("agendamentoHabilitado", agendaService.unidadePermiteAgendamento(unidadeId));
-            model.addAttribute("cargos", cargoColaboradorRepository.findAssistenciaisAtivosOrderByDescricaoAsc());
-            model.addAttribute("especialidades", listarEspecialidadesParaFormulario(form.getCargoColaboradorId()));
+            popularCombosFormulario(model, form);
             return "pages/care/scheduling/agendas/form";
         }
         try {
-            agendaService.criar(unidadeId, form);
-            redirectAttributes.addFlashAttribute("successMessage", "Agenda cadastrada com sucesso");
+            int totalCriadas = agendaService.criar(unidadeId, form);
+            String mensagem = totalCriadas == 1
+                    ? "Agenda cadastrada com sucesso"
+                    : totalCriadas + " agendas cadastradas com sucesso";
+            redirectAttributes.addFlashAttribute("successMessage", mensagem);
             return "redirect:/ui/agendamentos";
         } catch (IllegalArgumentException ex) {
             model.addAttribute("modoEdicao", false);
             model.addAttribute("agendamentoHabilitado", agendaService.unidadePermiteAgendamento(unidadeId));
-            model.addAttribute("cargos", cargoColaboradorRepository.findAssistenciaisAtivosOrderByDescricaoAsc());
-            model.addAttribute("especialidades", listarEspecialidadesParaFormulario(form.getCargoColaboradorId()));
+            popularCombosFormulario(model, form);
             model.addAttribute("errorMessage", ex.getMessage());
             return "pages/care/scheduling/agendas/form";
         }
@@ -199,8 +224,7 @@ public class AgendaEspecialidadeController {
         model.addAttribute("modoEdicao", true);
         model.addAttribute("itemId", id);
         model.addAttribute("agendamentoHabilitado", true);
-        model.addAttribute("cargos", cargoColaboradorRepository.findAssistenciaisAtivosOrderByDescricaoAsc());
-        model.addAttribute("especialidades", listarEspecialidadesParaFormulario(form.getCargoColaboradorId()));
+        popularCombosFormulario(model, form);
         return "pages/care/scheduling/agendas/form";
     }
 
@@ -216,8 +240,7 @@ public class AgendaEspecialidadeController {
             model.addAttribute("modoEdicao", true);
             model.addAttribute("itemId", id);
             model.addAttribute("agendamentoHabilitado", agendaService.unidadePermiteAgendamento(unidadeId));
-            model.addAttribute("cargos", cargoColaboradorRepository.findAssistenciaisAtivosOrderByDescricaoAsc());
-            model.addAttribute("especialidades", listarEspecialidadesParaFormulario(form.getCargoColaboradorId()));
+            popularCombosFormulario(model, form);
             return "pages/care/scheduling/agendas/form";
         }
         try {
@@ -228,8 +251,7 @@ public class AgendaEspecialidadeController {
             model.addAttribute("modoEdicao", true);
             model.addAttribute("itemId", id);
             model.addAttribute("agendamentoHabilitado", agendaService.unidadePermiteAgendamento(unidadeId));
-            model.addAttribute("cargos", cargoColaboradorRepository.findAssistenciaisAtivosOrderByDescricaoAsc());
-            model.addAttribute("especialidades", listarEspecialidadesParaFormulario(form.getCargoColaboradorId()));
+            popularCombosFormulario(model, form);
             model.addAttribute("errorMessage", ex.getMessage());
             return "pages/care/scheduling/agendas/form";
         }
@@ -281,18 +303,46 @@ public class AgendaEspecialidadeController {
                                    @Valid @ModelAttribute("pacienteForm") AgendaPacienteForm form,
                                    BindingResult bindingResult,
                                    Model model,
+                                   @RequestParam(required = false) String origem,
+                                   @RequestParam(required = false) Long cargoColaboradorId,
+                                   @RequestParam(required = false) Long especialidadeId,
+                                   @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicio,
+                                   @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFim,
+                                   @RequestParam(required = false, defaultValue = "false") boolean mostrarLivres,
                                    RedirectAttributes redirectAttributes) {
         requirePermission();
         Long unidadeId = unidadeAtual();
+        boolean origemCalendario = "calendario".equalsIgnoreCase(origem);
         if (bindingResult.hasErrors()) {
+            if (origemCalendario) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Dados invalidos para vincular paciente no horario selecionado.");
+                return redirecionarParaCalendario(cargoColaboradorId, especialidadeId, dataInicio, dataFim, mostrarLivres);
+            }
             popularTelaPacientes(model, unidadeId, id);
             return "pages/care/scheduling/agendas/pacientes";
         }
         try {
-            agendaService.vincularPaciente(unidadeId, id, form);
-            redirectAttributes.addFlashAttribute("successMessage", "Paciente vinculado com sucesso");
+            var resultado = agendaService.vincularPaciente(unidadeId, id, form);
+            String mensagem = resultado.getTotalCriado() == 1
+                    ? "Paciente vinculado com sucesso"
+                    : resultado.getTotalCriado() + " sessoes vinculadas com sucesso";
+            if (resultado.getTotalNaoCriado() > 0) {
+                mensagem += ". Nao criadas: " + resultado.getTotalNaoCriado();
+                String resumoAvisos = resultado.resumoAvisos(2);
+                if (!resumoAvisos.isBlank()) {
+                    mensagem += " (" + resumoAvisos + ")";
+                }
+            }
+            redirectAttributes.addFlashAttribute("successMessage", mensagem);
+            if (origemCalendario) {
+                return redirecionarParaCalendario(cargoColaboradorId, especialidadeId, dataInicio, dataFim, mostrarLivres);
+            }
             return "redirect:/ui/agendamentos/" + id + "/pacientes";
         } catch (IllegalArgumentException ex) {
+            if (origemCalendario) {
+                redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+                return redirecionarParaCalendario(cargoColaboradorId, especialidadeId, dataInicio, dataFim, mostrarLivres);
+            }
             model.addAttribute("errorMessage", ex.getMessage());
             popularTelaPacientes(model, unidadeId, id);
             return "pages/care/scheduling/agendas/pacientes";
@@ -302,6 +352,12 @@ public class AgendaEspecialidadeController {
     @PostMapping("/{id}/pacientes/{agendaPacienteId}/excluir")
     public String removerPaciente(@PathVariable Long id,
                                   @PathVariable Long agendaPacienteId,
+                                  @RequestParam(required = false) String origem,
+                                  @RequestParam(required = false) Long cargoColaboradorId,
+                                  @RequestParam(required = false) Long especialidadeId,
+                                  @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicio,
+                                  @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFim,
+                                  @RequestParam(required = false, defaultValue = "false") boolean mostrarLivres,
                                   RedirectAttributes redirectAttributes) {
         requirePermission();
         Long unidadeId = unidadeAtual();
@@ -311,12 +367,18 @@ public class AgendaEspecialidadeController {
         } catch (IllegalArgumentException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
         }
-        return "redirect:/ui/agendamentos/" + id + "/pacientes";
+        return redirecionarPosAcaoAgenda(id, origem, cargoColaboradorId, especialidadeId, dataInicio, dataFim, mostrarLivres);
     }
 
     @PostMapping("/{id}/pacientes/{agendaPacienteId}/confirmar")
     public String confirmarPaciente(@PathVariable Long id,
                                     @PathVariable Long agendaPacienteId,
+                                    @RequestParam(required = false) String origem,
+                                    @RequestParam(required = false) Long cargoColaboradorId,
+                                    @RequestParam(required = false) Long especialidadeId,
+                                    @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicio,
+                                    @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFim,
+                                    @RequestParam(required = false, defaultValue = "false") boolean mostrarLivres,
                                     RedirectAttributes redirectAttributes) {
         requirePermission();
         Long unidadeId = unidadeAtual();
@@ -326,12 +388,18 @@ public class AgendaEspecialidadeController {
         } catch (IllegalArgumentException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
         }
-        return "redirect:/ui/agendamentos/" + id + "/pacientes";
+        return redirecionarPosAcaoAgenda(id, origem, cargoColaboradorId, especialidadeId, dataInicio, dataFim, mostrarLivres);
     }
 
     @PostMapping("/{id}/pacientes/{agendaPacienteId}/falta")
     public String marcarFalta(@PathVariable Long id,
                               @PathVariable Long agendaPacienteId,
+                              @RequestParam(required = false) String origem,
+                              @RequestParam(required = false) Long cargoColaboradorId,
+                              @RequestParam(required = false) Long especialidadeId,
+                              @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicio,
+                              @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFim,
+                              @RequestParam(required = false, defaultValue = "false") boolean mostrarLivres,
                               RedirectAttributes redirectAttributes) {
         requirePermission();
         Long unidadeId = unidadeAtual();
@@ -341,12 +409,18 @@ public class AgendaEspecialidadeController {
         } catch (IllegalArgumentException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
         }
-        return "redirect:/ui/agendamentos/" + id + "/pacientes";
+        return redirecionarPosAcaoAgenda(id, origem, cargoColaboradorId, especialidadeId, dataInicio, dataFim, mostrarLivres);
     }
 
     @PostMapping("/{id}/pacientes/{agendaPacienteId}/atendido")
     public String marcarAtendido(@PathVariable Long id,
                                  @PathVariable Long agendaPacienteId,
+                                 @RequestParam(required = false) String origem,
+                                 @RequestParam(required = false) Long cargoColaboradorId,
+                                 @RequestParam(required = false) Long especialidadeId,
+                                 @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicio,
+                                 @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFim,
+                                 @RequestParam(required = false, defaultValue = "false") boolean mostrarLivres,
                                  RedirectAttributes redirectAttributes) {
         requirePermission();
         Long unidadeId = unidadeAtual();
@@ -356,7 +430,7 @@ public class AgendaEspecialidadeController {
         } catch (IllegalArgumentException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
         }
-        return "redirect:/ui/agendamentos/" + id + "/pacientes";
+        return redirecionarPosAcaoAgenda(id, origem, cargoColaboradorId, especialidadeId, dataInicio, dataFim, mostrarLivres);
     }
 
     @GetMapping("/{id}/pacientes/{agendaPacienteId}/reagendar")
@@ -445,10 +519,6 @@ public class AgendaEspecialidadeController {
         var pacientesAgendados = agendaService.listarPacientesAgendados(unidadeId, agendaId);
         var horariosDisponiveis = agendaService.listarHorariosDisponiveis(unidadeId, agendaId);
         var horariosGrade = agendaService.listarHorariosGrade(unidadeId, agendaId);
-        long totalAgendado = pacientesAgendados.size();
-        long retornoAgendado = pacientesAgendados.stream()
-                .filter(item -> item.getTipoVaga() == TipoVagaAgenda.RETORNO)
-                .count();
         var ocupacaoPorHorario = new java.util.LinkedHashMap<java.time.LocalTime, br.com.his.care.scheduling.model.AgendaEspecialidadePaciente>();
         for (var horario : horariosGrade) {
             ocupacaoPorHorario.put(horario, null);
@@ -458,6 +528,13 @@ public class AgendaEspecialidadeController {
                 ocupacaoPorHorario.put(item.getHoraAtendimento(), item);
             }
         }
+        long vagasOcupadas = ocupacaoPorHorario.values().stream()
+                .filter(java.util.Objects::nonNull)
+                .count();
+        long retornoAgendado = ocupacaoPorHorario.values().stream()
+                .filter(java.util.Objects::nonNull)
+                .filter(item -> item.getTipoVaga() == TipoVagaAgenda.RETORNO)
+                .count();
         AgendaPacienteForm pacienteForm = (AgendaPacienteForm) model.getAttribute("pacienteForm");
         if (pacienteForm != null && pacienteForm.getHoraAtendimento() == null && !horariosDisponiveis.isEmpty()) {
             pacienteForm.setHoraAtendimento(horariosDisponiveis.get(0));
@@ -471,7 +548,9 @@ public class AgendaEspecialidadeController {
         model.addAttribute("ocupacaoPorHorario", ocupacaoPorHorario);
         model.addAttribute("tiposVaga", TipoVagaAgenda.values());
         model.addAttribute("statusAgendamentoValores", StatusAgendamentoPaciente.values());
-        model.addAttribute("vagasDisponiveis", Math.max(agenda.getVagasTotais() - totalAgendado, 0));
+        model.addAttribute("periodicidadesRecorrencia", PeriodicidadeRecorrenciaAgendamento.values());
+        model.addAttribute("vagasOcupadas", vagasOcupadas);
+        model.addAttribute("vagasDisponiveis", Math.max(agenda.getVagasTotais() - vagasOcupadas, 0));
         model.addAttribute("vagasRetornoDisponiveis", Math.max(agenda.getVagasRetorno() - retornoAgendado, 0));
     }
 
@@ -487,6 +566,60 @@ public class AgendaEspecialidadeController {
         return agendaService.listarEspecialidadesAtivasPorCargo(cargoColaboradorId);
     }
 
+    private String redirecionarParaCalendario(Long cargoColaboradorId,
+                                              Long especialidadeId,
+                                              LocalDate dataInicio,
+                                              LocalDate dataFim,
+                                              boolean mostrarLivres) {
+        UriComponentsBuilder builder = UriComponentsBuilder.fromPath("/ui/agendamentos/calendario");
+        if (cargoColaboradorId != null) {
+            builder.queryParam("cargoColaboradorId", cargoColaboradorId);
+        }
+        if (especialidadeId != null) {
+            builder.queryParam("especialidadeId", especialidadeId);
+        }
+        if (dataInicio != null) {
+            builder.queryParam("dataInicio", dataInicio);
+        }
+        if (dataFim != null) {
+            builder.queryParam("dataFim", dataFim);
+        }
+        if (mostrarLivres) {
+            builder.queryParam("mostrarLivres", "true");
+        }
+        return "redirect:" + builder.toUriString();
+    }
+
+    private String redirecionarPosAcaoAgenda(Long agendaId,
+                                             String origem,
+                                             Long cargoColaboradorId,
+                                             Long especialidadeId,
+                                             LocalDate dataInicio,
+                                             LocalDate dataFim,
+                                             boolean mostrarLivres) {
+        if ("calendario".equalsIgnoreCase(origem)) {
+            return redirecionarParaCalendario(cargoColaboradorId, especialidadeId, dataInicio, dataFim, mostrarLivres);
+        }
+        return "redirect:/ui/agendamentos/" + agendaId + "/pacientes";
+    }
+
+    private void popularCombosFormulario(Model model, AgendaEspecialidadeForm form) {
+        model.addAttribute("cargos", cargoColaboradorRepository.findAssistenciaisAtivosOrderByDescricaoAsc());
+        model.addAttribute("especialidades", listarEspecialidadesParaFormulario(
+                form == null ? null : form.getCargoColaboradorId()));
+        model.addAttribute("intervalosDisponiveis", intervalosDisponiveis(
+                form == null ? null : form.getIntervaloMinutos()));
+    }
+
+    private List<Integer> intervalosDisponiveis(Integer intervaloSelecionado) {
+        List<Integer> intervalos = new ArrayList<>(INTERVALOS_PADRAO_MINUTOS);
+        if (intervaloSelecionado != null && intervaloSelecionado > 0 && !intervalos.contains(intervaloSelecionado)) {
+            intervalos.add(intervaloSelecionado);
+            intervalos.sort(Integer::compareTo);
+        }
+        return intervalos;
+    }
+
     private PacienteLookupOption toOption(Especialidade especialidade) {
         return new PacienteLookupOption(especialidade.getId(), especialidade.getDescricao());
     }
@@ -496,5 +629,12 @@ public class AgendaEspecialidadeController {
         if (!operationalPermissionService.has(authentication, OperationalPermissionService.PERM_RECEPCAO_EXECUTAR)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Sem permissao para acessar agendamento");
         }
+    }
+
+    private long contarStatus(List<AgendaCalendarioEventoDto> eventos,
+                              StatusAgendamentoPaciente status) {
+        return eventos.stream()
+                .filter(evento -> evento.getStatus() == status)
+                .count();
     }
 }

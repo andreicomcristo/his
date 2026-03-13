@@ -15,7 +15,7 @@
                   th:object="${form}"
                   th:action="${modoEdicao} ? @{'/ui/agendamentos/' + ${itemId}} : @{/ui/agendamentos}">
                 <div class="form-row">
-                    <div class="form-group col-md-3">
+                    <div class="form-group col-md-6">
                         <label>Cargo assistencial<span class="required-mark">*</span></label>
                         <select class="form-control"
                                 id="cargoColaboradorId"
@@ -29,7 +29,7 @@
                         </select>
                         <small class="text-danger" th:errors="*{cargoColaboradorId}"></small>
                     </div>
-                    <div class="form-group col-md-3">
+                    <div class="form-group col-md-6">
                         <label>Especialidade</label>
                         <select class="form-control" id="especialidadeId" th:field="*{especialidadeId}">
                             <option value="">Nao se aplica</option>
@@ -40,40 +40,94 @@
                         <small id="especialidadeHint" class="text-muted d-block">Selecione uma especialidade somente quando aplicavel ao cargo.</small>
                         <small class="text-danger" th:errors="*{especialidadeId}"></small>
                     </div>
-                    <div class="form-group col-md-2">
+                    <div class="form-group col-md-3" th:if="${!modoEdicao}">
+                        <label>Data inicio<span class="required-mark">*</span></label>
+                        <input type="date" class="form-control" th:field="*{dataAgenda}">
+                        <small class="text-danger" th:errors="*{dataAgenda}"></small>
+                    </div>
+                    <div class="form-group col-md-3" th:if="${!modoEdicao}">
+                        <label>Data fim</label>
+                        <input type="date" class="form-control" th:field="*{dataFim}">
+                        <small class="text-danger" th:errors="*{dataFim}"></small>
+                    </div>
+                    <div class="form-group col-md-3" th:if="${modoEdicao}">
                         <label>Data<span class="required-mark">*</span></label>
                         <input type="date" class="form-control" th:field="*{dataAgenda}">
                         <small class="text-danger" th:errors="*{dataAgenda}"></small>
                     </div>
-                    <div class="form-group col-md-2">
+                    <div class="form-group col-md-3">
                         <label>Hora inicio<span class="required-mark">*</span></label>
                         <input type="time" class="form-control" th:field="*{horaInicio}">
                         <small class="text-danger" th:errors="*{horaInicio}"></small>
                     </div>
-                    <div class="form-group col-md-2">
+                    <div class="form-group col-md-3">
                         <label>Hora fim<span class="required-mark">*</span></label>
                         <input type="time" class="form-control" th:field="*{horaFim}">
                         <small class="text-danger" th:errors="*{horaFim}"></small>
                     </div>
                 </div>
 
-                <div class="form-row">
-                    <div class="form-group col-md-2">
-                        <label>Vagas totais<span class="required-mark">*</span></label>
-                        <input type="number" class="form-control" min="1" th:field="*{vagasTotais}">
-                        <small class="text-danger" th:errors="*{vagasTotais}"></small>
+                <div class="form-row" th:if="${!modoEdicao}">
+                    <div class="form-group col-md-12">
+                        <label>Dias da semana sem atendimento</label>
+                        <div class="d-flex flex-wrap">
+                            <div class="form-check mr-4 mb-2">
+                                <input class="form-check-input" type="checkbox" th:field="*{diasNaoAtende}" value="MONDAY">
+                                <label class="form-check-label">Segunda</label>
+                            </div>
+                            <div class="form-check mr-4 mb-2">
+                                <input class="form-check-input" type="checkbox" th:field="*{diasNaoAtende}" value="TUESDAY">
+                                <label class="form-check-label">Terca</label>
+                            </div>
+                            <div class="form-check mr-4 mb-2">
+                                <input class="form-check-input" type="checkbox" th:field="*{diasNaoAtende}" value="WEDNESDAY">
+                                <label class="form-check-label">Quarta</label>
+                            </div>
+                            <div class="form-check mr-4 mb-2">
+                                <input class="form-check-input" type="checkbox" th:field="*{diasNaoAtende}" value="THURSDAY">
+                                <label class="form-check-label">Quinta</label>
+                            </div>
+                            <div class="form-check mr-4 mb-2">
+                                <input class="form-check-input" type="checkbox" th:field="*{diasNaoAtende}" value="FRIDAY">
+                                <label class="form-check-label">Sexta</label>
+                            </div>
+                            <div class="form-check mr-4 mb-2">
+                                <input class="form-check-input" type="checkbox" th:field="*{diasNaoAtende}" value="SATURDAY">
+                                <label class="form-check-label">Sabado</label>
+                            </div>
+                            <div class="form-check mr-4 mb-2">
+                                <input class="form-check-input" type="checkbox" th:field="*{diasNaoAtende}" value="SUNDAY">
+                                <label class="form-check-label">Domingo</label>
+                            </div>
+                        </div>
+                        <small class="text-muted d-block">Marque apenas os dias que nao devem gerar agenda dentro do periodo.</small>
                     </div>
-                    <div class="form-group col-md-2">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group col-md-4">
+                        <label>Vagas totais (automatico)</label>
+                        <input type="number" class="form-control" th:field="*{vagasTotais}" readonly>
+                        <small class="text-danger" th:errors="*{vagasTotais}"></small>
+                        <small class="text-muted d-block" id="vagasTotaisHint">
+                            Calculado automaticamente a partir do horario e intervalo.
+                        </small>
+                    </div>
+                    <div class="form-group col-md-4">
                         <label>Vagas retorno<span class="required-mark">*</span></label>
                         <input type="number" class="form-control" min="0" th:field="*{vagasRetorno}">
                         <small class="text-danger" th:errors="*{vagasRetorno}"></small>
                     </div>
-                    <div class="form-group col-md-2">
+                    <div class="form-group col-md-4">
                         <label>Intervalo (min)<span class="required-mark">*</span></label>
-                        <input type="number" class="form-control" min="1" max="240" th:field="*{intervaloMinutos}">
+                        <select class="form-control" th:field="*{intervaloMinutos}">
+                            <option th:each="intervalo : ${intervalosDisponiveis}"
+                                    th:value="${intervalo}"
+                                    th:text="${intervalo % 60 == 0 ? (intervalo / 60) + ' hora(s) (' + intervalo + ' min)' : intervalo + ' minutos'}"></option>
+                        </select>
                         <small class="text-danger" th:errors="*{intervaloMinutos}"></small>
                     </div>
-                    <div class="form-group col-md-4">
+                    <div class="form-group col-md-10">
                         <label>Observacao</label>
                         <input type="text" class="form-control" th:field="*{observacao}">
                         <small class="text-danger" th:errors="*{observacao}"></small>
@@ -162,6 +216,92 @@
                 carregarEspecialidades(this.value, null);
             });
             carregarEspecialidades(cargoSelect.value, especialidadeInicial);
+        }());
+
+        (function () {
+            var horaInicioInput = document.getElementById('horaInicio');
+            var horaFimInput = document.getElementById('horaFim');
+            var intervaloInput = document.getElementById('intervaloMinutos');
+            var vagasTotaisInput = document.getElementById('vagasTotais');
+            var vagasRetornoInput = document.getElementById('vagasRetorno');
+            var vagasTotaisHint = document.getElementById('vagasTotaisHint');
+            if (!horaInicioInput || !horaFimInput || !intervaloInput || !vagasTotaisInput || !vagasRetornoInput || !vagasTotaisHint) {
+                return;
+            }
+
+            function ajustarLimiteRetorno(vagasTotais) {
+                vagasRetornoInput.max = String(vagasTotais);
+                var retornoAtual = parseInt(vagasRetornoInput.value, 10);
+                if (!isNaN(retornoAtual) && retornoAtual > vagasTotais) {
+                    vagasRetornoInput.value = String(vagasTotais);
+                }
+            }
+
+            function parseMinutes(value) {
+                if (!value || value.indexOf(':') < 0) {
+                    return null;
+                }
+                var parts = value.split(':');
+                var hour = parseInt(parts[0], 10);
+                var minute = parseInt(parts[1], 10);
+                if (isNaN(hour) || isNaN(minute)) {
+                    return null;
+                }
+                return (hour * 60) + minute;
+            }
+
+            function atualizarVagasTotais() {
+                var inicioMin = parseMinutes(horaInicioInput.value);
+                var fimMin = parseMinutes(horaFimInput.value);
+                var intervalo = parseInt(intervaloInput.value, 10);
+
+                if (inicioMin === null || fimMin === null || isNaN(intervalo) || intervalo <= 0) {
+                    vagasTotaisInput.value = '0';
+                    ajustarLimiteRetorno(0);
+                    vagasTotaisHint.textContent = 'Preencha horario inicial, final e intervalo para calcular automaticamente.';
+                    return;
+                }
+                var duracao = fimMin - inicioMin;
+                if (duracao <= 0) {
+                    vagasTotaisInput.value = '0';
+                    ajustarLimiteRetorno(0);
+                    vagasTotaisHint.textContent = 'Hora final deve ser maior que hora inicial.';
+                    return;
+                }
+                if (duracao % intervalo !== 0) {
+                    vagasTotaisInput.value = '0';
+                    ajustarLimiteRetorno(0);
+                    vagasTotaisHint.textContent = 'Intervalo deve fechar exatamente no periodo informado.';
+                    return;
+                }
+
+                var vagas = Math.floor(duracao / intervalo);
+                vagasTotaisInput.value = String(vagas);
+                ajustarLimiteRetorno(vagas);
+                vagasTotaisHint.textContent = 'Total calculado automaticamente: ' + vagas + ' vaga(s).';
+            }
+
+            horaInicioInput.addEventListener('input', atualizarVagasTotais);
+            horaInicioInput.addEventListener('change', atualizarVagasTotais);
+            horaFimInput.addEventListener('input', atualizarVagasTotais);
+            horaFimInput.addEventListener('change', atualizarVagasTotais);
+            intervaloInput.addEventListener('change', atualizarVagasTotais);
+            vagasRetornoInput.addEventListener('input', function () {
+                var vagasTotais = parseInt(vagasTotaisInput.value, 10);
+                if (isNaN(vagasTotais) || vagasTotais < 0) {
+                    vagasTotais = 0;
+                }
+                ajustarLimiteRetorno(vagasTotais);
+            });
+            vagasRetornoInput.addEventListener('change', function () {
+                var vagasTotais = parseInt(vagasTotaisInput.value, 10);
+                if (isNaN(vagasTotais) || vagasTotais < 0) {
+                    vagasTotais = 0;
+                }
+                ajustarLimiteRetorno(vagasTotais);
+            });
+
+            atualizarVagasTotais();
         }());
     </script>
 </th:block>

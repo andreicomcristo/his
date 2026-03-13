@@ -3,6 +3,7 @@ package br.com.his.care.scheduling.repository;
 import java.util.List;
 import java.time.LocalTime;
 import java.util.Optional;
+import java.util.Collection;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -74,6 +75,15 @@ public interface AgendaEspecialidadePacienteRepository extends JpaRepository<Age
               and ap.status <> br.com.his.care.scheduling.model.StatusAgendamentoPaciente.CANCELADO
             """)
     List<Long> listarSlotsOcupadosPorAgenda(Long agendaEspecialidadeId);
+
+    @Query("""
+            select ap.agendaEspecialidade.id, count(ap)
+            from AgendaEspecialidadePaciente ap
+            where ap.agendaEspecialidade.id in ?1
+              and ap.status <> br.com.his.care.scheduling.model.StatusAgendamentoPaciente.CANCELADO
+            group by ap.agendaEspecialidade.id
+            """)
+    List<Object[]> contarAgendadosPorAgendaIds(Collection<Long> agendaIds);
 
     @Query("""
             select ap

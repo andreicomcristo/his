@@ -49,7 +49,13 @@ public class CurrentUserViewAdvice {
 
         String unidadeNome = unidadeContext.getUnidadeAtual()
                 .flatMap(unidadeRepository::findById)
-                .map(unidade -> unidade.getNome())
+                .map(unidade -> {
+                    String sigla = unidade.getSigla();
+                    if (sigla != null && !sigla.isBlank()) {
+                        return unidade.getNome() + " - " + sigla;
+                    }
+                    return unidade.getNome();
+                })
                 .orElse(null);
 
         String company = firstNonBlank(

@@ -19,8 +19,19 @@
                     <small class="text-danger" th:errors="*{nome}"></small>
                 </div>
                 <div class="form-group">
-                    <label>Tipo estabelecimento</label>
-                    <input class="form-control" type="text" th:field="*{tipoEstabelecimento}">
+                    <label>Sigla</label>
+                    <input class="form-control" type="text" th:field="*{sigla}" maxlength="20">
+                    <small class="text-danger" th:errors="*{sigla}"></small>
+                </div>
+                <div class="form-group">
+                    <label>Tipo de unidade<span class="required-mark">*</span></label>
+                    <select class="form-control form-select chat-input" th:field="*{tipoUnidadeId}">
+                        <option value="">Selecione</option>
+                        <option th:each="item : ${tiposUnidade}"
+                                th:value="${item.id}"
+                                th:text="${item.descricao}"></option>
+                    </select>
+                    <small class="text-danger" th:errors="*{tipoUnidadeId}"></small>
                 </div>
                 <div class="form-group">
                     <label>CNES</label>

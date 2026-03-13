@@ -2,6 +2,8 @@ package br.com.his.care.scheduling.dto;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 import org.springframework.format.annotation.DateTimeFormat;
 
@@ -20,6 +22,9 @@ public class AgendaEspecialidadeForm {
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     private LocalDate dataAgenda;
 
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+    private LocalDate dataFim;
+
     @NotNull(message = "Hora inicial e obrigatoria")
     @DateTimeFormat(pattern = "HH:mm")
     private LocalTime horaInicio;
@@ -28,9 +33,7 @@ public class AgendaEspecialidadeForm {
     @DateTimeFormat(pattern = "HH:mm")
     private LocalTime horaFim;
 
-    @NotNull(message = "Vagas totais e obrigatorio")
-    @Min(value = 1, message = "Vagas totais deve ser maior que zero")
-    private Integer vagasTotais;
+    private Integer vagasTotais = 0;
 
     @NotNull(message = "Vagas de retorno e obrigatorio")
     @Min(value = 0, message = "Vagas de retorno nao pode ser negativo")
@@ -44,6 +47,8 @@ public class AgendaEspecialidadeForm {
     private String observacao;
 
     private boolean ativo = true;
+
+    private Set<String> diasNaoAtende = new LinkedHashSet<>();
 
     public Long getCargoColaboradorId() {
         return cargoColaboradorId;
@@ -67,6 +72,14 @@ public class AgendaEspecialidadeForm {
 
     public void setDataAgenda(LocalDate dataAgenda) {
         this.dataAgenda = dataAgenda;
+    }
+
+    public LocalDate getDataFim() {
+        return dataFim;
+    }
+
+    public void setDataFim(LocalDate dataFim) {
+        this.dataFim = dataFim;
     }
 
     public LocalTime getHoraInicio() {
@@ -123,5 +136,13 @@ public class AgendaEspecialidadeForm {
 
     public void setAtivo(boolean ativo) {
         this.ativo = ativo;
+    }
+
+    public Set<String> getDiasNaoAtende() {
+        return diasNaoAtende;
+    }
+
+    public void setDiasNaoAtende(Set<String> diasNaoAtende) {
+        this.diasNaoAtende = diasNaoAtende;
     }
 }

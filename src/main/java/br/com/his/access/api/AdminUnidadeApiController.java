@@ -83,8 +83,11 @@ public class AdminUnidadeApiController {
     private static UnidadeForm toForm(UnidadeAdminRequest request) {
         UnidadeForm form = new UnidadeForm();
         form.setNome(request.getNome());
-        form.setTipoEstabelecimento(request.getTipoEstabelecimento());
+        form.setTipoUnidadeId(request.getTipoUnidadeId());
+        form.setSigla(request.getSigla());
         form.setCnes(request.getCnes());
+        form.setUnidadeFederativaId(request.getUnidadeFederativaId());
+        form.setCidadeId(request.getCidadeId());
         return form;
     }
 

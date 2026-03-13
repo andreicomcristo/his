@@ -1,6 +1,7 @@
 package br.com.his.access.api.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 public class UnidadeAdminRequest {
@@ -9,11 +10,20 @@ public class UnidadeAdminRequest {
     @Size(max = 150)
     private String nome;
 
-    @Size(max = 80)
-    private String tipoEstabelecimento;
+    @NotNull
+    private Long tipoUnidadeId;
+
+    @Size(max = 20)
+    private String sigla;
 
     @Size(max = 20)
     private String cnes;
+
+    @NotNull
+    private Long unidadeFederativaId;
+
+    @NotNull
+    private Long cidadeId;
 
     public String getNome() {
         return nome;
@@ -23,12 +33,20 @@ public class UnidadeAdminRequest {
         this.nome = nome;
     }
 
-    public String getTipoEstabelecimento() {
-        return tipoEstabelecimento;
+    public Long getTipoUnidadeId() {
+        return tipoUnidadeId;
     }
 
-    public void setTipoEstabelecimento(String tipoEstabelecimento) {
-        this.tipoEstabelecimento = tipoEstabelecimento;
+    public void setTipoUnidadeId(Long tipoUnidadeId) {
+        this.tipoUnidadeId = tipoUnidadeId;
+    }
+
+    public String getSigla() {
+        return sigla;
+    }
+
+    public void setSigla(String sigla) {
+        this.sigla = sigla;
     }
 
     public String getCnes() {
@@ -37,5 +55,21 @@ public class UnidadeAdminRequest {
 
     public void setCnes(String cnes) {
         this.cnes = cnes;
+    }
+
+    public Long getUnidadeFederativaId() {
+        return unidadeFederativaId;
+    }
+
+    public void setUnidadeFederativaId(Long unidadeFederativaId) {
+        this.unidadeFederativaId = unidadeFederativaId;
+    }
+
+    public Long getCidadeId() {
+        return cidadeId;
+    }
+
+    public void setCidadeId(Long cidadeId) {
+        this.cidadeId = cidadeId;
     }
 }

@@ -49,6 +49,124 @@
   display: none;
 }
 
+.his-account-dropdown {
+  width: 440px;
+  padding: 0;
+  border: 1px solid #d9dde5;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 16px 36px rgba(43, 47, 77, 0.25);
+}
+
+.his-account-banner {
+  position: relative;
+  padding: 22px 24px;
+  min-height: 154px;
+  background: linear-gradient(rgba(218, 98, 74, 0.88), rgba(218, 98, 74, 0.88)),
+    url("/kero/assets/images/dropdown-header/city4.jpg") center/cover no-repeat;
+}
+
+.his-account-banner-content {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.his-account-avatar {
+  border: 3px solid rgba(255, 255, 255, 0.45);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.15);
+}
+
+.his-account-identity {
+  flex: 1;
+  min-width: 0;
+}
+
+.his-account-name {
+  color: #ffffff;
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.08;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+
+.his-account-company,
+.his-account-role {
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 15px;
+  line-height: 1.25;
+}
+
+.his-account-role {
+  margin-top: 2px;
+}
+
+.his-account-logout-form {
+  align-self: flex-start;
+}
+
+.his-account-logout-btn {
+  margin-top: 2px;
+}
+
+.his-account-body {
+  background: #ffffff;
+  padding: 18px 0 8px;
+}
+
+.his-account-section-title {
+  color: #616a76;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 0 24px 6px;
+}
+
+.his-account-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 24px;
+  color: #515a67;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.his-account-item i {
+  font-size: 19px;
+  color: #da624a;
+}
+
+.his-account-item:hover,
+.his-account-item:focus {
+  background: #f3f6fb;
+  color: #2f3742;
+  text-decoration: none;
+}
+
+@media (max-width: 767.98px) {
+  .his-account-dropdown {
+    width: 320px;
+  }
+
+  .his-account-banner {
+    min-height: 124px;
+    padding: 16px;
+  }
+
+  .his-account-name {
+    font-size: 22px;
+  }
+
+  .his-account-company,
+  .his-account-role {
+    font-size: 13px;
+  }
+}
+
 .scrollbar-sidebar.scrollbar-container {
   scrollbar-width: none;
   scrollbar-color: #e3e7ee transparent;

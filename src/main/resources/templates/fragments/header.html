@@ -46,39 +46,34 @@
                                     <i class="fa fa-angle-down ml-2 opacity-8"></i>
                                 </a>
                                 <div tabindex="-1" role="menu" aria-hidden="true"
-                                     class="rm-pointers dropdown-menu-lg dropdown-menu dropdown-menu-right">
-                                    <div class="dropdown-menu-header">
-                                        <div class="dropdown-menu-header-inner bg-primary">
-                                            <div class="menu-header-content text-left">
-                                                <div class="widget-content p-0">
-                                                    <div class="widget-content-wrapper">
-                                                        <div class="widget-content-left mr-3">
-                                                            <img width="42" class="rounded-circle"
-                                                                 th:src="${currentUser.avatarUrl}" alt="avatar">
-                                                        </div>
-                                                        <div class="widget-content-left">
-                                                            <div class="widget-heading" th:text="${currentUser.name}">USER</div>
-                                                            <div class="widget-subheading" th:text="${currentUser.company}">Default Company</div>
-                                                            <div class="widget-subheading"
-                                                                 th:if="${currentAtuacao != null}"
-                                                                 th:text="${currentAtuacao.descricaoCompleta()}">ATUACAO</div>
-                                                        </div>
-                                                        <div class="widget-content-right mr-2">
-                                                            <div class="d-flex flex-column align-items-end">
-                                                                <a th:href="@{/ui/escolher-unidade}" class="btn-pill btn-shadow btn btn-light mb-2">
-                                                                    <i class="fa fa-exchange mr-1"></i> Trocar unidade e atuacao
-                                                                </a>
-                                                                <form th:action="@{/logout}" method="post" class="d-inline">
-                                                                    <button type="submit" class="btn-pill btn-shadow btn-shine btn btn-focus">
-                                                                        <i class="fa fa-sign-out text-danger"></i> Sair
-                                                                    </button>
-                                                                </form>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
+                                     class="rm-pointers dropdown-menu-lg dropdown-menu dropdown-menu-right his-account-dropdown">
+                                    <div class="his-account-banner">
+                                        <div class="his-account-banner-content">
+                                            <img width="68" class="rounded-circle his-account-avatar"
+                                                 th:src="${currentUser.avatarUrl}" alt="avatar">
+                                            <div class="his-account-identity">
+                                                <div class="his-account-name" th:text="${currentUser.name}">USER</div>
+                                                <div class="his-account-company" th:text="${currentUser.company}">UNIDADE</div>
+                                                <div class="his-account-role"
+                                                     th:if="${currentAtuacao != null}"
+                                                     th:text="${currentAtuacao.descricaoCompleta()}">ATUACAO</div>
+                                                <div class="his-account-role"
+                                                     th:if="${currentAtuacao == null}"
+                                                     th:text="${currentUser.role}">ROLE</div>
                                             </div>
+                                            <form th:action="@{/logout}" method="post" class="his-account-logout-form">
+                                                <button type="submit" class="btn-pill btn-shadow btn-shine btn btn-focus his-account-logout-btn">
+                                                    <i class="fa fa-sign-out text-danger mr-1"></i> Sair
+                                                </button>
+                                            </form>
                                         </div>
+                                    </div>
+                                    <div class="his-account-body">
+                                        <div class="his-account-section-title">Minha conta</div>
+                                        <a th:href="@{/ui/escolher-unidade}" class="dropdown-item his-account-item">
+                                            <i class="pe-7s-repeat"></i>
+                                            <span>Trocar unidade e atuacao</span>
+                                        </a>
                                     </div>
                                 </div>
                             </div>

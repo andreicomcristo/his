@@ -36,4 +36,6 @@ public interface UsuarioColaboradorRepository extends JpaRepository<UsuarioColab
             where uc.colaborador.id in ?1
             """)
     List<UsuarioColaborador> findByColaboradorIdsComUsuario(Collection<Long> colaboradorIds);
+
+    void deleteByUsuarioId(Long usuarioId);
 }

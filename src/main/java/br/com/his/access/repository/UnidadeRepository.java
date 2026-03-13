@@ -13,7 +13,8 @@ public interface UnidadeRepository extends JpaRepository<Unidade, Long> {
 
     List<Unidade> findAllByOrderByNomeAsc();
 
-    List<Unidade> findByNomeContainingIgnoreCaseOrCnesContainingIgnoreCaseOrderByNomeAsc(String nome, String cnes);
+    List<Unidade> findByNomeContainingIgnoreCaseOrSiglaContainingIgnoreCaseOrCnesContainingIgnoreCaseOrderByNomeAsc(
+            String nome, String sigla, String cnes);
 
     Optional<Unidade> findByCnes(String cnes);
 }

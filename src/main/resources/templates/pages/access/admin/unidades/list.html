@@ -9,7 +9,7 @@
                 <a class="btn btn-primary btn-sm" th:href="@{/ui/admin/unidades/novo}">Nova unidade</a>
             </div>
             <form method="get" th:action="@{/ui/admin/unidades}" class="form-inline mb-3">
-                <input type="text" name="q" class="form-control mr-2" placeholder="Buscar por nome/cnes" th:value="${q}">
+                <input type="text" name="q" class="form-control mr-2" placeholder="Buscar por nome/sigla/cnes" th:value="${q}">
                 <button class="btn btn-outline-secondary btn-sm" type="submit">Buscar</button>
             </form>
 
@@ -21,6 +21,7 @@
                 <tr>
                     <th>ID</th>
                     <th>Nome</th>
+                    <th>Sigla</th>
                     <th>Tipo</th>
                     <th>Cidade</th>
                     <th>CNES</th>
@@ -32,7 +33,8 @@
                 <tr th:each="u : ${unidades}">
                     <td th:text="${u.id}"></td>
                     <td th:text="${u.nome}"></td>
-                    <td th:text="${u.tipoEstabelecimento}"></td>
+                    <td th:text="${u.sigla == null ? '-' : u.sigla}"></td>
+                    <td th:text="${u.tipoUnidade == null ? '-' : u.tipoUnidade.descricao}"></td>
                     <td th:text="${u.cidade == null ? '-' : u.cidade.nome + ' - ' + u.cidade.unidadeFederativa.sigla}"></td>
                     <td th:text="${u.cnes}"></td>
                     <td>

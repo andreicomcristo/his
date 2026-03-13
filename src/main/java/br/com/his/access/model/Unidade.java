@@ -22,8 +22,12 @@ public class Unidade {
     @Column(nullable = false, length = 150)
     private String nome;
 
-    @Column(name = "tipo_estabelecimento", length = 80)
-    private String tipoEstabelecimento;
+    @Column(length = 20)
+    private String sigla;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "tipo_unidade_id", nullable = false)
+    private TipoUnidade tipoUnidade;
 
     @Column(length = 20)
     private String cnes;
@@ -51,12 +55,28 @@ public class Unidade {
         this.nome = nome;
     }
 
+    public String getSigla() {
+        return sigla;
+    }
+
+    public void setSigla(String sigla) {
+        this.sigla = sigla;
+    }
+
     public String getTipoEstabelecimento() {
-        return tipoEstabelecimento;
+        return tipoUnidade == null ? null : tipoUnidade.getDescricao();
     }
 
     public void setTipoEstabelecimento(String tipoEstabelecimento) {
-        this.tipoEstabelecimento = tipoEstabelecimento;
+        // Campo legado. O valor e derivado de tipoUnidade.
+    }
+
+    public TipoUnidade getTipoUnidade() {
+        return tipoUnidade;
+    }
+
+    public void setTipoUnidade(TipoUnidade tipoUnidade) {
+        this.tipoUnidade = tipoUnidade;
     }
 
     public String getCnes() {

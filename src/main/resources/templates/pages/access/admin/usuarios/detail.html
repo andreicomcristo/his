@@ -7,6 +7,11 @@
             <h5 class="card-title">Usuario</h5>
             <p class="mb-1"><strong>ID:</strong> <span th:text="${usuario.id}"></span></p>
             <p class="mb-3"><strong>Keycloak ID:</strong> <small th:text="${usuario.keycloakId}"></small></p>
+            <p class="mb-3">
+                <strong>Status:</strong>
+                <span class="badge" th:classappend="${usuario.ativo} ? 'badge-success' : 'badge-secondary'"
+                      th:text="${usuario.ativo} ? 'ATIVO' : 'INATIVO'">ATIVO</span>
+            </p>
 
             <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
             <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
@@ -45,6 +50,40 @@
                 </button>
                 <a th:href="@{/ui/admin/usuarios}" class="btn btn-outline-secondary btn-sm ml-2">Voltar</a>
             </form>
+
+            <div class="mb-4">
+                <form method="post"
+                      class="d-inline"
+                      th:if="${usuario.ativo}"
+                      th:action="@{'/ui/admin/usuarios/' + ${usuario.id} + '/status'}">
+                    <input type="hidden" name="ativo" value="false">
+                    <button type="submit"
+                            class="btn btn-sm btn-outline-warning mr-2"
+                            onclick="return confirm('Desativar este usuario? Ele perdera acesso ao sistema.')">
+                        Desativar usuario
+                    </button>
+                </form>
+                <form method="post"
+                      class="d-inline"
+                      th:if="${!usuario.ativo}"
+                      th:action="@{'/ui/admin/usuarios/' + ${usuario.id} + '/status'}">
+                    <input type="hidden" name="ativo" value="true">
+                    <button type="submit"
+                            class="btn btn-sm btn-outline-success mr-2"
+                            onclick="return confirm('Reativar este usuario?')">
+                        Reativar usuario
+                    </button>
+                </form>
+                <form method="post"
+                      class="d-inline"
+                      th:action="@{'/ui/admin/usuarios/' + ${usuario.id} + '/excluir-definitivo'}">
+                    <button type="submit"
+                            class="btn btn-sm btn-outline-danger"
+                            onclick="return confirm('Excluir definitivamente este usuario? Esta acao e permitida apenas quando nao houver historico operacional.')">
+                        Excluir definitivamente
+                    </button>
+                </form>
+            </div>
 
             <h6>Vinculo com colaborador</h6>
             <form th:action="@{'/ui/admin/usuarios/' + ${usuario.id} + '/colaborador'}" method="post" class="form-row mb-3">

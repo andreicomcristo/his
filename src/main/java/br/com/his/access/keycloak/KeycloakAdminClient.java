@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
@@ -127,6 +128,66 @@ public class KeycloakAdminClient {
         return userId;
     }
 
+    public void atualizarStatusUsuario(String keycloakId,
+                                       String username,
+                                       String email,
+                                       boolean enabled) {
+        if (!properties.isEnabled()) {
+            return;
+        }
+
+        String userId = resolveUserIdForMutation(keycloakId, username)
+                .orElseThrow(() -> new IllegalArgumentException("Usuario nao encontrado no Keycloak para atualizar status."));
+
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("username", username);
+        payload.put("enabled", enabled);
+        if (email != null && !email.isBlank()) {
+            payload.put("email", email);
+        }
+        payload.put("requiredActions", List.of());
+
+        try {
+            restClient.put()
+                    .uri(adminUsersUrl() + "/" + userId)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .header("Authorization", "Bearer " + obterToken())
+                    .body(payload)
+                    .retrieve()
+                    .toBodilessEntity();
+        } catch (HttpClientErrorException ex) {
+            throw new IllegalArgumentException(
+                    "Falha ao atualizar status no Keycloak: " + extrairMensagemErro(ex),
+                    ex);
+        }
+    }
+
+    public void excluirUsuario(String keycloakId, String username) {
+        if (!properties.isEnabled()) {
+            return;
+        }
+
+        Optional<String> userIdOpt = resolveUserIdForMutation(keycloakId, username);
+        if (userIdOpt.isEmpty()) {
+            return;
+        }
+
+        try {
+            restClient.delete()
+                    .uri(adminUsersUrl() + "/" + userIdOpt.get())
+                    .header("Authorization", "Bearer " + obterToken())
+                    .retrieve()
+                    .toBodilessEntity();
+        } catch (HttpClientErrorException ex) {
+            if (ex.getStatusCode() == HttpStatus.NOT_FOUND) {
+                return;
+            }
+            throw new IllegalArgumentException(
+                    "Falha ao excluir usuario no Keycloak: " + extrairMensagemErro(ex),
+                    ex);
+        }
+    }
+
     private void setSenhaTemporaria(String userId, String senha, boolean temporary, String token) {
         Map<String, Object> body = Map.of(
                 "type", "password",
@@ -140,6 +201,18 @@ public class KeycloakAdminClient {
                 .body(body)
                 .retrieve()
                 .toBodilessEntity();
+    }
+
+    private Optional<String> resolveUserIdForMutation(String keycloakId, String username) {
+        String normalizedKeycloakId = normalizeIdentifier(keycloakId);
+        if (normalizedKeycloakId != null) {
+            return Optional.of(normalizedKeycloakId);
+        }
+        if (username == null || username.isBlank()) {
+            return Optional.empty();
+        }
+        String token = obterToken();
+        return buscarUserIdPorUsername(username, token);
     }
 
     @SuppressWarnings("unchecked")
@@ -247,6 +320,17 @@ public class KeycloakAdminClient {
             return "";
         }
         return value.endsWith("/") ? value.substring(0, value.length() - 1) : value;
+    }
+
+    private static String normalizeIdentifier(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        String normalized = value.trim();
+        if (normalized.startsWith("pending:")) {
+            return null;
+        }
+        return normalized;
     }
 
     private static String extrairMensagemErro(HttpClientErrorException ex) {

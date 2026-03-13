@@ -48,10 +48,180 @@
                     </div>
                 </div>
 
+                <hr>
+                <h6 class="mb-3">Colaborador (opcional)</h6>
+                <p class="text-muted small mb-3">
+                    Informe o CPF para vincular um colaborador existente ou criar um novo colaborador junto com o usuario.
+                </p>
+
+                <div id="colaboradorLookupAlert" class="alert d-none" role="alert"></div>
+
+                <div class="form-row">
+                    <div class="form-group col-md-4">
+                        <label>CPF do colaborador</label>
+                        <input class="form-control" th:field="*{colaboradorCpf}" id="colaboradorCpf"
+                               placeholder="Somente numeros">
+                        <small class="text-danger" th:errors="*{colaboradorCpf}"></small>
+                    </div>
+                    <div class="form-group col-md-8">
+                        <label>Nome do colaborador (obrigatorio ao criar novo)</label>
+                        <input class="form-control" th:field="*{colaboradorNome}" id="colaboradorNome"
+                               placeholder="Nome completo">
+                        <small class="text-danger" th:errors="*{colaboradorNome}"></small>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label>Cargo do colaborador (opcional)</label>
+                        <select class="form-control" th:field="*{colaboradorCargoId}" id="colaboradorCargoId">
+                            <option value="">Selecione</option>
+                            <option th:each="cargo : ${cargosColaborador}"
+                                    th:value="${cargo.id}"
+                                    th:text="${cargo.descricao}"></option>
+                        </select>
+                    </div>
+                    <div class="form-group col-md-6 mt-4">
+                        <div class="custom-checkbox custom-control mt-2">
+                            <input type="checkbox" class="custom-control-input"
+                                   th:field="*{associarColaboradorExistente}"
+                                   id="associarColaboradorExistente">
+                            <label class="custom-control-label" for="associarColaboradorExistente">
+                                Associar colaborador existente
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
                 <button class="btn btn-primary btn-sm" type="submit">Criar usuario</button>
                 <a th:href="@{/ui/admin/usuarios}" class="btn btn-outline-secondary btn-sm">Voltar</a>
             </form>
         </div>
     </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var cpfInput = document.getElementById('colaboradorCpf');
+            var nomeInput = document.getElementById('colaboradorNome');
+            var cargoSelect = document.getElementById('colaboradorCargoId');
+            var associarCheckbox = document.getElementById('associarColaboradorExistente');
+            var alertBox = document.getElementById('colaboradorLookupAlert');
+
+            function onlyDigits(value) {
+                return (value || '').replace(/\D/g, '');
+            }
+
+            function showAlert(type, message) {
+                alertBox.className = 'alert alert-' + type;
+                alertBox.textContent = message;
+                alertBox.classList.remove('d-none');
+            }
+
+            function clearAlert() {
+                alertBox.className = 'alert d-none';
+                alertBox.textContent = '';
+            }
+
+            function setModoNovoColaborador() {
+                nomeInput.readOnly = false;
+                cargoSelect.disabled = false;
+                associarCheckbox.checked = false;
+            }
+
+            function setModoAssociarExistente() {
+                nomeInput.readOnly = true;
+                cargoSelect.disabled = true;
+                associarCheckbox.checked = true;
+            }
+
+            function selecionarCargoDoColaborador(result) {
+                var cargoId = result && result.colaboradorCargoId ? String(result.colaboradorCargoId) : '';
+                if (!cargoId) {
+                    cargoSelect.value = '';
+                    return;
+                }
+
+                var optionExistente = cargoSelect.querySelector('option[value="' + cargoId + '"]');
+                if (!optionExistente) {
+                    var descricao = result.colaboradorCargoDescricao || ('Cargo #' + cargoId);
+                    var novaOption = document.createElement('option');
+                    novaOption.value = cargoId;
+                    novaOption.textContent = descricao + ' (inativo)';
+                    cargoSelect.appendChild(novaOption);
+                }
+                cargoSelect.value = cargoId;
+            }
+
+            function consultarCpf() {
+                var cpf = onlyDigits(cpfInput.value);
+                cpfInput.value = cpf;
+                if (!cpf) {
+                    clearAlert();
+                    setModoNovoColaborador();
+                    cargoSelect.value = '';
+                    return;
+                }
+
+                fetch('/ui/admin/usuarios/colaborador-por-cpf?cpf=' + encodeURIComponent(cpf))
+                    .then(function (response) {
+                        if (!response.ok) {
+                            throw new Error('Falha ao consultar CPF');
+                        }
+                        return response.json();
+                    })
+                    .then(function (result) {
+                        if (!result.encontrado) {
+                            showAlert('info', 'CPF nao encontrado. Ao salvar, um novo colaborador sera criado com os dados informados.');
+                            setModoNovoColaborador();
+                            cargoSelect.value = '';
+                            return;
+                        }
+
+                        if (result.vinculadoUsuario) {
+                            showAlert(
+                                'danger',
+                                'CPF ja vinculado ao usuario ' + (result.usuarioUsername || ('#' + result.usuarioId))
+                                    + '. Nao e possivel associar a outro usuario.'
+                            );
+                            nomeInput.value = result.colaboradorNome || '';
+                            selecionarCargoDoColaborador(result);
+                            setModoNovoColaborador();
+                            associarCheckbox.checked = false;
+                            return;
+                        }
+
+                        showAlert(
+                            'success',
+                            'Colaborador encontrado: ' + result.colaboradorNome + '. Marque para associar este cadastro existente.'
+                        );
+                        nomeInput.value = result.colaboradorNome || '';
+                        selecionarCargoDoColaborador(result);
+                        setModoAssociarExistente();
+                    })
+                    .catch(function () {
+                        showAlert('warning', 'Nao foi possivel validar o CPF agora. Voce pode continuar e validar ao salvar.');
+                        setModoNovoColaborador();
+                    });
+            }
+
+            cpfInput.addEventListener('blur', consultarCpf);
+            cpfInput.addEventListener('change', consultarCpf);
+
+            associarCheckbox.addEventListener('change', function () {
+                if (this.checked) {
+                    nomeInput.readOnly = true;
+                    cargoSelect.disabled = true;
+                } else {
+                    nomeInput.readOnly = false;
+                    cargoSelect.disabled = false;
+                }
+            });
+
+            if (onlyDigits(cpfInput.value)) {
+                consultarCpf();
+            } else {
+                setModoNovoColaborador();
+            }
+        });
+    </script>
 </th:block>
 </html>

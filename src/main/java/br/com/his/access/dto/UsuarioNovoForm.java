@@ -25,6 +25,16 @@ public class UsuarioNovoForm {
 
     private boolean exigirTrocaSenha = true;
 
+    @Size(max = 30)
+    private String colaboradorCpf;
+
+    @Size(max = 150)
+    private String colaboradorNome;
+
+    private Long colaboradorCargoId;
+
+    private boolean associarColaboradorExistente;
+
     public String getUsername() {
         return username;
     }
@@ -71,5 +81,37 @@ public class UsuarioNovoForm {
 
     public void setExigirTrocaSenha(boolean exigirTrocaSenha) {
         this.exigirTrocaSenha = exigirTrocaSenha;
+    }
+
+    public String getColaboradorCpf() {
+        return colaboradorCpf;
+    }
+
+    public void setColaboradorCpf(String colaboradorCpf) {
+        this.colaboradorCpf = colaboradorCpf;
+    }
+
+    public String getColaboradorNome() {
+        return colaboradorNome;
+    }
+
+    public void setColaboradorNome(String colaboradorNome) {
+        this.colaboradorNome = colaboradorNome;
+    }
+
+    public Long getColaboradorCargoId() {
+        return colaboradorCargoId;
+    }
+
+    public void setColaboradorCargoId(Long colaboradorCargoId) {
+        this.colaboradorCargoId = colaboradorCargoId;
+    }
+
+    public boolean isAssociarColaboradorExistente() {
+        return associarColaboradorExistente;
+    }
+
+    public void setAssociarColaboradorExistente(boolean associarColaboradorExistente) {
+        this.associarColaboradorExistente = associarColaboradorExistente;
     }
 }

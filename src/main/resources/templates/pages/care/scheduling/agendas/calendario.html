@@ -61,20 +61,34 @@
                 </div>
             </form>
 
+            <div class="alert alert-success py-2" th:if="${successMessage}" th:text="${successMessage}"></div>
+            <div class="alert alert-danger py-2" th:if="${errorMessage}" th:text="${errorMessage}"></div>
             <div th:if="${infoMessage}" class="alert alert-info py-2" th:text="${infoMessage}"></div>
 
-            <div class="mb-3">
-                <span class="badge badge-secondary mr-2"
-                      th:text="${'Eventos no periodo: ' + #lists.size(eventosCalendario)}">Eventos no periodo</span>
-                <span class="badge badge-success mr-2"
-                      th:if="${mostrarLivres}"
-                      th:text="${'Horarios livres: ' + #lists.size(horariosLivresCalendario)}">Horarios livres</span>
-                <span class="badge badge-secondary mr-1">PENDENTE</span>
-                <span class="badge badge-primary mr-1">CONFIRMADO</span>
-                <span class="badge badge-success mr-1">ATENDIDO</span>
-                <span class="badge badge-warning mr-1">FALTOU</span>
-                <span class="badge badge-danger">CANCELADO</span>
-                <span class="badge badge-light border ml-1" th:if="${mostrarLivres}">LIVRE</span>
+            <div class="row agenda-calendario-metricas mb-3">
+                <div class="col-12 col-sm-6 col-lg mb-2">
+                    <span class="badge badge-secondary d-block py-2"
+                          th:text="${'Eventos no periodo: ' + #lists.size(eventosCalendario)}">Eventos no periodo</span>
+                </div>
+                <div class="col-12 col-sm-6 col-lg mb-2" th:if="${mostrarLivres and horariosLivresDisponiveis}">
+                    <span class="badge badge-success d-block py-2"
+                          th:text="${'Horarios livres: ' + qtdHorariosLivres}">Horarios livres</span>
+                </div>
+                <div class="col-12 col-sm-6 col-lg mb-2">
+                    <span class="badge badge-secondary d-block py-2" th:text="${'Pendente: ' + qtdPendente}">PENDENTE</span>
+                </div>
+                <div class="col-12 col-sm-6 col-lg mb-2">
+                    <span class="badge badge-primary d-block py-2" th:text="${'Confirmado: ' + qtdConfirmado}">CONFIRMADO</span>
+                </div>
+                <div class="col-12 col-sm-6 col-lg mb-2">
+                    <span class="badge badge-success d-block py-2" th:text="${'Atendido: ' + qtdAtendido}">ATENDIDO</span>
+                </div>
+                <div class="col-12 col-sm-6 col-lg mb-2">
+                    <span class="badge badge-warning d-block py-2" th:text="${'Faltou: ' + qtdFaltou}">FALTOU</span>
+                </div>
+                <div class="col-12 col-sm-6 col-lg mb-2">
+                    <span class="badge badge-danger d-block py-2" th:text="${'Cancelado: ' + qtdCancelado}">CANCELADO</span>
+                </div>
             </div>
 
             <ul class="body-tabs body-tabs-layout tabs-animated body-tabs-animated nav mb-3">
@@ -99,9 +113,15 @@
                                 <div th:each="evento : ${eventosCalendario}"
                                      class="agendamento-event"
                                      th:attr="data-id=${evento.agendaPacienteId},
+                                              data-agenda-id=${evento.agendaId},
                                               data-title=${evento.paciente + ' | ' + evento.cargo + ' | ' + evento.especialidade + ' | ' + evento.tipoVaga},
+                                              data-paciente=${evento.paciente},
+                                              data-tipo-vaga=${evento.tipoVaga},
+                                              data-status-label=${evento.status.name()},
                                               data-start=${#temporals.format(evento.inicio, 'yyyy-MM-dd''T''HH:mm:ss')},
                                               data-end=${#temporals.format(evento.fim, 'yyyy-MM-dd''T''HH:mm:ss')},
+                                              data-cargo=${evento.cargo},
+                                              data-especialidade=${evento.especialidade},
                                               data-url=@{'/ui/agendamentos/' + ${evento.agendaId} + '/pacientes'},
                                               data-status=${#strings.toLowerCase(evento.status.name())},
                                               data-description=${evento.observacao != null ? evento.observacao : ''}">
@@ -111,9 +131,12 @@
                                 <div th:each="livre : ${horariosLivresCalendario}"
                                      class="agendamento-event-free"
                                      th:attr="data-id=${livre.agendaSlotId},
+                                              data-agenda-id=${livre.agendaId},
                                               data-title=${'LIVRE | ' + livre.cargo + ' | ' + livre.especialidade},
                                               data-start=${#temporals.format(livre.inicio, 'yyyy-MM-dd''T''HH:mm:ss')},
                                               data-end=${#temporals.format(livre.fim, 'yyyy-MM-dd''T''HH:mm:ss')},
+                                              data-cargo=${livre.cargo},
+                                              data-especialidade=${livre.especialidade},
                                               data-url=@{'/ui/agendamentos/' + ${livre.agendaId} + '/pacientes'},
                                               data-description=${'Horario livre para agendamento'}">
                                 </div>
@@ -166,6 +189,133 @@
                         </tr>
                         </tbody>
                     </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="agendamento-livre-modal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <form id="agendamento-livre-form" method="post" class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Agendar paciente em horario livre</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted mb-3" id="agendamento-livre-slot-info">Horario selecionado</p>
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                    <input type="hidden" name="origem" value="calendario">
+                    <input type="hidden" name="cargoColaboradorId" th:value="${cargoColaboradorSelecionadoId}">
+                    <input type="hidden" name="especialidadeId" th:value="${especialidadeSelecionadaId}">
+                    <input type="hidden" name="dataInicio" th:value="${dataInicio}">
+                    <input type="hidden" name="dataFim" th:value="${dataFim}">
+                    <input type="hidden" name="mostrarLivres" th:value="${mostrarLivres}">
+                    <input type="hidden" name="horaAtendimento" id="modal-hora-atendimento">
+
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label>Paciente<span class="required-mark">*</span></label>
+                            <select class="form-control" name="pacienteId" required>
+                                <option value="">Selecione</option>
+                                <option th:each="p : ${pacientesDisponiveis}"
+                                        th:value="${p.id}"
+                                        th:text="${p.nomeExibicao + (p.cpf != null ? ' | CPF: ' + p.cpf : '')}"></option>
+                            </select>
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label>Tipo da vaga<span class="required-mark">*</span></label>
+                            <select class="form-control" name="tipoVaga" required>
+                                <option th:each="t : ${tiposVaga}" th:value="${t}" th:text="${t}"></option>
+                            </select>
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label>Recorrencia</label>
+                            <select class="form-control" name="periodicidadeRecorrencia" id="modal-periodicidade-recorrencia">
+                                <option th:each="p : ${periodicidadesRecorrencia}"
+                                        th:value="${p}"
+                                        th:text="${p.name() == 'SEMANAL' ? 'Semanal' : 'Nao recorrente'}"></option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group col-md-3" id="modal-quantidade-sessoes-group" style="display:none;">
+                            <label>Qtd. sessoes</label>
+                            <input type="number" class="form-control" name="quantidadeSessoes" id="modal-quantidade-sessoes" min="1" max="52" value="2">
+                        </div>
+                        <div class="form-group col-md-9">
+                            <label>Observacao</label>
+                            <input type="text" class="form-control" name="observacao">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary btn-sm">Agendar paciente</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal fade" id="agendamento-evento-modal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Agendamento</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted mb-3" id="agendamento-evento-slot-info">Horario selecionado</p>
+                    <div class="mb-2"><strong>Paciente:</strong> <span id="agendamento-evento-paciente">-</span></div>
+                    <div class="mb-2"><strong>Cargo:</strong> <span id="agendamento-evento-cargo">-</span></div>
+                    <div class="mb-2"><strong>Especialidade:</strong> <span id="agendamento-evento-especialidade">-</span></div>
+                    <div class="mb-2"><strong>Tipo vaga:</strong> <span id="agendamento-evento-tipo-vaga">-</span></div>
+                    <div class="mb-2"><strong>Status:</strong> <span id="agendamento-evento-status" class="badge">-</span></div>
+                    <div><strong>Observacao:</strong> <span id="agendamento-evento-observacao">-</span></div>
+                </div>
+                <div class="modal-footer d-flex flex-wrap justify-content-end">
+                    <a id="agendamento-evento-reagendar-link" href="#" class="btn btn-outline-info btn-sm mr-2 mb-2 d-none">Reagendar</a>
+
+                    <form id="agendamento-evento-confirmar-form" method="post" class="mr-2 mb-2 d-none">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                        <input type="hidden" name="origem" value="calendario">
+                        <input type="hidden" name="cargoColaboradorId" th:value="${cargoColaboradorSelecionadoId}">
+                        <input type="hidden" name="especialidadeId" th:value="${especialidadeSelecionadaId}">
+                        <input type="hidden" name="dataInicio" th:value="${dataInicio}">
+                        <input type="hidden" name="dataFim" th:value="${dataFim}">
+                        <input type="hidden" name="mostrarLivres" th:value="${mostrarLivres}">
+                        <button type="submit" class="btn btn-outline-primary btn-sm">Confirmar</button>
+                    </form>
+
+                    <form id="agendamento-evento-falta-form" method="post" class="mr-2 mb-2 d-none">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                        <input type="hidden" name="origem" value="calendario">
+                        <input type="hidden" name="cargoColaboradorId" th:value="${cargoColaboradorSelecionadoId}">
+                        <input type="hidden" name="especialidadeId" th:value="${especialidadeSelecionadaId}">
+                        <input type="hidden" name="dataInicio" th:value="${dataInicio}">
+                        <input type="hidden" name="dataFim" th:value="${dataFim}">
+                        <input type="hidden" name="mostrarLivres" th:value="${mostrarLivres}">
+                        <button type="submit" class="btn btn-outline-warning btn-sm">Faltou</button>
+                    </form>
+
+                    <form id="agendamento-evento-cancelar-form" method="post" class="mr-2 mb-2 d-none">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                        <input type="hidden" name="origem" value="calendario">
+                        <input type="hidden" name="cargoColaboradorId" th:value="${cargoColaboradorSelecionadoId}">
+                        <input type="hidden" name="especialidadeId" th:value="${especialidadeSelecionadaId}">
+                        <input type="hidden" name="dataInicio" th:value="${dataInicio}">
+                        <input type="hidden" name="dataFim" th:value="${dataFim}">
+                        <input type="hidden" name="mostrarLivres" th:value="${mostrarLivres}">
+                        <button type="submit"
+                                class="btn btn-outline-danger btn-sm"
+                                onclick="return confirm('Cancelar agendamento?');">Cancelar</button>
+                    </form>
+
+                    <button type="button" class="btn btn-secondary btn-sm mb-2" data-dismiss="modal">Fechar</button>
                 </div>
             </div>
         </div>
@@ -226,6 +376,12 @@
     </script>
 
     <style>
+        .agenda-calendario-metricas .badge {
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+        }
+
         #agendamento-calendar .fc-event.ev-status-pendente {
             background-color: #6c757d;
             border-color: #6c757d;
@@ -251,6 +407,26 @@
             background-color: #e8f5ee;
             border-color: #3ac47d;
             color: #1e7e34;
+        }
+        #agendamento-calendar .fc-time-grid-event .fc-title {
+            white-space: normal;
+            font-size: 0.75rem;
+            line-height: 1.15;
+        }
+        #agendamento-calendar .fc-time-grid-event .fc-time {
+            font-size: 0.72rem;
+            font-weight: 600;
+        }
+        #agendamento-calendar .fc-axis {
+            font-size: 0.74rem;
+            color: #6c757d;
+        }
+        #agendamento-calendar .fc-time-grid .fc-slats td {
+            height: 1.9em;
+        }
+        #agendamento-calendar .fc-agendaWeek-view,
+        #agendamento-calendar .fc-agendaDay-view {
+            min-height: 720px;
         }
     </style>
 
@@ -293,10 +469,18 @@
                     var item = $(this);
                     eventos.push({
                         id: item.data('id'),
+                        agendaId: item.data('agendaId'),
                         title: item.data('title'),
+                        paciente: item.data('paciente'),
+                        tipoVaga: item.data('tipoVaga'),
+                        statusLabel: item.data('statusLabel'),
+                        statusCode: item.data('status'),
                         start: item.data('start'),
                         end: item.data('end'),
+                        cargo: item.data('cargo'),
+                        especialidade: item.data('especialidade'),
                         url: item.data('url'),
+                        isLivre: false,
                         className: 'ev-status-' + item.data('status'),
                         description: item.data('description')
                     });
@@ -305,33 +489,194 @@
                     var item = $(this);
                     eventos.push({
                         id: 'livre-' + item.data('id'),
+                        agendaId: item.data('agendaId'),
                         title: item.data('title'),
                         start: item.data('start'),
                         end: item.data('end'),
+                        cargo: item.data('cargo'),
+                        especialidade: item.data('especialidade'),
                         url: item.data('url'),
+                        isLivre: true,
                         className: 'ev-status-livre',
                         description: item.data('description')
                     });
                 });
 
+                var modalEl = $('#agendamento-livre-modal');
+                var modalFormEl = $('#agendamento-livre-form');
+                var modalSlotInfoEl = $('#agendamento-livre-slot-info');
+                var modalHoraAtendimentoEl = $('#modal-hora-atendimento');
+                var modalPeriodicidadeEl = $('#modal-periodicidade-recorrencia');
+                var modalQuantidadeGroupEl = $('#modal-quantidade-sessoes-group');
+                var modalQuantidadeInputEl = $('#modal-quantidade-sessoes');
+                var modalEventoEl = $('#agendamento-evento-modal');
+                var modalEventoSlotInfoEl = $('#agendamento-evento-slot-info');
+                var modalEventoPacienteEl = $('#agendamento-evento-paciente');
+                var modalEventoCargoEl = $('#agendamento-evento-cargo');
+                var modalEventoEspecialidadeEl = $('#agendamento-evento-especialidade');
+                var modalEventoTipoVagaEl = $('#agendamento-evento-tipo-vaga');
+                var modalEventoStatusEl = $('#agendamento-evento-status');
+                var modalEventoObservacaoEl = $('#agendamento-evento-observacao');
+                var modalEventoReagendarLinkEl = $('#agendamento-evento-reagendar-link');
+                var modalEventoConfirmarFormEl = $('#agendamento-evento-confirmar-form');
+                var modalEventoFaltaFormEl = $('#agendamento-evento-falta-form');
+                var modalEventoCancelarFormEl = $('#agendamento-evento-cancelar-form');
+
+                function refreshRecorrenciaModal() {
+                    var semanal = modalPeriodicidadeEl.val() === 'SEMANAL';
+                    modalQuantidadeGroupEl.toggle(semanal);
+                    if (!semanal) {
+                        modalQuantidadeInputEl.val('1');
+                    } else if (!modalQuantidadeInputEl.val() || parseInt(modalQuantidadeInputEl.val(), 10) < 1) {
+                        modalQuantidadeInputEl.val('2');
+                    }
+                }
+
+                modalPeriodicidadeEl.on('change', refreshRecorrenciaModal);
+                refreshRecorrenciaModal();
+
+                function abrirModalHorarioLivre(event) {
+                    if (!event || !event.url || !event.start) {
+                        return;
+                    }
+                    modalFormEl.attr('action', event.url);
+                    modalHoraAtendimentoEl.val(event.start.format('HH:mm'));
+                    modalFormEl.find('select[name="pacienteId"]').val('');
+                    modalFormEl.find('select[name="tipoVaga"]').val('NORMAL');
+                    modalPeriodicidadeEl.val('NENHUMA');
+                    modalQuantidadeInputEl.val('1');
+                    refreshRecorrenciaModal();
+                    modalFormEl.find('input[name="observacao"]').val('');
+
+                    var descricao = event.start.format('DD/MM/YYYY HH:mm') + ' - ' + event.end.format('HH:mm')
+                        + ' | ' + (event.cargo || '')
+                        + ' | ' + (event.especialidade || 'NAO SE APLICA');
+                    modalSlotInfoEl.text(descricao);
+                    modalEl.modal('show');
+                }
+
+                function classBadgeStatus(statusCode) {
+                    if (statusCode === 'confirmado') {
+                        return 'badge-primary';
+                    }
+                    if (statusCode === 'atendido') {
+                        return 'badge-success';
+                    }
+                    if (statusCode === 'faltou') {
+                        return 'badge-warning';
+                    }
+                    if (statusCode === 'cancelado') {
+                        return 'badge-danger';
+                    }
+                    return 'badge-secondary';
+                }
+
+                function abrirModalAgendamento(event) {
+                    if (!event || !event.id || !event.agendaId || !event.start) {
+                        return;
+                    }
+                    var basePacienteUrl = '/ui/agendamentos/' + event.agendaId + '/pacientes/' + event.id;
+                    modalEventoConfirmarFormEl.attr('action', basePacienteUrl + '/confirmar');
+                    modalEventoFaltaFormEl.attr('action', basePacienteUrl + '/falta');
+                    modalEventoCancelarFormEl.attr('action', basePacienteUrl + '/excluir');
+                    modalEventoReagendarLinkEl.attr('href', basePacienteUrl + '/reagendar');
+
+                    var descricao = event.start.format('DD/MM/YYYY HH:mm') + ' - ' + event.end.format('HH:mm');
+                    modalEventoSlotInfoEl.text(descricao);
+                    modalEventoPacienteEl.text(event.paciente || '-');
+                    modalEventoCargoEl.text(event.cargo || '-');
+                    modalEventoEspecialidadeEl.text(event.especialidade || 'NAO SE APLICA');
+                    modalEventoTipoVagaEl.text(event.tipoVaga || '-');
+                    modalEventoObservacaoEl.text(event.description || '-');
+
+                    modalEventoStatusEl
+                        .removeClass('badge-secondary badge-primary badge-success badge-warning badge-danger')
+                        .addClass(classBadgeStatus(event.statusCode))
+                        .text(event.statusLabel || '-');
+
+                    var cancelado = event.statusCode === 'cancelado';
+                    modalEventoConfirmarFormEl.toggleClass('d-none', cancelado || event.statusCode === 'confirmado');
+                    modalEventoFaltaFormEl.toggleClass('d-none', cancelado || event.statusCode === 'faltou');
+                    modalEventoCancelarFormEl.toggleClass('d-none', cancelado);
+                    modalEventoReagendarLinkEl.toggleClass('d-none', cancelado);
+
+                    modalEventoEl.modal('show');
+                }
+
                 calendarEl.fullCalendar({
                     header: {
                         left: 'prev,next today',
                         center: 'title',
-                        right: 'month,basicWeek,basicDay,listWeek'
+                        right: 'month,agendaWeek,agendaDay,listWeek'
                     },
                     themeSystem: 'bootstrap4',
                     bootstrapFontAwesome: true,
+                    locale: 'pt-br',
+                    firstDay: 1,
+                    buttonText: {
+                        today: 'hoje',
+                        month: 'mes',
+                        week: 'semana',
+                        day: 'dia',
+                        list: 'lista'
+                    },
+                    allDayText: 'dia inteiro',
+                    noEventsMessage: 'Nenhum agendamento para o periodo',
+                    monthNames: [
+                        'janeiro', 'fevereiro', 'marco', 'abril', 'maio', 'junho',
+                        'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'
+                    ],
+                    monthNamesShort: [
+                        'jan', 'fev', 'mar', 'abr', 'mai', 'jun',
+                        'jul', 'ago', 'set', 'out', 'nov', 'dez'
+                    ],
+                    dayNames: [
+                        'domingo', 'segunda-feira', 'terca-feira', 'quarta-feira',
+                        'quinta-feira', 'sexta-feira', 'sabado'
+                    ],
+                    dayNamesShort: ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sab'],
+                    columnHeaderFormat: 'ddd D/M',
                     navLinks: true,
                     editable: false,
                     eventLimit: true,
-                    defaultView: 'month',
+                    defaultView: 'agendaWeek',
+                    allDaySlot: false,
+                    nowIndicator: true,
+                    minTime: '06:00:00',
+                    maxTime: '23:00:00',
+                    scrollTime: '07:00:00',
+                    slotDuration: '00:15:00',
+                    slotLabelInterval: '01:00:00',
+                    slotLabelFormat: 'HH:mm',
+                    timeFormat: 'HH:mm',
+                    views: {
+                        month: {
+                            buttonText: 'mes'
+                        },
+                        agendaWeek: {
+                            buttonText: 'semana'
+                        },
+                        agendaDay: {
+                            buttonText: 'dia'
+                        },
+                        listWeek: {
+                            buttonText: 'lista'
+                        }
+                    },
                     defaultDate: /*[[${#temporals.format(dataInicio, 'yyyy-MM-dd')}]]*/ '',
                     events: eventos,
                     eventRender: function (event, element) {
                         if (event.description) {
                             element.attr('title', event.description);
                         }
+                    },
+                    eventClick: function (event) {
+                        if (event.isLivre) {
+                            abrirModalHorarioLivre(event);
+                            return false;
+                        }
+                        abrirModalAgendamento(event);
+                        return false;
                     }
                 });
 

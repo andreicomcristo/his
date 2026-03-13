@@ -19,7 +19,10 @@ public class AdminApiMapper {
         UnidadeAdminResponse response = new UnidadeAdminResponse();
         response.setId(unidade.getId());
         response.setNome(unidade.getNome());
+        response.setTipoUnidadeId(unidade.getTipoUnidade() == null ? null : unidade.getTipoUnidade().getId());
+        response.setTipoUnidadeDescricao(unidade.getTipoUnidade() == null ? null : unidade.getTipoUnidade().getDescricao());
         response.setTipoEstabelecimento(unidade.getTipoEstabelecimento());
+        response.setSigla(unidade.getSigla());
         response.setCnes(unidade.getCnes());
         response.setAtivo(unidade.isAtivo());
         return response;

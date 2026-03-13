@@ -7,7 +7,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import br.com.his.access.model.Unidade;
+import br.com.his.access.model.TipoUnidade;
 import br.com.his.access.repository.UnidadeRepository;
+import br.com.his.access.repository.TipoUnidadeRepository;
 import br.com.his.access.dto.UnidadeForm;
 import br.com.his.reference.location.model.Cidade;
 import br.com.his.reference.location.repository.CidadeRepository;
@@ -17,11 +19,14 @@ public class UnidadeAdminService {
 
     private final UnidadeRepository unidadeRepository;
     private final CidadeRepository cidadeRepository;
+    private final TipoUnidadeRepository tipoUnidadeRepository;
 
     public UnidadeAdminService(UnidadeRepository unidadeRepository,
-                              CidadeRepository cidadeRepository) {
+                               CidadeRepository cidadeRepository,
+                               TipoUnidadeRepository tipoUnidadeRepository) {
         this.unidadeRepository = unidadeRepository;
         this.cidadeRepository = cidadeRepository;
+        this.tipoUnidadeRepository = tipoUnidadeRepository;
     }
 
     @Transactional(readOnly = true)
@@ -30,8 +35,8 @@ public class UnidadeAdminService {
         if (normalized == null) {
             return unidadeRepository.findAllByOrderByNomeAsc();
         }
-        return unidadeRepository.findByNomeContainingIgnoreCaseOrCnesContainingIgnoreCaseOrderByNomeAsc(
-                normalized, normalized);
+        return unidadeRepository.findByNomeContainingIgnoreCaseOrSiglaContainingIgnoreCaseOrCnesContainingIgnoreCaseOrderByNomeAsc(
+                normalized, normalized, normalized);
     }
 
     @Transactional(readOnly = true)
@@ -43,7 +48,7 @@ public class UnidadeAdminService {
     @Transactional
     public Unidade criar(UnidadeForm form) {
         Unidade unidade = new Unidade();
-        apply(form, unidade, cidadeRepository);
+        apply(form, unidade, cidadeRepository, tipoUnidadeRepository);
         unidade.setAtivo(true);
         return salvar(unidade);
     }
@@ -51,7 +56,7 @@ public class UnidadeAdminService {
     @Transactional
     public Unidade atualizar(Long id, UnidadeForm form) {
         Unidade unidade = buscarPorId(id);
-        apply(form, unidade, cidadeRepository);
+        apply(form, unidade, cidadeRepository, tipoUnidadeRepository);
         return salvar(unidade);
     }
 
@@ -70,15 +75,21 @@ public class UnidadeAdminService {
         }
     }
 
-    private static void apply(UnidadeForm form, Unidade unidade, CidadeRepository cidadeRepository) {
+    private static void apply(UnidadeForm form,
+                              Unidade unidade,
+                              CidadeRepository cidadeRepository,
+                              TipoUnidadeRepository tipoUnidadeRepository) {
         Cidade cidade = cidadeRepository.findById(form.getCidadeId())
                 .orElseThrow(() -> new IllegalArgumentException("Cidade invalida"));
+        TipoUnidade tipoUnidade = tipoUnidadeRepository.findById(form.getTipoUnidadeId())
+                .orElseThrow(() -> new IllegalArgumentException("Tipo de unidade invalido"));
         if (form.getUnidadeFederativaId() == null || cidade.getUnidadeFederativa() == null
                 || !cidade.getUnidadeFederativa().getId().equals(form.getUnidadeFederativaId())) {
             throw new IllegalArgumentException("Cidade nao pertence a UF informada");
         }
         unidade.setNome(normalizeUpper(form.getNome()));
-        unidade.setTipoEstabelecimento(normalizeUpper(form.getTipoEstabelecimento()));
+        unidade.setSigla(normalizeUpper(form.getSigla()));
+        unidade.setTipoUnidade(tipoUnidade);
         unidade.setCnes(normalize(form.getCnes()));
         unidade.setCidade(cidade);
     }

@@ -53,4 +53,25 @@ public interface AgendaEspecialidadeRepository extends JpaRepository<AgendaEspec
                                   Long agendaIdIgnorar,
                                   LocalTime horaInicio,
                                   LocalTime horaFim);
+
+    @Query("""
+            select a
+            from AgendaEspecialidade a
+            where a.unidade.id = ?1
+              and a.cargoColaborador.id = ?2
+              and (
+                    (?3 is null and a.especialidade is null)
+                    or (?3 is not null and a.especialidade.id = ?3)
+              )
+              and a.dataAgenda = ?4
+              and a.ativo = true
+              and a.horaInicio <= ?5
+              and a.horaFim > ?5
+            order by a.horaInicio
+            """)
+    List<AgendaEspecialidade> listarAtivasPorContextoDataEHorario(Long unidadeId,
+                                                                   Long cargoColaboradorId,
+                                                                   Long especialidadeId,
+                                                                   LocalDate dataAgenda,
+                                                                   LocalTime horarioAtendimento);
 }

@@ -247,4 +247,40 @@ public interface ColaboradorUnidadeAtuacaoRepository extends JpaRepository<Colab
                                       @Param("unidadeId") Long unidadeId,
                                       @Param("colaboradorUnidadeAtuacaoId") Long colaboradorUnidadeAtuacaoId,
                                       @Param("permissionNames") Collection<String> permissionNames);
+
+    @Query(value = """
+            SELECT EXISTS (
+                SELECT 1
+                FROM colaborador_unidade_atuacao cua
+                JOIN colaborador_unidade_vinculo cuv ON cuv.id = cua.colaborador_unidade_vinculo_id
+                JOIN usuario_colaborador uc ON uc.colaborador_id = cuv.colaborador_id
+                JOIN usuario u ON u.id = uc.usuario_id
+                JOIN perfil_permissao pp ON pp.perfil_id = cua.perfil_id
+                JOIN permissao p ON p.id = pp.permissao_id
+                WHERE u.id = :usuarioId
+                  AND u.ativo = true
+                  AND uc.ativo = true
+                  AND cuv.ativo = true
+                  AND cua.ativo = true
+                  AND p.nome IN (:permissionNames)
+            )
+            """, nativeQuery = true)
+    boolean usuarioPossuiAlgumaPermissaoAtiva(@Param("usuarioId") Long usuarioId,
+                                              @Param("permissionNames") Collection<String> permissionNames);
+
+    @Query(value = """
+            SELECT COUNT(DISTINCT u.id)
+            FROM colaborador_unidade_atuacao cua
+            JOIN colaborador_unidade_vinculo cuv ON cuv.id = cua.colaborador_unidade_vinculo_id
+            JOIN usuario_colaborador uc ON uc.colaborador_id = cuv.colaborador_id
+            JOIN usuario u ON u.id = uc.usuario_id
+            JOIN perfil_permissao pp ON pp.perfil_id = cua.perfil_id
+            JOIN permissao p ON p.id = pp.permissao_id
+            WHERE u.ativo = true
+              AND uc.ativo = true
+              AND cuv.ativo = true
+              AND cua.ativo = true
+              AND p.nome IN (:permissionNames)
+            """, nativeQuery = true)
+    long contarUsuariosAtivosComAlgumaPermissao(@Param("permissionNames") Collection<String> permissionNames);
 }

@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import br.com.his.access.dto.UnidadeForm;
+import br.com.his.access.repository.TipoUnidadeRepository;
 import br.com.his.reference.location.service.UnidadeFederativaAdminService;
 import br.com.his.access.service.UnidadeAdminService;
 import br.com.his.reference.location.repository.CidadeRepository;
@@ -23,13 +24,16 @@ public class UnidadeAdminController {
 
     private final UnidadeAdminService unidadeAdminService;
     private final CidadeRepository cidadeRepository;
+    private final TipoUnidadeRepository tipoUnidadeRepository;
     private final UnidadeFederativaAdminService unidadeFederativaAdminService;
 
     public UnidadeAdminController(UnidadeAdminService unidadeAdminService,
                                   CidadeRepository cidadeRepository,
+                                  TipoUnidadeRepository tipoUnidadeRepository,
                                   UnidadeFederativaAdminService unidadeFederativaAdminService) {
         this.unidadeAdminService = unidadeAdminService;
         this.cidadeRepository = cidadeRepository;
+        this.tipoUnidadeRepository = tipoUnidadeRepository;
         this.unidadeFederativaAdminService = unidadeFederativaAdminService;
     }
 
@@ -77,7 +81,8 @@ public class UnidadeAdminController {
         var unidade = unidadeAdminService.buscarPorId(id);
         UnidadeForm form = new UnidadeForm();
         form.setNome(unidade.getNome());
-        form.setTipoEstabelecimento(unidade.getTipoEstabelecimento());
+        form.setTipoUnidadeId(unidade.getTipoUnidade() == null ? null : unidade.getTipoUnidade().getId());
+        form.setSigla(unidade.getSigla());
         form.setCnes(unidade.getCnes());
         form.setUnidadeFederativaId(unidade.getCidade() == null ? null : unidade.getCidade().getUnidadeFederativa().getId());
         form.setCidadeId(unidade.getCidade() == null ? null : unidade.getCidade().getId());
@@ -122,6 +127,7 @@ public class UnidadeAdminController {
 
     private void populateModel(Model model, UnidadeForm form) {
         model.addAttribute("ufs", unidadeFederativaAdminService.listarTodas());
+        model.addAttribute("tiposUnidade", tipoUnidadeRepository.findByAtivoOrderByDescricaoAsc(true));
         Long unidadeFederativaId = form == null ? null : form.getUnidadeFederativaId();
         model.addAttribute("cidades", unidadeFederativaId == null
                 ? java.util.List.of()
