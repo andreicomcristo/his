@@ -9,7 +9,7 @@
                 <a class="btn btn-primary btn-sm" th:href="@{/ui/admin/bairros/novo}">Novo bairro</a>
             </div>
             <form method="get" class="form-inline mb-3">
-                <input type="text" name="q" class="form-control mr-2" placeholder="Buscar por bairro, cidade ou UF" th:value="${q}">
+                <input type="text" name="q" class="form-control mr-2" placeholder="Buscar por bairro, Municipio ou UF" th:value="${q}">
                 <button class="btn btn-outline-secondary btn-sm" type="submit">Buscar</button>
             </form>
             <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
@@ -18,7 +18,7 @@
                 <tr>
                     <th>ID</th>
                     <th>Nome</th>
-                    <th>Cidade</th>
+                    <th>Municipio</th>
                     <th>UF</th>
                     <th>Ativo</th>
                     <th></th>
@@ -28,8 +28,8 @@
                 <tr th:each="item : ${items}">
                     <td th:text="${item.id}"></td>
                     <td th:text="${item.nome}"></td>
-                    <td th:text="${item.cidade.nome}"></td>
-                    <td th:text="${item.cidade.unidadeFederativa.sigla}"></td>
+                    <td th:text="${item.Municipio.nome}"></td>
+                    <td th:text="${item.Municipio.unidadeFederativa.sigla}"></td>
                     <td th:text="${item.ativo ? 'SIM' : 'NAO'}"></td>
                     <td class="text-right">
                         <a class="btn btn-sm btn-outline-primary" th:href="@{'/ui/admin/bairros/' + ${item.id} + '/editar'}">Editar</a>
@@ -44,3 +44,4 @@
     </div>
 </th:block>
 </html>
+

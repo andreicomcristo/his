@@ -15,8 +15,8 @@ public class UnidadeFederativa {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 100)
-    private String nome;
+    @Column(name = "descricao", nullable = false, length = 100)
+    private String descricao;
 
     @Column(nullable = false, length = 2)
     private String sigla;
@@ -32,12 +32,12 @@ public class UnidadeFederativa {
         this.id = id;
     }
 
-    public String getNome() {
-        return nome;
+    public String getDescricao() {
+        return descricao;
     }
 
-    public void setNome(String nome) {
-        this.nome = nome;
+    public void setDescricao(String descricao) {
+        this.descricao = descricao;
     }
 
     public String getSigla() {

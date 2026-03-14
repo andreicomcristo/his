@@ -9,9 +9,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 
-import br.com.his.reference.location.model.Cidade;
+import br.com.his.reference.location.model.Municipio;
 import br.com.his.reference.location.model.UnidadeFederativa;
-import br.com.his.reference.location.repository.CidadeRepository;
+import br.com.his.reference.location.repository.MunicipioRepository;
 import br.com.his.reference.location.repository.UnidadeFederativaRepository;
 import br.com.his.patient.dto.PacienteCepResponse;
 
@@ -20,14 +20,14 @@ public class CepLookupService {
 
     private final RestClient restClient;
     private final UnidadeFederativaRepository unidadeFederativaRepository;
-    private final CidadeRepository cidadeRepository;
+    private final MunicipioRepository MunicipioRepository;
 
     public CepLookupService(RestClient.Builder restClientBuilder,
                             UnidadeFederativaRepository unidadeFederativaRepository,
-                            CidadeRepository cidadeRepository) {
+                            MunicipioRepository MunicipioRepository) {
         this.restClient = restClientBuilder.build();
         this.unidadeFederativaRepository = unidadeFederativaRepository;
-        this.cidadeRepository = cidadeRepository;
+        this.MunicipioRepository = MunicipioRepository;
     }
 
     public PacienteCepResponse buscarPorCep(String cepInformado) {
@@ -43,7 +43,7 @@ public class CepLookupService {
 
         UnidadeFederativa uf = unidadeFederativaRepository.findBySiglaIgnoreCase(viaCep.uf())
                 .orElseThrow(() -> new IllegalArgumentException("UF retornada pelo CEP nao encontrada no HIS."));
-        Cidade cidade = localizarCidade(uf.getId(), viaCep.localidade());
+        Municipio Municipio = localizarMunicipio(uf.getId(), viaCep.localidade());
 
         PacienteCepResponse response = new PacienteCepResponse();
         response.setCep(cep);
@@ -52,10 +52,10 @@ public class CepLookupService {
         response.setComplemento(normalize(viaCep.complemento()));
         response.setUnidadeFederativaId(uf.getId());
         response.setUfSigla(uf.getSigla());
-        response.setCidadeNome(normalize(viaCep.localidade()));
-        if (cidade != null) {
-            response.setCidadeId(cidade.getId());
-            response.setCidadeNome(cidade.getNome());
+        response.setMunicipioNome(normalize(viaCep.localidade()));
+        if (Municipio != null) {
+            response.setMunicipioId(Municipio.getId());
+            response.setMunicipioNome(Municipio.getNome());
         }
         return response;
     }
@@ -76,21 +76,21 @@ public class CepLookupService {
         }
     }
 
-    private Cidade localizarCidade(Long ufId, String localidade) {
+    private Municipio localizarMunicipio(Long ufId, String localidade) {
         if (localidade == null || localidade.isBlank()) {
             return null;
         }
-        String cidadeNormalizada = normalizeForMatch(localidade);
-        List<Cidade> cidades = cidadeRepository.findByUnidadeFederativaIdOrderByNome(ufId);
-        for (Cidade cidade : cidades) {
-            if (normalizeForMatch(cidade.getNome()).equals(cidadeNormalizada)) {
-                return cidade;
+        String municipioNormalizada = normalizeForMatch(localidade);
+        List<Municipio> Municipios = MunicipioRepository.findByUnidadeFederativaIdOrderByNome(ufId);
+        for (Municipio Municipio : Municipios) {
+            if (normalizeForMatch(Municipio.getNome()).equals(municipioNormalizada)) {
+                return Municipio;
             }
         }
-        for (Cidade cidade : cidades) {
-            String nome = normalizeForMatch(cidade.getNome());
-            if (nome.contains(cidadeNormalizada) || cidadeNormalizada.contains(nome)) {
-                return cidade;
+        for (Municipio Municipio : Municipios) {
+            String nome = normalizeForMatch(Municipio.getNome());
+            if (nome.contains(municipioNormalizada) || municipioNormalizada.contains(nome)) {
+                return Municipio;
             }
         }
         return null;
@@ -131,3 +131,4 @@ public class CepLookupService {
             Boolean erro) {
     }
 }
+

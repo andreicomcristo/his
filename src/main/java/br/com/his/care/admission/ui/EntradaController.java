@@ -39,7 +39,7 @@ import br.com.his.care.admission.dto.EntradaPendenteForm;
 import br.com.his.care.admission.dto.EntradaForm;
 import br.com.his.care.attendance.model.Atendimento;
 import br.com.his.care.attendance.service.AssistencialFlowService;
-import br.com.his.reference.location.repository.CidadeRepository;
+import br.com.his.reference.location.repository.MunicipioRepository;
 import br.com.his.reference.location.repository.UnidadeFederativaRepository;
 import br.com.his.patient.dto.PacienteForm;
 import br.com.his.patient.model.Paciente;
@@ -62,7 +62,7 @@ public class EntradaController {
     private final UnidadeFederativaRepository unidadeFederativaRepository;
     private final PacienteLookupService pacienteLookupService;
     private final PacienteService pacienteService;
-    private final CidadeRepository cidadeRepository;
+    private final MunicipioRepository MunicipioRepository;
     private final SmartValidator validator;
 
     public EntradaController(AssistencialFlowService assistencialFlowService,
@@ -75,7 +75,7 @@ public class EntradaController {
                              UnidadeFederativaRepository unidadeFederativaRepository,
                              PacienteLookupService pacienteLookupService,
                              PacienteService pacienteService,
-                             CidadeRepository cidadeRepository,
+                             MunicipioRepository MunicipioRepository,
                              SmartValidator validator) {
         this.assistencialFlowService = assistencialFlowService;
         this.operationalPermissionService = operationalPermissionService;
@@ -87,7 +87,7 @@ public class EntradaController {
         this.unidadeFederativaRepository = unidadeFederativaRepository;
         this.pacienteLookupService = pacienteLookupService;
         this.pacienteService = pacienteService;
-        this.cidadeRepository = cidadeRepository;
+        this.MunicipioRepository = MunicipioRepository;
         this.validator = validator;
     }
 
@@ -105,9 +105,9 @@ public class EntradaController {
                                 : entrada.getTipoProcedencia().getId());
                         f.setProcedenciaId(entrada.getProcedencia() == null ? null : entrada.getProcedencia().getId());
                         f.setProcedenciaBairroId(entrada.getProcedenciaBairro() == null ? null : entrada.getProcedenciaBairro().getId());
-                        f.setProcedenciaCidadeUfId(entrada.getProcedenciaCidade() == null || entrada.getProcedenciaCidade().getUnidadeFederativa() == null
-                                ? null : entrada.getProcedenciaCidade().getUnidadeFederativa().getId());
-                        f.setProcedenciaCidadeId(entrada.getProcedenciaCidade() == null ? null : entrada.getProcedenciaCidade().getId());
+                        f.setProcedenciaMunicipioUfId(entrada.getProcedenciaMunicipio() == null || entrada.getProcedenciaMunicipio().getUnidadeFederativa() == null
+                                ? null : entrada.getProcedenciaMunicipio().getUnidadeFederativa().getId());
+                        f.setProcedenciaMunicipioId(entrada.getProcedenciaMunicipio() == null ? null : entrada.getProcedenciaMunicipio().getId());
                         f.setFormaChegadaId(entrada.getFormaChegada() == null ? null : entrada.getFormaChegada().getId());
                         f.setMotivoEntradaId(entrada.getMotivoEntrada() == null ? null : entrada.getMotivoEntrada().getId());
                         f.setTelefoneComunicante(entrada.getTelefoneComunicante());
@@ -139,10 +139,10 @@ public class EntradaController {
         model.addAttribute("areasEntrada", areaRepository.findAreasAtivasRecebemEntradaByUnidadeId(atendimento.getUnidade().getId()));
         model.addAttribute("tiposProcedenciaEntrada", pacienteLookupService.listarTiposProcedenciaEntrada());
         model.addAttribute("procedenciasEntrada", pacienteLookupService.listarProcedenciasEntrada(atendimento.getUnidade().getId()));
-        model.addAttribute("bairrosEntrada", pacienteLookupService.listarBairrosPorCidade(
-                atendimento.getUnidade().getCidade() == null ? null : atendimento.getUnidade().getCidade().getId()));
-        model.addAttribute("ufsEntrada", unidadeFederativaRepository.findAllByOrderByNomeAsc());
-        model.addAttribute("cidadesEntrada", pacienteLookupService.listarCidadesProcedenciaEntrada());
+        model.addAttribute("bairrosEntrada", pacienteLookupService.listarBairrosPorMunicipio(
+                atendimento.getUnidade().getMunicipio() == null ? null : atendimento.getUnidade().getMunicipio().getId()));
+        model.addAttribute("ufsEntrada", unidadeFederativaRepository.findAllByOrderByDescricaoAsc());
+        model.addAttribute("municipiosEntrada", pacienteLookupService.listarMunicipiosProcedenciaEntrada());
         model.addAttribute("formasChegada", formaChegadaRepository.findByAtivoTrueOrderByDescricaoAsc());
         model.addAttribute("grausParentesco", grauParentescoRepository.findByAtivoTrueOrderByDescricaoAsc());
         model.addAttribute("motivosEntrada", motivoEntradaRepository.findByAtivoTrueOrderByDescricaoAsc());
@@ -187,10 +187,10 @@ public class EntradaController {
             model.addAttribute("areasEntrada", areaRepository.findAreasAtivasRecebemEntradaByUnidadeId(atendimento.getUnidade().getId()));
             model.addAttribute("tiposProcedenciaEntrada", pacienteLookupService.listarTiposProcedenciaEntrada());
             model.addAttribute("procedenciasEntrada", pacienteLookupService.listarProcedenciasEntrada(atendimento.getUnidade().getId()));
-            model.addAttribute("bairrosEntrada", pacienteLookupService.listarBairrosPorCidade(
-                    atendimento.getUnidade().getCidade() == null ? null : atendimento.getUnidade().getCidade().getId()));
-            model.addAttribute("ufsEntrada", unidadeFederativaRepository.findAllByOrderByNomeAsc());
-            model.addAttribute("cidadesEntrada", pacienteLookupService.listarCidadesProcedenciaEntrada());
+            model.addAttribute("bairrosEntrada", pacienteLookupService.listarBairrosPorMunicipio(
+                    atendimento.getUnidade().getMunicipio() == null ? null : atendimento.getUnidade().getMunicipio().getId()));
+            model.addAttribute("ufsEntrada", unidadeFederativaRepository.findAllByOrderByDescricaoAsc());
+            model.addAttribute("municipiosEntrada", pacienteLookupService.listarMunicipiosProcedenciaEntrada());
             model.addAttribute("formasChegada", formaChegadaRepository.findByAtivoTrueOrderByDescricaoAsc());
             model.addAttribute("grausParentesco", grauParentescoRepository.findByAtivoTrueOrderByDescricaoAsc());
             model.addAttribute("motivosEntrada", motivoEntradaRepository.findByAtivoTrueOrderByDescricaoAsc());
@@ -267,10 +267,10 @@ public class EntradaController {
         model.addAttribute("areasEntrada", areaRepository.findAreasAtivasRecebemEntradaByUnidadeId(atendimento.getUnidade().getId()));
         model.addAttribute("tiposProcedenciaEntrada", pacienteLookupService.listarTiposProcedenciaEntrada());
         model.addAttribute("procedenciasEntrada", pacienteLookupService.listarProcedenciasEntrada(atendimento.getUnidade().getId()));
-        model.addAttribute("bairrosEntrada", pacienteLookupService.listarBairrosPorCidade(
-                atendimento.getUnidade().getCidade() == null ? null : atendimento.getUnidade().getCidade().getId()));
-        model.addAttribute("ufsEntrada", unidadeFederativaRepository.findAllByOrderByNomeAsc());
-        model.addAttribute("cidadesEntrada", pacienteLookupService.listarCidadesProcedenciaEntrada());
+        model.addAttribute("bairrosEntrada", pacienteLookupService.listarBairrosPorMunicipio(
+                atendimento.getUnidade().getMunicipio() == null ? null : atendimento.getUnidade().getMunicipio().getId()));
+        model.addAttribute("ufsEntrada", unidadeFederativaRepository.findAllByOrderByDescricaoAsc());
+        model.addAttribute("municipiosEntrada", pacienteLookupService.listarMunicipiosProcedenciaEntrada());
         model.addAttribute("formasChegada", formaChegadaRepository.findByAtivoTrueOrderByDescricaoAsc());
         model.addAttribute("grausParentesco", grauParentescoRepository.findByAtivoTrueOrderByDescricaoAsc());
         model.addAttribute("motivosEntrada", motivoEntradaRepository.findByAtivoTrueOrderByDescricaoAsc());
@@ -297,10 +297,10 @@ public class EntradaController {
         model.addAttribute("deficiencias", pacienteLookupService.listarDeficiencias());
         model.addAttribute("profissoes", pacienteLookupService.listarProfissoes());
         model.addAttribute("procedencias", pacienteLookupService.listarProcedencias());
-        model.addAttribute("ufs", unidadeFederativaRepository.findAllByOrderByNomeAsc());
-        model.addAttribute("cidades", form.getUnidadeFederativaId() == null
+        model.addAttribute("ufs", unidadeFederativaRepository.findAllByOrderByDescricaoAsc());
+        model.addAttribute("municipios", form.getUnidadeFederativaId() == null
                 ? java.util.List.of()
-                : cidadeRepository.findByUnidadeFederativaIdOrderByNome(form.getUnidadeFederativaId()));
+                : MunicipioRepository.findByUnidadeFederativaIdOrderByNome(form.getUnidadeFederativaId()));
     }
 
     private void copyPacienteToForm(Paciente paciente, PacienteForm form) {
@@ -333,9 +333,9 @@ public class EntradaController {
         form.setNumero(paciente.getNumero());
         form.setComplemento(paciente.getComplemento());
         form.setBairro(paciente.getBairro());
-        if (paciente.getCidade() != null) {
-            form.setCidadeId(paciente.getCidade().getId());
-            form.setUnidadeFederativaId(paciente.getCidade().getUnidadeFederativa().getId());
+        if (paciente.getMunicipio() != null) {
+            form.setMunicipioId(paciente.getMunicipio().getId());
+            form.setUnidadeFederativaId(paciente.getMunicipio().getUnidadeFederativa().getId());
         }
         form.setTemporario(paciente.isTemporario());
         form.setIdadeAparente(paciente.getIdadeAparente());
@@ -349,9 +349,9 @@ public class EntradaController {
                 : entrada.getTipoProcedencia().getId());
         form.setProcedenciaId(entrada.getProcedencia() == null ? null : entrada.getProcedencia().getId());
         form.setProcedenciaBairroId(entrada.getProcedenciaBairro() == null ? null : entrada.getProcedenciaBairro().getId());
-        form.setProcedenciaCidadeUfId(entrada.getProcedenciaCidade() == null || entrada.getProcedenciaCidade().getUnidadeFederativa() == null
-                ? null : entrada.getProcedenciaCidade().getUnidadeFederativa().getId());
-        form.setProcedenciaCidadeId(entrada.getProcedenciaCidade() == null ? null : entrada.getProcedenciaCidade().getId());
+        form.setProcedenciaMunicipioUfId(entrada.getProcedenciaMunicipio() == null || entrada.getProcedenciaMunicipio().getUnidadeFederativa() == null
+                ? null : entrada.getProcedenciaMunicipio().getUnidadeFederativa().getId());
+        form.setProcedenciaMunicipioId(entrada.getProcedenciaMunicipio() == null ? null : entrada.getProcedenciaMunicipio().getId());
         form.setFormaChegadaId(entrada.getFormaChegada() == null ? null : entrada.getFormaChegada().getId());
         form.setMotivoEntradaId(entrada.getMotivoEntrada() == null ? null : entrada.getMotivoEntrada().getId());
         form.setTelefoneComunicante(entrada.getTelefoneComunicante());
@@ -376,3 +376,5 @@ public class EntradaController {
         }
     }
 }
+
+

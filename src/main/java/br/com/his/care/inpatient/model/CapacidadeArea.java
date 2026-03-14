@@ -77,3 +77,5 @@ public class CapacidadeArea {
         this.ativo = ativo;
     }
 }
+
+

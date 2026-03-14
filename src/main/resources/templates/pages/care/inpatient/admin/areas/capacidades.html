@@ -19,7 +19,7 @@
                                th:value="${capacidade.id}"
                                th:id="${'capacidade_' + capacidade.id}">
                         <label class="form-check-label" th:for="${'capacidade_' + capacidade.id}">
-                            <span th:text="${capacidade.nome}">CAPACIDADE</span>
+                            <span th:text="${capacidade.nome}">CAPAMunicipio</span>
                             <small class="text-muted" th:if="${capacidade.descricao != null}" th:text="${' - ' + capacidade.descricao}"></small>
                         </label>
                     </div>
@@ -33,3 +33,5 @@
     </div>
 </th:block>
 </html>
+
+

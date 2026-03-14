@@ -62,7 +62,7 @@ import br.com.his.care.inpatient.repository.InternacaoRepository;
 import br.com.his.care.inpatient.repository.ObservacaoRepository;
 import br.com.his.care.attendance.repository.StatusAtendimentoRepository;
 import br.com.his.care.attendance.service.AssistencialFlowService;
-import br.com.his.reference.location.repository.CidadeRepository;
+import br.com.his.reference.location.repository.MunicipioRepository;
 import br.com.his.reference.location.repository.UnidadeFederativaRepository;
 import br.com.his.patient.dto.PacienteForm;
 import br.com.his.patient.model.Paciente;
@@ -90,7 +90,7 @@ public class AtendimentoController {
     private final PacienteService pacienteService;
     private final PacienteLookupService pacienteLookupService;
     private final UnidadeFederativaRepository unidadeFederativaRepository;
-    private final CidadeRepository cidadeRepository;
+    private final MunicipioRepository MunicipioRepository;
     private final AreaRepository areaRepository;
     private final FormaChegadaRepository formaChegadaRepository;
     private final GrauParentescoRepository grauParentescoRepository;
@@ -109,7 +109,7 @@ public class AtendimentoController {
                                  PacienteService pacienteService,
                                  PacienteLookupService pacienteLookupService,
                                  UnidadeFederativaRepository unidadeFederativaRepository,
-                                 CidadeRepository cidadeRepository,
+                                 MunicipioRepository MunicipioRepository,
                                  AreaRepository areaRepository,
                                  FormaChegadaRepository formaChegadaRepository,
                                  GrauParentescoRepository grauParentescoRepository,
@@ -127,7 +127,7 @@ public class AtendimentoController {
         this.pacienteService = pacienteService;
         this.pacienteLookupService = pacienteLookupService;
         this.unidadeFederativaRepository = unidadeFederativaRepository;
-        this.cidadeRepository = cidadeRepository;
+        this.MunicipioRepository = MunicipioRepository;
         this.areaRepository = areaRepository;
         this.formaChegadaRepository = formaChegadaRepository;
         this.grauParentescoRepository = grauParentescoRepository;
@@ -513,13 +513,13 @@ public class AtendimentoController {
         model.addAttribute("areasEntrada", areaRepository.findAreasAtivasRecebemEntradaByUnidadeId(unidadeAtual()));
         model.addAttribute("tiposProcedenciaEntrada", pacienteLookupService.listarTiposProcedenciaEntrada());
         model.addAttribute("procedenciasEntrada", pacienteLookupService.listarProcedenciasEntrada(unidadeAtual()));
-        Long cidadeId = unidadeRepository.findById(unidadeAtual())
-                .map(unidade -> unidade.getCidade())
-                .map(br.com.his.reference.location.model.Cidade::getId)
+        Long municipioId = unidadeRepository.findById(unidadeAtual())
+                .map(unidade -> unidade.getMunicipio())
+                .map(br.com.his.reference.location.model.Municipio::getId)
                 .orElse(null);
-                        model.addAttribute("bairrosEntrada", pacienteLookupService.listarBairrosPorCidade(cidadeId));
-        model.addAttribute("ufsEntrada", unidadeFederativaRepository.findAllByOrderByNomeAsc());
-        model.addAttribute("cidadesEntrada", pacienteLookupService.listarCidadesProcedenciaEntrada());
+                        model.addAttribute("bairrosEntrada", pacienteLookupService.listarBairrosPorMunicipio(municipioId));
+        model.addAttribute("ufsEntrada", unidadeFederativaRepository.findAllByOrderByDescricaoAsc());
+        model.addAttribute("municipiosEntrada", pacienteLookupService.listarMunicipiosProcedenciaEntrada());
         model.addAttribute("formasChegada", formaChegadaRepository.findByAtivoTrueOrderByDescricaoAsc());
         model.addAttribute("grausParentesco", grauParentescoRepository.findByAtivoTrueOrderByDescricaoAsc());
         model.addAttribute("motivosEntrada", motivoEntradaRepository.findByAtivoTrueOrderByDescricaoAsc());
@@ -810,8 +810,8 @@ public class AtendimentoController {
                 errors.put("entradaForm.procedenciaBairroId", "Bairro e obrigatorio.");
             }
         } else if (Long.valueOf(3L).equals(wizard.getEntradaForm().getTipoProcedenciaId())) {
-            if (wizard.getEntradaForm().getProcedenciaCidadeId() == null) {
-                errors.put("entradaForm.procedenciaCidadeId", "Cidade e obrigatoria.");
+            if (wizard.getEntradaForm().getProcedenciaMunicipioId() == null) {
+                errors.put("entradaForm.procedenciaMunicipioId", "Municipio e obrigatoria.");
             }
         } else if (wizard.getEntradaForm().getProcedenciaId() == null) {
             errors.put("entradaForm.procedenciaId", "Procedencia e obrigatoria.");
@@ -928,7 +928,7 @@ public class AtendimentoController {
         target.setComplemento(source.getComplemento());
         target.setBairro(source.getBairro());
         target.setUnidadeFederativaId(source.getUnidadeFederativaId());
-        target.setCidadeId(source.getCidadeId());
+        target.setMunicipioId(source.getMunicipioId());
         wizard.setSexoTemporario(submitted.getSexoTemporario());
         wizard.setIdadeAparenteTemporario(submitted.getIdadeAparenteTemporario());
     }
@@ -942,8 +942,8 @@ public class AtendimentoController {
         wizard.getEntradaForm().setTipoProcedenciaId(submitted.getEntradaForm().getTipoProcedenciaId());
         wizard.getEntradaForm().setProcedenciaId(submitted.getEntradaForm().getProcedenciaId());
         wizard.getEntradaForm().setProcedenciaBairroId(submitted.getEntradaForm().getProcedenciaBairroId());
-        wizard.getEntradaForm().setProcedenciaCidadeUfId(submitted.getEntradaForm().getProcedenciaCidadeUfId());
-        wizard.getEntradaForm().setProcedenciaCidadeId(submitted.getEntradaForm().getProcedenciaCidadeId());
+        wizard.getEntradaForm().setProcedenciaMunicipioUfId(submitted.getEntradaForm().getProcedenciaMunicipioUfId());
+        wizard.getEntradaForm().setProcedenciaMunicipioId(submitted.getEntradaForm().getProcedenciaMunicipioId());
         wizard.getEntradaForm().setFormaChegadaId(submitted.getEntradaForm().getFormaChegadaId());
         wizard.getEntradaForm().setMotivoEntradaId(submitted.getEntradaForm().getMotivoEntradaId());
         wizard.getEntradaForm().setTelefoneComunicante(submitted.getEntradaForm().getTelefoneComunicante());
@@ -990,10 +990,10 @@ public class AtendimentoController {
         model.addAttribute("deficiencias", pacienteLookupService.listarDeficiencias());
         model.addAttribute("profissoes", pacienteLookupService.listarProfissoes());
         model.addAttribute("procedencias", pacienteLookupService.listarProcedencias());
-        model.addAttribute("ufs", unidadeFederativaRepository.findAllByOrderByNomeAsc());
-        model.addAttribute("cidades", form.getUnidadeFederativaId() == null
+        model.addAttribute("ufs", unidadeFederativaRepository.findAllByOrderByDescricaoAsc());
+        model.addAttribute("municipios", form.getUnidadeFederativaId() == null
                 ? List.of()
-                : cidadeRepository.findByUnidadeFederativaIdOrderByNome(form.getUnidadeFederativaId()));
+                : MunicipioRepository.findByUnidadeFederativaIdOrderByNome(form.getUnidadeFederativaId()));
     }
 
     private String registerChegadaToken(HttpSession session) {
@@ -1030,3 +1030,5 @@ public class AtendimentoController {
         return novoMapa;
     }
 }
+
+

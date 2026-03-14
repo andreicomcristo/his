@@ -19,8 +19,8 @@ public class Bairro {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "cidade_id", nullable = false)
-    private Cidade cidade;
+    @JoinColumn(name = "municipio_id", nullable = false)
+    private Municipio Municipio;
 
     @Column(nullable = false, length = 100)
     private String nome;
@@ -36,12 +36,12 @@ public class Bairro {
         this.id = id;
     }
 
-    public Cidade getCidade() {
-        return cidade;
+    public Municipio getMunicipio() {
+        return Municipio;
     }
 
-    public void setCidade(Cidade cidade) {
-        this.cidade = cidade;
+    public void setMunicipio(Municipio Municipio) {
+        this.Municipio = Municipio;
     }
 
     public String getNome() {
@@ -60,3 +60,4 @@ public class Bairro {
         this.ativo = ativo;
     }
 }
+

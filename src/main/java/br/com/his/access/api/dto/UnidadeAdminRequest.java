@@ -1,5 +1,7 @@
 package br.com.his.access.api.dto;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
+
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -23,7 +25,8 @@ public class UnidadeAdminRequest {
     private Long unidadeFederativaId;
 
     @NotNull
-    private Long cidadeId;
+    @JsonAlias("cidadeId")
+    private Long municipioId;
 
     public String getNome() {
         return nome;
@@ -65,11 +68,11 @@ public class UnidadeAdminRequest {
         this.unidadeFederativaId = unidadeFederativaId;
     }
 
-    public Long getCidadeId() {
-        return cidadeId;
+    public Long getMunicipioId() {
+        return municipioId;
     }
 
-    public void setCidadeId(Long cidadeId) {
-        this.cidadeId = cidadeId;
+    public void setMunicipioId(Long municipioId) {
+        this.municipioId = municipioId;
     }
 }

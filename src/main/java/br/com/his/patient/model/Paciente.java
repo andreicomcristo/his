@@ -13,7 +13,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import br.com.his.reference.location.model.Cidade;
+import br.com.his.reference.location.model.Municipio;
 import br.com.his.patient.model.lookup.Deficiencia;
 import br.com.his.patient.model.lookup.Escolaridade;
 import br.com.his.patient.model.lookup.EstadoCivil;
@@ -137,8 +137,8 @@ public class Paciente {
     private String bairro;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "cidade_id")
-    private Cidade cidade;
+    @JoinColumn(name = "municipio_id")
+    private Municipio municipio;
 
     @Column(nullable = false)
     private boolean temporario;
@@ -429,12 +429,12 @@ public class Paciente {
         this.bairro = bairro;
     }
 
-    public Cidade getCidade() {
-        return cidade;
+    public Municipio getMunicipio() {
+        return municipio;
     }
 
-    public void setCidade(Cidade cidade) {
-        this.cidade = cidade;
+    public void setMunicipio(Municipio municipio) {
+        this.municipio = municipio;
     }
 
     public boolean isTemporario() {
@@ -539,3 +539,4 @@ public class Paciente {
         return !ativo || mergedInto != null;
     }
 }
+

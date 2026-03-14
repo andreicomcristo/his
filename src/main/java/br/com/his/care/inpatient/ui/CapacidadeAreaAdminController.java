@@ -86,3 +86,5 @@ public class CapacidadeAreaAdminController {
         return "redirect:/ui/admin/capacidades-area";
     }
 }
+
+

@@ -35,3 +35,5 @@ public interface AreaCapacidadeRepository extends JpaRepository<AreaCapacidade, 
 
     void deleteByAreaId(Long areaId);
 }
+
+

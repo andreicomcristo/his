@@ -114,9 +114,9 @@ import br.com.his.care.attendance.repository.StatusAtendimentoRepository;
 import br.com.his.care.attendance.repository.UnidadeConfigFluxoRepository;
 import br.com.his.care.triage.repository.UnidadeRegraTriagemRepository;
 import br.com.his.reference.location.model.Bairro;
-import br.com.his.reference.location.model.Cidade;
+import br.com.his.reference.location.model.Municipio;
 import br.com.his.reference.location.repository.BairroRepository;
-import br.com.his.reference.location.repository.CidadeRepository;
+import br.com.his.reference.location.repository.MunicipioRepository;
 import br.com.his.patient.model.lookup.Procedencia;
 import br.com.his.patient.model.lookup.Profissao;
 import br.com.his.patient.model.lookup.TipoProcedencia;
@@ -160,7 +160,7 @@ public class AssistencialFlowService {
     private final ProfissaoRepository profissaoRepository;
     private final TipoProcedenciaRepository tipoProcedenciaRepository;
     private final BairroRepository bairroRepository;
-    private final CidadeRepository cidadeRepository;
+    private final MunicipioRepository MunicipioRepository;
     private final AtendimentoPeriodoRepository atendimentoPeriodoRepository;
     private final AtendimentoEventoRepository atendimentoEventoRepository;
     private final UnidadeRepository unidadeRepository;
@@ -200,7 +200,7 @@ public class AssistencialFlowService {
                                    ProfissaoRepository profissaoRepository,
                                    TipoProcedenciaRepository tipoProcedenciaRepository,
                                    BairroRepository bairroRepository,
-                                   CidadeRepository cidadeRepository,
+                                   MunicipioRepository MunicipioRepository,
                                    AtendimentoPeriodoRepository atendimentoPeriodoRepository,
                                    AtendimentoEventoRepository atendimentoEventoRepository,
                                    UnidadeRepository unidadeRepository,
@@ -239,7 +239,7 @@ public class AssistencialFlowService {
         this.profissaoRepository = profissaoRepository;
         this.tipoProcedenciaRepository = tipoProcedenciaRepository;
         this.bairroRepository = bairroRepository;
-        this.cidadeRepository = cidadeRepository;
+        this.MunicipioRepository = MunicipioRepository;
         this.atendimentoPeriodoRepository = atendimentoPeriodoRepository;
         this.atendimentoEventoRepository = atendimentoEventoRepository;
         this.unidadeRepository = unidadeRepository;
@@ -564,7 +564,7 @@ public class AssistencialFlowService {
                 .orElseThrow(() -> new IllegalArgumentException("Tipo de procedencia nao encontrado"));
         Procedencia procedencia = null;
         Bairro bairro = null;
-        Cidade cidade = null;
+        Municipio Municipio = null;
         SituacaoOcupacional situacaoOcupacional = form.getSituacaoOcupacionalId() == null
                 ? null
                 : situacaoOcupacionalRepository.findById(form.getSituacaoOcupacionalId())
@@ -590,23 +590,23 @@ public class AssistencialFlowService {
         }
         String descricaoTipoProcedencia = normalize(tipoProcedencia.getDescricao());
         boolean tipoBairro = "BAIRRO".equalsIgnoreCase(descricaoTipoProcedencia);
-        boolean tipoCidade = "CIDADE".equalsIgnoreCase(descricaoTipoProcedencia);
+        boolean tipoMunicipio = "Municipio".equalsIgnoreCase(descricaoTipoProcedencia);
         if (tipoBairro) {
             if (form.getProcedenciaBairroId() == null) {
                 throw new IllegalArgumentException("Bairro obrigatorio para o tipo de procedencia BAIRRO");
             }
             bairro = bairroRepository.findById(form.getProcedenciaBairroId())
                     .orElseThrow(() -> new IllegalArgumentException("Bairro nao encontrado"));
-            if (atendimento.getUnidade().getCidade() == null || bairro.getCidade() == null
-                    || !bairro.getCidade().getId().equals(atendimento.getUnidade().getCidade().getId())) {
-                throw new IllegalArgumentException("Bairro invalido para a cidade da unidade atual");
+            if (atendimento.getUnidade().getMunicipio() == null || bairro.getMunicipio() == null
+                    || !bairro.getMunicipio().getId().equals(atendimento.getUnidade().getMunicipio().getId())) {
+                throw new IllegalArgumentException("Bairro invalido para a Municipio da unidade atual");
             }
-        } else if (tipoCidade) {
-            if (form.getProcedenciaCidadeId() == null) {
-                throw new IllegalArgumentException("Cidade obrigatoria para o tipo de procedencia CIDADE");
+        } else if (tipoMunicipio) {
+            if (form.getProcedenciaMunicipioId() == null) {
+                throw new IllegalArgumentException("Municipio obrigatoria para o tipo de procedencia Municipio");
             }
-            cidade = cidadeRepository.findById(form.getProcedenciaCidadeId())
-                    .orElseThrow(() -> new IllegalArgumentException("Cidade nao encontrada"));
+            Municipio = MunicipioRepository.findById(form.getProcedenciaMunicipioId())
+                    .orElseThrow(() -> new IllegalArgumentException("Municipio nao encontrada"));
         } else {
             if (form.getProcedenciaId() == null) {
                 throw new IllegalArgumentException("Procedencia obrigatoria para o tipo selecionado");
@@ -628,7 +628,7 @@ public class AssistencialFlowService {
         entrada.setTipoProcedencia(tipoProcedencia);
         entrada.setProcedencia(procedencia);
         entrada.setProcedenciaBairro(bairro);
-        entrada.setProcedenciaCidade(cidade);
+        entrada.setProcedenciaMunicipio(Municipio);
         entrada.setMotivoEntrada(motivoEntrada);
         entrada.setGrauParentesco(grauParentesco);
         entrada.setSituacaoOcupacional(situacaoOcupacional);
@@ -1427,3 +1427,4 @@ public class AssistencialFlowService {
         return (fallback == null || fallback.isBlank()) ? null : fallback;
     }
 }
+

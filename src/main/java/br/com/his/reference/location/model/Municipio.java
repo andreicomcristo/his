@@ -11,8 +11,8 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "cidade")
-public class Cidade {
+@Table(name = "municipio")
+public class Municipio {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

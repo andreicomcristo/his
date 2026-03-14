@@ -83,3 +83,5 @@ public class CapacidadeAreaAdminService {
         return normalized == null ? null : normalized.toUpperCase();
     }
 }
+
+

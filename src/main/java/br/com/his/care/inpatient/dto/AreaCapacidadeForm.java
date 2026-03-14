@@ -15,3 +15,5 @@ public class AreaCapacidadeForm {
         this.capacidadeIds = capacidadeIds;
     }
 }
+
+

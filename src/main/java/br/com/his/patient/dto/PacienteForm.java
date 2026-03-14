@@ -87,7 +87,7 @@ public class PacienteForm {
 
     private Long unidadeFederativaId;
 
-    private Long cidadeId;
+    private Long municipioId;
 
     private boolean temporario;
 
@@ -335,12 +335,12 @@ public class PacienteForm {
         this.unidadeFederativaId = unidadeFederativaId;
     }
 
-    public Long getCidadeId() {
-        return cidadeId;
+    public Long getMunicipioId() {
+        return municipioId;
     }
 
-    public void setCidadeId(Long cidadeId) {
-        this.cidadeId = cidadeId;
+    public void setMunicipioId(Long municipioId) {
+        this.municipioId = municipioId;
     }
 
     public boolean isTemporario() {
@@ -359,3 +359,4 @@ public class PacienteForm {
         this.idadeAparente = idadeAparente;
     }
 }
+

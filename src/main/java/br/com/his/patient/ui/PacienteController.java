@@ -16,8 +16,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import br.com.his.care.attendance.service.AssistencialFlowService;
-import br.com.his.reference.location.model.Cidade;
-import br.com.his.reference.location.repository.CidadeRepository;
+import br.com.his.reference.location.model.Municipio;
+import br.com.his.reference.location.repository.MunicipioRepository;
 import br.com.his.reference.location.repository.UnidadeFederativaRepository;
 import br.com.his.patient.dto.PacienteForm;
 import br.com.his.patient.dto.PacienteCepResponse;
@@ -42,7 +42,7 @@ public class PacienteController {
     private final CepLookupService cepLookupService;
     private final CadsusLookupService cadsusLookupService;
     private final UnidadeFederativaRepository unidadeFederativaRepository;
-    private final CidadeRepository cidadeRepository;
+    private final MunicipioRepository MunicipioRepository;
 
     public PacienteController(PacienteService pacienteService,
                               AssistencialFlowService assistencialFlowService,
@@ -50,14 +50,14 @@ public class PacienteController {
                               CepLookupService cepLookupService,
                               CadsusLookupService cadsusLookupService,
                               UnidadeFederativaRepository unidadeFederativaRepository,
-                              CidadeRepository cidadeRepository) {
+                              MunicipioRepository MunicipioRepository) {
         this.pacienteService = pacienteService;
         this.assistencialFlowService = assistencialFlowService;
         this.pacienteLookupService = pacienteLookupService;
         this.cepLookupService = cepLookupService;
         this.cadsusLookupService = cadsusLookupService;
         this.unidadeFederativaRepository = unidadeFederativaRepository;
-        this.cidadeRepository = cidadeRepository;
+        this.MunicipioRepository = MunicipioRepository;
     }
 
     @GetMapping
@@ -86,12 +86,12 @@ public class PacienteController {
         return "pages/patient/form";
     }
 
-    @GetMapping("/cidades-por-uf/{unidadeFederativaId}")
+    @GetMapping("/municipios-por-uf/{unidadeFederativaId}")
     @ResponseBody
-    public List<PacienteLookupOption> cidadesPorUf(@PathVariable Long unidadeFederativaId) {
-        return cidadeRepository.findByUnidadeFederativaIdOrderByNome(unidadeFederativaId)
+    public List<PacienteLookupOption> MunicipiosPorUf(@PathVariable Long unidadeFederativaId) {
+        return MunicipioRepository.findByUnidadeFederativaIdOrderByNome(unidadeFederativaId)
                 .stream()
-                .map(this::toCidadeOption)
+                .map(this::toMunicipioOption)
                 .toList();
     }
 
@@ -357,9 +357,9 @@ public class PacienteController {
         form.setNumero(paciente.getNumero());
         form.setComplemento(paciente.getComplemento());
         form.setBairro(paciente.getBairro());
-        if (paciente.getCidade() != null) {
-            form.setCidadeId(paciente.getCidade().getId());
-            form.setUnidadeFederativaId(paciente.getCidade().getUnidadeFederativa().getId());
+        if (paciente.getMunicipio() != null) {
+            form.setMunicipioId(paciente.getMunicipio().getId());
+            form.setUnidadeFederativaId(paciente.getMunicipio().getUnidadeFederativa().getId());
         }
         form.setTemporario(paciente.isTemporario());
         form.setIdadeAparente(paciente.getIdadeAparente());
@@ -380,18 +380,20 @@ public class PacienteController {
         model.addAttribute("deficiencias", pacienteLookupService.listarDeficiencias());
         model.addAttribute("profissoes", pacienteLookupService.listarProfissoes());
         model.addAttribute("procedencias", pacienteLookupService.listarProcedencias());
-        model.addAttribute("ufs", unidadeFederativaRepository.findAllByOrderByNomeAsc());
+        model.addAttribute("ufs", unidadeFederativaRepository.findAllByOrderByDescricaoAsc());
         Long unidadeFederativaId = null;
         Object formObject = model.getAttribute("pacienteForm");
         if (formObject instanceof PacienteForm form) {
             unidadeFederativaId = form.getUnidadeFederativaId();
         }
-        model.addAttribute("cidades", unidadeFederativaId == null
+        model.addAttribute("municipios", unidadeFederativaId == null
                 ? List.of()
-                : cidadeRepository.findByUnidadeFederativaIdOrderByNome(unidadeFederativaId));
+                : MunicipioRepository.findByUnidadeFederativaIdOrderByNome(unidadeFederativaId));
     }
 
-    private PacienteLookupOption toCidadeOption(Cidade cidade) {
-        return new PacienteLookupOption(cidade.getId(), cidade.getNome());
+    private PacienteLookupOption toMunicipioOption(Municipio Municipio) {
+        return new PacienteLookupOption(Municipio.getId(), Municipio.getNome());
     }
 }
+
+

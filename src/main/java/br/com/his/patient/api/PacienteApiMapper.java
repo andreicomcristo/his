@@ -43,7 +43,7 @@ public class PacienteApiMapper {
         form.setComplemento(request.getComplemento());
         form.setBairro(request.getBairro());
         form.setUnidadeFederativaId(request.getUnidadeFederativaId());
-        form.setCidadeId(request.getCidadeId());
+        form.setMunicipioId(request.getMunicipioId());
         form.setTemporario(false);
         return form;
     }
@@ -80,7 +80,7 @@ public class PacienteApiMapper {
         form.setComplemento(request.getComplemento());
         form.setBairro(request.getBairro());
         form.setUnidadeFederativaId(request.getUnidadeFederativaId());
-        form.setCidadeId(request.getCidadeId());
+        form.setMunicipioId(request.getMunicipioId());
         form.setTemporario(true);
         form.setIdadeAparente(request.getIdadeAparente());
         return form;
@@ -118,10 +118,10 @@ public class PacienteApiMapper {
         response.setNumero(paciente.getNumero());
         response.setComplemento(paciente.getComplemento());
         response.setBairro(paciente.getBairro());
-        response.setCidadeId(paciente.getCidade() == null ? null : paciente.getCidade().getId());
-        response.setCidade(paciente.getCidade() == null ? null : paciente.getCidade().getNome());
-        response.setUnidadeFederativaId(paciente.getCidade() == null ? null : paciente.getCidade().getUnidadeFederativa().getId());
-        response.setUf(paciente.getCidade() == null ? null : paciente.getCidade().getUnidadeFederativa().getSigla());
+        response.setMunicipioId(paciente.getMunicipio() == null ? null : paciente.getMunicipio().getId());
+        response.setMunicipio(paciente.getMunicipio() == null ? null : paciente.getMunicipio().getNome());
+        response.setUnidadeFederativaId(paciente.getMunicipio() == null ? null : paciente.getMunicipio().getUnidadeFederativa().getId());
+        response.setUf(paciente.getMunicipio() == null ? null : paciente.getMunicipio().getUnidadeFederativa().getSigla());
         response.setTemporario(paciente.isTemporario());
         response.setIdadeAparente(paciente.getIdadeAparente());
         response.setAtivo(paciente.isAtivo());
@@ -132,3 +132,4 @@ public class PacienteApiMapper {
         return response;
     }
 }
+

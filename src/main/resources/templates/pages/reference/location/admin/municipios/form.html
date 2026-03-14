@@ -1,18 +1,18 @@
 <!DOCTYPE html>
 <html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layout/base :: layout(${modoEdicao} ? 'Administracao - Editar Cidade' : 'Administracao - Nova Cidade', ~{::content})}">
+      th:replace="~{layout/base :: layout(${modoEdicao} ? 'Administracao - Editar Municipio' : 'Administracao - Novo Municipio', ~{::content})}">
 <th:block th:fragment="content">
     <div class="main-card mb-3 card">
         <div class="card-body">
-            <h5 class="card-title" th:text="${modoEdicao} ? 'Editar Cidade' : 'Nova Cidade'"></h5>
+            <h5 class="card-title" th:text="${modoEdicao} ? 'Editar Municipio' : 'Novo Municipio'"></h5>
             <form th:object="${form}" method="post"
-                  th:action="${modoEdicao} ? @{'/ui/admin/cidades/' + ${itemId}} : @{/ui/admin/cidades}">
+                  th:action="${modoEdicao} ? @{'/ui/admin/municipios/' + ${itemId}} : @{/ui/admin/municipios}">
                 <div class="form-row">
                     <div class="form-group col-md-4">
                         <label>UF<span class="required-mark">*</span></label>
                         <select class="form-control" th:field="*{unidadeFederativaId}">
                             <option value="">Selecione</option>
-                            <option th:each="uf : ${ufs}" th:value="${uf.id}" th:text="${uf.nome + ' - ' + uf.sigla}"></option>
+                            <option th:each="uf : ${ufs}" th:value="${uf.id}" th:text="${uf.descricao + ' - ' + uf.sigla}"></option>
                         </select>
                         <small class="text-danger" th:errors="*{unidadeFederativaId}"></small>
                     </div>
@@ -28,10 +28,11 @@
                 </div>
                 <div class="mt-3">
                     <button type="submit" class="btn btn-primary mr-2">Salvar</button>
-                    <a class="btn btn-secondary" th:href="@{/ui/admin/cidades}">Voltar</a>
+                    <a class="btn btn-secondary" th:href="@{/ui/admin/municipios}">Voltar</a>
                 </div>
             </form>
         </div>
     </div>
 </th:block>
 </html>
+

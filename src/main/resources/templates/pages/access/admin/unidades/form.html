@@ -43,19 +43,19 @@
                         <option value="">Selecione</option>
                         <option th:each="item : ${ufs}"
                                 th:value="${item.id}"
-                                th:text="${item.nome + ' - ' + item.sigla}"></option>
+                                th:text="${item.descricao + ' - ' + item.sigla}"></option>
                     </select>
                     <small class="text-danger" th:errors="*{unidadeFederativaId}"></small>
                 </div>
                 <div class="form-group">
-                    <label>Cidade<span class="required-mark">*</span></label>
-                    <select class="form-control form-select chat-input" th:field="*{cidadeId}" id="cidadeId">
+                    <label>Municipio<span class="required-mark">*</span></label>
+                    <select class="form-control form-select chat-input" th:field="*{municipioId}" id="municipioId">
                         <option value="">Selecione</option>
-                        <option th:each="cidade : ${cidades}"
-                                th:value="${cidade.id}"
-                                th:text="${cidade.nome}"></option>
+                        <option th:each="municipio : ${municipios}"
+                                th:value="${municipio.id}"
+                                th:text="${municipio.nome}"></option>
                     </select>
-                    <small class="text-danger" th:errors="*{cidadeId}"></small>
+                    <small class="text-danger" th:errors="*{municipioId}"></small>
                 </div>
 
                 <button class="btn btn-primary btn-sm" type="submit">Salvar</button>
@@ -66,41 +66,41 @@
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             var ufSelect = document.getElementById('unidadeFederativaId');
-            var cidadeSelect = document.getElementById('cidadeId');
+            var municipioSelect = document.getElementById('municipioId');
 
-            function resetCidades() {
-                cidadeSelect.innerHTML = '<option value="">Selecione</option>';
+            function resetMunicipios() {
+                municipioSelect.innerHTML = '<option value="">Selecione</option>';
             }
 
-            function loadCidades(ufId, selectedCidadeId) {
-                resetCidades();
+            function loadMunicipios(ufId, selectedMunicipioId) {
+                resetMunicipios();
                 if (!ufId) {
                     return;
                 }
-                fetch('/ui/admin/cidades/por-uf/' + ufId)
+                fetch('/ui/admin/municipios/por-uf/' + ufId)
                     .then(function (response) { return response.json(); })
                     .then(function (items) {
                         items.forEach(function (item) {
                             var option = document.createElement('option');
                             option.value = item.id;
                             option.textContent = item.descricao;
-                            if (selectedCidadeId && String(selectedCidadeId) === String(item.id)) {
+                            if (selectedMunicipioId && String(selectedMunicipioId) === String(item.id)) {
                                 option.selected = true;
                             }
-                            cidadeSelect.appendChild(option);
+                            municipioSelect.appendChild(option);
                         });
                     });
             }
 
             if (ufSelect) {
-                var selectedCidadeId = cidadeSelect.value;
+                var selectedMunicipioId = municipioSelect.value;
                 if (ufSelect.value) {
-                    loadCidades(ufSelect.value, selectedCidadeId);
+                    loadMunicipios(ufSelect.value, selectedMunicipioId);
                 } else {
-                    resetCidades();
+                    resetMunicipios();
                 }
                 ufSelect.addEventListener('change', function () {
-                    loadCidades(this.value, null);
+                    loadMunicipios(this.value, null);
                 });
             }
         });

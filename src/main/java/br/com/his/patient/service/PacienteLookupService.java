@@ -6,7 +6,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 import br.com.his.reference.location.repository.BairroRepository;
-import br.com.his.reference.location.repository.CidadeRepository;
+import br.com.his.reference.location.repository.MunicipioRepository;
 import br.com.his.patient.dto.PacienteLookupOption;
 import br.com.his.patient.dto.ProcedenciaEntradaOption;
 import br.com.his.patient.dto.PacienteForm;
@@ -25,16 +25,16 @@ public class PacienteLookupService {
 
     private final JdbcTemplate jdbcTemplate;
     private final BairroRepository bairroRepository;
-    private final CidadeRepository cidadeRepository;
+    private final MunicipioRepository MunicipioRepository;
     private final SexoRepository sexoRepository;
 
     public PacienteLookupService(JdbcTemplate jdbcTemplate,
                                 BairroRepository bairroRepository,
-                                CidadeRepository cidadeRepository,
+                                MunicipioRepository MunicipioRepository,
                                 SexoRepository sexoRepository) {
         this.jdbcTemplate = jdbcTemplate;
         this.bairroRepository = bairroRepository;
-        this.cidadeRepository = cidadeRepository;
+        this.MunicipioRepository = MunicipioRepository;
         this.sexoRepository = sexoRepository;
     }
 
@@ -118,23 +118,23 @@ public class PacienteLookupService {
                 (rs, rowNum) -> new PacienteLookupOption(rs.getLong("id"), rs.getString("descricao")));
     }
 
-    public List<PacienteLookupOption> listarBairrosPorCidade(Long cidadeId) {
-        if (cidadeId == null) {
+    public List<PacienteLookupOption> listarBairrosPorMunicipio(Long municipioId) {
+        if (municipioId == null) {
             return List.of();
         }
-        return bairroRepository.findAtivosByCidadeIdOrderByNome(cidadeId)
+        return bairroRepository.findAtivosByMunicipioIdOrderByNome(municipioId)
                 .stream()
                 .map(bairro -> new PacienteLookupOption(bairro.getId(), bairro.getNome()))
                 .toList();
     }
 
-    public List<PacienteLookupOption> listarCidadesProcedenciaEntrada() {
-        return cidadeRepository.findAllWithUnidadeFederativaOrderByNome()
+    public List<PacienteLookupOption> listarMunicipiosProcedenciaEntrada() {
+        return MunicipioRepository.findAllWithUnidadeFederativaOrderByNome()
                 .stream()
-                .map(cidade -> new PacienteLookupOption(
-                        cidade.getId(),
-                        cidade.getNome() + " - " + cidade.getUnidadeFederativa().getSigla(),
-                        cidade.getUnidadeFederativa().getId()))
+                .map(Municipio -> new PacienteLookupOption(
+                        Municipio.getId(),
+                        Municipio.getNome() + " - " + Municipio.getUnidadeFederativa().getSigla(),
+                        Municipio.getUnidadeFederativa().getId()))
                 .toList();
     }
 
@@ -184,3 +184,4 @@ public class PacienteLookupService {
         }
     }
 }
+

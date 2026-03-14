@@ -87,7 +87,7 @@ public class AdminUnidadeApiController {
         form.setSigla(request.getSigla());
         form.setCnes(request.getCnes());
         form.setUnidadeFederativaId(request.getUnidadeFederativaId());
-        form.setCidadeId(request.getCidadeId());
+        form.setMunicipioId(request.getMunicipioId());
         return form;
     }
 

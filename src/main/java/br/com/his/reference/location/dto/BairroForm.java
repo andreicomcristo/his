@@ -9,8 +9,8 @@ public class BairroForm {
     @NotNull(message = "UF e obrigatoria")
     private Long unidadeFederativaId;
 
-    @NotNull(message = "Cidade e obrigatoria")
-    private Long cidadeId;
+    @NotNull(message = "Municipio e obrigatoria")
+    private Long municipioId;
 
     @NotBlank(message = "Nome e obrigatorio")
     @Size(max = 100)
@@ -26,12 +26,12 @@ public class BairroForm {
         this.unidadeFederativaId = unidadeFederativaId;
     }
 
-    public Long getCidadeId() {
-        return cidadeId;
+    public Long getMunicipioId() {
+        return municipioId;
     }
 
-    public void setCidadeId(Long cidadeId) {
-        this.cidadeId = cidadeId;
+    public void setMunicipioId(Long municipioId) {
+        this.municipioId = municipioId;
     }
 
     public String getNome() {
@@ -50,3 +50,4 @@ public class BairroForm {
         this.ativo = ativo;
     }
 }
+

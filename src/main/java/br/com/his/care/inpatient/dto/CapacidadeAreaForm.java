@@ -38,3 +38,5 @@ public class CapacidadeAreaForm {
         this.ativo = ativo;
     }
 }
+
+

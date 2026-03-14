@@ -5,9 +5,9 @@ import jakarta.validation.constraints.Size;
 
 public class UnidadeFederativaForm {
 
-    @NotBlank(message = "Nome e obrigatorio")
+    @NotBlank(message = "Descricao e obrigatoria")
     @Size(max = 100)
-    private String nome;
+    private String descricao;
 
     @NotBlank(message = "Sigla e obrigatoria")
     @Size(max = 2)
@@ -16,12 +16,12 @@ public class UnidadeFederativaForm {
     @Size(max = 2)
     private String codigoIbge;
 
-    public String getNome() {
-        return nome;
+    public String getDescricao() {
+        return descricao;
     }
 
-    public void setNome(String nome) {
-        this.nome = nome;
+    public void setDescricao(String descricao) {
+        this.descricao = descricao;
     }
 
     public String getSigla() {

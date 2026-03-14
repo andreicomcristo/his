@@ -116,7 +116,7 @@
                                     <span class="patient-summary-label">Logradouro:</span><span class="patient-summary-value" data-patient-field="logradouro">-</span>
                                 </div>
                                 <div class="patient-summary-item">
-                                    <span class="patient-summary-label">Cidade:</span><span class="patient-summary-value" data-patient-field="cidade">-</span>
+                                    <span class="patient-summary-label">Municipio:</span><span class="patient-summary-value" data-patient-field="Municipio">-</span>
                                 </div>
                                 <div class="patient-summary-item">
                                     <span class="patient-summary-label">Bairro:</span><span class="patient-summary-value" data-patient-field="bairro">-</span>
@@ -141,7 +141,7 @@
                                         th:data-telefone="${p.telefone}"
                                         th:data-cep="${p.cep}"
                                         th:data-logradouro="${p.logradouro}"
-                                        th:data-cidade="${p.cidade != null ? p.cidade.nome : ''}"
+                                        th:data-Municipio="${p.Municipio != null ? p.Municipio.nome : ''}"
                                         th:data-bairro="${p.bairro}"
                                         th:text="${p.nome + ' (#' + p.id + ')'}"></option>
                             </select>
@@ -194,7 +194,7 @@
                     card.querySelector('[data-patient-field="telefone"]').textContent = textOrDash(option.dataset.telefone);
                     card.querySelector('[data-patient-field="cep"]').textContent = textOrDash(option.dataset.cep);
                     card.querySelector('[data-patient-field="logradouro"]').textContent = textOrDash(option.dataset.logradouro);
-                    card.querySelector('[data-patient-field="cidade"]').textContent = textOrDash(option.dataset.cidade);
+                    card.querySelector('[data-patient-field="Municipio"]').textContent = textOrDash(option.dataset.Municipio);
                     card.querySelector('[data-patient-field="bairro"]').textContent = textOrDash(option.dataset.bairro);
                 }
 
@@ -206,3 +206,4 @@
 </th:block>
 </body>
 </html>
+

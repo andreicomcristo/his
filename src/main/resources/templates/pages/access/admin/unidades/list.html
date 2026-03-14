@@ -23,7 +23,7 @@
                     <th>Nome</th>
                     <th>Sigla</th>
                     <th>Tipo</th>
-                    <th>Cidade</th>
+                    <th>Municipio</th>
                     <th>CNES</th>
                     <th>Status</th>
                     <th></th>
@@ -35,7 +35,7 @@
                     <td th:text="${u.nome}"></td>
                     <td th:text="${u.sigla == null ? '-' : u.sigla}"></td>
                     <td th:text="${u.tipoUnidade == null ? '-' : u.tipoUnidade.descricao}"></td>
-                    <td th:text="${u.cidade == null ? '-' : u.cidade.nome + ' - ' + u.cidade.unidadeFederativa.sigla}"></td>
+                    <td th:text="${u.municipio == null ? '-' : u.municipio.nome + ' - ' + u.municipio.unidadeFederativa.sigla}"></td>
                     <td th:text="${u.cnes}"></td>
                     <td>
                         <span class="badge" th:classappend="${u.ativo} ? 'badge-success' : 'badge-secondary'"

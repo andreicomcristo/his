@@ -38,7 +38,7 @@ import br.com.his.patient.model.lookup.Procedencia;
 import br.com.his.patient.model.lookup.Profissao;
 import br.com.his.patient.model.lookup.TipoProcedencia;
 import br.com.his.reference.location.model.Bairro;
-import br.com.his.reference.location.model.Cidade;
+import br.com.his.reference.location.model.Municipio;
 
 @Entity
 @Table(name = "entrada")
@@ -81,8 +81,8 @@ public class Entrada {
     private Bairro procedenciaBairro;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "procedencia_cidade_id")
-    private Cidade procedenciaCidade;
+    @JoinColumn(name = "procedencia_municipio_id")
+    private Municipio procedenciaMunicipio;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "motivo_entrada_id")
@@ -180,12 +180,12 @@ public class Entrada {
         this.procedenciaBairro = procedenciaBairro;
     }
 
-    public Cidade getProcedenciaCidade() {
-        return procedenciaCidade;
+    public Municipio getProcedenciaMunicipio() {
+        return procedenciaMunicipio;
     }
 
-    public void setProcedenciaCidade(Cidade procedenciaCidade) {
-        this.procedenciaCidade = procedenciaCidade;
+    public void setProcedenciaMunicipio(Municipio procedenciaMunicipio) {
+        this.procedenciaMunicipio = procedenciaMunicipio;
     }
 
     public FormaChegada getFormaChegada() {
@@ -332,3 +332,4 @@ public class Entrada {
         this.atualizadoPorUsuario = atualizadoPorUsuario;
     }
 }
+

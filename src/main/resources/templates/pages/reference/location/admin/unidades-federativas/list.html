@@ -9,7 +9,7 @@
                 <a class="btn btn-primary btn-sm" th:href="@{/ui/admin/unidades-federativas/novo}">Nova UF</a>
             </div>
             <form method="get" class="form-inline mb-3">
-                <input type="text" name="q" class="form-control mr-2" placeholder="Buscar por nome ou sigla" th:value="${q}">
+                <input type="text" name="q" class="form-control mr-2" placeholder="Buscar por descricao ou sigla" th:value="${q}">
                 <button class="btn btn-outline-secondary btn-sm" type="submit">Buscar</button>
             </form>
             <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
@@ -17,7 +17,7 @@
                 <thead>
                 <tr>
                     <th>ID</th>
-                    <th>Nome</th>
+                    <th>Descricao</th>
                     <th>Sigla</th>
                     <th>Cod. IBGE</th>
                     <th></th>
@@ -26,7 +26,7 @@
                 <tbody>
                 <tr th:each="item : ${items}">
                     <td th:text="${item.id}"></td>
-                    <td th:text="${item.nome}"></td>
+                    <td th:text="${item.descricao}"></td>
                     <td th:text="${item.sigla}"></td>
                     <td th:text="${item.codigoIbge}"></td>
                     <td class="text-right">

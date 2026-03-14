@@ -1,6 +1,6 @@
 package br.com.his.access.model;
 
-import br.com.his.reference.location.model.Cidade;
+import br.com.his.reference.location.model.Municipio;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -33,8 +33,8 @@ public class Unidade {
     private String cnes;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "cidade_id")
-    private Cidade cidade;
+    @JoinColumn(name = "municipio_id")
+    private Municipio municipio;
 
     @Column(nullable = false)
     private boolean ativo;
@@ -87,12 +87,12 @@ public class Unidade {
         this.cnes = cnes;
     }
 
-    public Cidade getCidade() {
-        return cidade;
+    public Municipio getMunicipio() {
+        return municipio;
     }
 
-    public void setCidade(Cidade cidade) {
-        this.cidade = cidade;
+    public void setMunicipio(Municipio municipio) {
+        this.municipio = municipio;
     }
 
     public boolean isAtivo() {

@@ -239,14 +239,14 @@
                                     <label>UF</label>
                                     <select class="multiselect-dropdown form-control" th:field="*{unidadeFederativaId}" id="unidadeFederativaId">
                                         <option value="">Selecione</option>
-                                        <option th:each="item : ${ufs}" th:value="${item.id}" th:text="${item.nome + ' - ' + item.sigla}"></option>
+                                        <option th:each="item : ${ufs}" th:value="${item.id}" th:text="${item.descricao + ' - ' + item.sigla}"></option>
                                     </select>
                                 </div>
                                 <div class="form-group col-md-6">
-                                    <label>Cidade</label>
-                                    <select class="multiselect-dropdown form-control" th:field="*{cidadeId}" id="cidadeId">
+                                    <label>Municipio</label>
+                                    <select class="multiselect-dropdown form-control" th:field="*{municipioId}" id="municipioId">
                                         <option value="">Selecione</option>
-                                        <option th:each="item : ${cidades}" th:value="${item.id}" th:text="${item.nome}"></option>
+                                        <option th:each="item : ${municipios}" th:value="${item.id}" th:text="${item.nome}"></option>
                                     </select>
                                 </div>
                             </div>
@@ -317,7 +317,7 @@
                 bindMask('.js-mask-phone', maskPhone);
 
                 var ufSelect = document.getElementById('unidadeFederativaId');
-                var cidadeSelect = document.getElementById('cidadeId');
+                var MunicipioSelect = document.getElementById('municipioId');
                 var cpfInput = document.getElementById('cpf');
                 var cepInput = document.getElementById('cep');
                 var cnsInput = document.getElementById('cns');
@@ -336,26 +336,26 @@
                 var cpfFeedback = document.getElementById('cpfFeedback');
                 var cepFeedback = document.getElementById('cepFeedback');
 
-                function resetCidades() {
-                    cidadeSelect.innerHTML = '<option value=\"\">Selecione</option>';
+                function resetMunicipios() {
+                    MunicipioSelect.innerHTML = '<option value=\"\">Selecione</option>';
                 }
 
-                function loadCidades(ufId, selectedCidadeId) {
-                    resetCidades();
+                function loadMunicipios(ufId, selectedMunicipioId) {
+                    resetMunicipios();
                     if (!ufId) {
                         return;
                     }
-                    fetch('/ui/pacientes/cidades-por-uf/' + ufId)
+                    fetch('/ui/pacientes/municipios-por-uf/' + ufId)
                         .then(function (response) { return response.json(); })
                         .then(function (items) {
                             items.forEach(function (item) {
                                 var option = document.createElement('option');
                                 option.value = item.id;
                                 option.textContent = item.descricao;
-                                if (selectedCidadeId && String(selectedCidadeId) === String(item.id)) {
+                                if (selectedMunicipioId && String(selectedMunicipioId) === String(item.id)) {
                                     option.selected = true;
                                 }
-                                cidadeSelect.appendChild(option);
+                                MunicipioSelect.appendChild(option);
                             });
                         });
                 }
@@ -391,7 +391,7 @@
                     if (ufSelect && data.unidadeFederativaId) {
                         ufSelect.value = String(data.unidadeFederativaId);
                         $(ufSelect).trigger('change');
-                        loadCidades(data.unidadeFederativaId, data.cidadeId);
+                        loadMunicipios(data.unidadeFederativaId, data.municipioId);
                     }
                 }
 
@@ -419,7 +419,7 @@
                     if (ufSelect && data.unidadeFederativaId) {
                         ufSelect.value = String(data.unidadeFederativaId);
                         $(ufSelect).trigger('change');
-                        loadCidades(data.unidadeFederativaId, data.cidadeId);
+                        loadMunicipios(data.unidadeFederativaId, data.municipioId);
                     }
                 }
 
@@ -489,13 +489,13 @@
                         });
                 }
 
-                if (ufSelect && cidadeSelect) {
-                    var selectedCidadeId = cidadeSelect.value;
+                if (ufSelect && MunicipioSelect) {
+                    var selectedMunicipioId = MunicipioSelect.value;
                     if (ufSelect.value) {
-                        loadCidades(ufSelect.value, selectedCidadeId);
+                        loadMunicipios(ufSelect.value, selectedMunicipioId);
                     }
                     $(ufSelect).on('change', function () {
-                    loadCidades(this.value, null);
+                    loadMunicipios(this.value, null);
                 });
                 }
 
@@ -511,3 +511,5 @@
 </th:block>
 </body>
 </html>
+
+

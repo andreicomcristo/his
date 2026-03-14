@@ -40,3 +40,5 @@ public interface CapacidadeAreaRepository extends JpaRepository<CapacidadeArea, 
 
     List<CapacidadeArea> findAllByOrderByNomeAsc();
 }
+
+

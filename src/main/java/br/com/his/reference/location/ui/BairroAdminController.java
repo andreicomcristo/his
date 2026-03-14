@@ -16,7 +16,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import br.com.his.reference.location.dto.BairroForm;
 import br.com.his.reference.location.service.BairroAdminService;
-import br.com.his.reference.location.service.CidadeAdminService;
+import br.com.his.reference.location.service.MunicipioAdminService;
 import br.com.his.reference.location.service.UnidadeFederativaAdminService;
 import br.com.his.reference.location.model.Bairro;
 import br.com.his.patient.dto.PacienteLookupOption;
@@ -27,14 +27,14 @@ import jakarta.validation.Valid;
 public class BairroAdminController {
 
     private final BairroAdminService service;
-    private final CidadeAdminService cidadeAdminService;
+    private final MunicipioAdminService MunicipioAdminService;
     private final UnidadeFederativaAdminService unidadeFederativaAdminService;
 
     public BairroAdminController(BairroAdminService service,
-                                 CidadeAdminService cidadeAdminService,
+                                 MunicipioAdminService MunicipioAdminService,
                                  UnidadeFederativaAdminService unidadeFederativaAdminService) {
         this.service = service;
-        this.cidadeAdminService = cidadeAdminService;
+        this.MunicipioAdminService = MunicipioAdminService;
         this.unidadeFederativaAdminService = unidadeFederativaAdminService;
     }
 
@@ -104,10 +104,10 @@ public class BairroAdminController {
         return "redirect:/ui/admin/bairros";
     }
 
-    @GetMapping("/por-cidade/{cidadeId}")
+    @GetMapping("/por-municipio/{municipioId}")
     @ResponseBody
-    public List<PacienteLookupOption> listarPorCidade(@PathVariable Long cidadeId) {
-        return service.listarPorCidade(cidadeId)
+    public List<PacienteLookupOption> listarPorMunicipio(@PathVariable Long municipioId) {
+        return service.listarPorMunicipio(municipioId)
                 .stream()
                 .filter(Bairro::isAtivo)
                 .map(this::toOption)
@@ -121,8 +121,9 @@ public class BairroAdminController {
     private void populateModel(Model model, BairroForm form) {
         model.addAttribute("ufs", unidadeFederativaAdminService.listarTodas());
         Long unidadeFederativaId = form == null ? null : form.getUnidadeFederativaId();
-        model.addAttribute("cidades", unidadeFederativaId == null
+        model.addAttribute("municipios", unidadeFederativaId == null
                 ? java.util.List.of()
-                : cidadeAdminService.listarPorUf(unidadeFederativaId));
+                : MunicipioAdminService.listarPorUf(unidadeFederativaId));
     }
 }
+

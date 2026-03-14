@@ -15,7 +15,7 @@ import br.com.his.access.dto.UnidadeForm;
 import br.com.his.access.repository.TipoUnidadeRepository;
 import br.com.his.reference.location.service.UnidadeFederativaAdminService;
 import br.com.his.access.service.UnidadeAdminService;
-import br.com.his.reference.location.repository.CidadeRepository;
+import br.com.his.reference.location.repository.MunicipioRepository;
 import jakarta.validation.Valid;
 
 @Controller
@@ -23,16 +23,16 @@ import jakarta.validation.Valid;
 public class UnidadeAdminController {
 
     private final UnidadeAdminService unidadeAdminService;
-    private final CidadeRepository cidadeRepository;
+    private final MunicipioRepository municipioRepository;
     private final TipoUnidadeRepository tipoUnidadeRepository;
     private final UnidadeFederativaAdminService unidadeFederativaAdminService;
 
     public UnidadeAdminController(UnidadeAdminService unidadeAdminService,
-                                  CidadeRepository cidadeRepository,
+                                  MunicipioRepository municipioRepository,
                                   TipoUnidadeRepository tipoUnidadeRepository,
                                   UnidadeFederativaAdminService unidadeFederativaAdminService) {
         this.unidadeAdminService = unidadeAdminService;
-        this.cidadeRepository = cidadeRepository;
+        this.municipioRepository = municipioRepository;
         this.tipoUnidadeRepository = tipoUnidadeRepository;
         this.unidadeFederativaAdminService = unidadeFederativaAdminService;
     }
@@ -84,8 +84,8 @@ public class UnidadeAdminController {
         form.setTipoUnidadeId(unidade.getTipoUnidade() == null ? null : unidade.getTipoUnidade().getId());
         form.setSigla(unidade.getSigla());
         form.setCnes(unidade.getCnes());
-        form.setUnidadeFederativaId(unidade.getCidade() == null ? null : unidade.getCidade().getUnidadeFederativa().getId());
-        form.setCidadeId(unidade.getCidade() == null ? null : unidade.getCidade().getId());
+        form.setUnidadeFederativaId(unidade.getMunicipio() == null ? null : unidade.getMunicipio().getUnidadeFederativa().getId());
+        form.setMunicipioId(unidade.getMunicipio() == null ? null : unidade.getMunicipio().getId());
         model.addAttribute("form", form);
         populateModel(model, form);
         model.addAttribute("modoEdicao", true);
@@ -129,8 +129,8 @@ public class UnidadeAdminController {
         model.addAttribute("ufs", unidadeFederativaAdminService.listarTodas());
         model.addAttribute("tiposUnidade", tipoUnidadeRepository.findByAtivoOrderByDescricaoAsc(true));
         Long unidadeFederativaId = form == null ? null : form.getUnidadeFederativaId();
-        model.addAttribute("cidades", unidadeFederativaId == null
+        model.addAttribute("municipios", unidadeFederativaId == null
                 ? java.util.List.of()
-                : cidadeRepository.findByUnidadeFederativaIdOrderByNome(unidadeFederativaId));
+                : municipioRepository.findByUnidadeFederativaIdOrderByNome(unidadeFederativaId));
     }
 }

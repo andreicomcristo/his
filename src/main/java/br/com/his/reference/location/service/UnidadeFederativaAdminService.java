@@ -22,14 +22,14 @@ public class UnidadeFederativaAdminService {
     public List<UnidadeFederativa> listar(String q) {
         String filtro = normalize(q);
         if (filtro == null || filtro.isBlank()) {
-            return repository.findAllByOrderByNomeAsc();
+            return repository.findAllByOrderByDescricaoAsc();
         }
         return repository.buscarPorFiltro(filtro);
     }
 
     @Transactional(readOnly = true)
     public List<UnidadeFederativa> listarTodas() {
-        return repository.findAllByOrderByNomeAsc();
+        return repository.findAllByOrderByDescricaoAsc();
     }
 
     @Transactional(readOnly = true)
@@ -58,14 +58,14 @@ public class UnidadeFederativaAdminService {
 
     public UnidadeFederativaForm toForm(UnidadeFederativa uf) {
         UnidadeFederativaForm form = new UnidadeFederativaForm();
-        form.setNome(uf.getNome());
+        form.setDescricao(uf.getDescricao());
         form.setSigla(uf.getSigla());
         form.setCodigoIbge(uf.getCodigoIbge());
         return form;
     }
 
     private void apply(UnidadeFederativa uf, UnidadeFederativaForm form) {
-        uf.setNome(normalize(form.getNome()).toUpperCase());
+        uf.setDescricao(normalize(form.getDescricao()).toUpperCase());
         uf.setSigla(normalize(form.getSigla()).toUpperCase());
         uf.setCodigoIbge(normalize(form.getCodigoIbge()));
     }

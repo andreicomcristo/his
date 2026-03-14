@@ -14,7 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import br.com.his.access.model.Usuario;
 import br.com.his.access.service.UsuarioAuditoriaService;
-import br.com.his.reference.location.model.Cidade;
+import br.com.his.reference.location.model.Municipio;
 import br.com.his.patient.dto.PacienteForm;
 import br.com.his.patient.model.Paciente;
 import br.com.his.patient.model.PacienteMergeLog;
@@ -313,10 +313,10 @@ public class PacienteService {
         paciente.setNumero(normalizeText(dto.getNumero()));
         paciente.setComplemento(normalizeText(dto.getComplemento()));
         paciente.setBairro(normalizeText(dto.getBairro()));
-        paciente.setCidade(reference(dto.getCidadeId(), Cidade.class));
+        paciente.setMunicipio(reference(dto.getMunicipioId(), Municipio.class));
         paciente.setTemporario(dto.isTemporario());
         paciente.setIdadeAparente(dto.getIdadeAparente());
-        validateCidadeUf(dto, paciente);
+        validateMunicipioUf(dto, paciente);
     }
 
     private void validateTemporaryData(Paciente paciente) {
@@ -395,8 +395,8 @@ public class PacienteService {
         if (isBlank(to.getBairro()) && !isBlank(from.getBairro())) {
             to.setBairro(from.getBairro());
         }
-        if (to.getCidade() == null && from.getCidade() != null) {
-            to.setCidade(from.getCidade());
+        if (to.getMunicipio() == null && from.getMunicipio() != null) {
+            to.setMunicipio(from.getMunicipio());
         }
         if (to.getIdadeAparente() == null && from.getIdadeAparente() != null) {
             to.setIdadeAparente(from.getIdadeAparente());
@@ -468,17 +468,17 @@ public class PacienteService {
         return usuarioAuditoriaService.usuarioAtual().orElse(null);
     }
 
-    private void validateCidadeUf(PacienteForm dto, Paciente paciente) {
-        if (dto.getCidadeId() == null) {
+    private void validateMunicipioUf(PacienteForm dto, Paciente paciente) {
+        if (dto.getMunicipioId() == null) {
             return;
         }
-        Cidade cidade = paciente.getCidade();
-        if (cidade == null) {
-            throw new IllegalArgumentException("Cidade invalida");
+        Municipio Municipio = paciente.getMunicipio();
+        if (Municipio == null) {
+            throw new IllegalArgumentException("Municipio invalida");
         }
         if (dto.getUnidadeFederativaId() != null
-                && !dto.getUnidadeFederativaId().equals(cidade.getUnidadeFederativa().getId())) {
-            throw new IllegalArgumentException("Cidade nao pertence a UF informada");
+                && !dto.getUnidadeFederativaId().equals(Municipio.getUnidadeFederativa().getId())) {
+            throw new IllegalArgumentException("Municipio nao pertence a UF informada");
         }
     }
 
@@ -524,3 +524,4 @@ public class PacienteService {
         return value == null || value.isBlank();
     }
 }
+

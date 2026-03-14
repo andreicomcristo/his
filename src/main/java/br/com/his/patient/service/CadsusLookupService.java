@@ -29,9 +29,9 @@ import org.w3c.dom.NodeList;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import br.com.his.reference.location.model.Cidade;
+import br.com.his.reference.location.model.Municipio;
 import br.com.his.reference.location.model.UnidadeFederativa;
-import br.com.his.reference.location.repository.CidadeRepository;
+import br.com.his.reference.location.repository.MunicipioRepository;
 import br.com.his.reference.location.repository.UnidadeFederativaRepository;
 import br.com.his.patient.config.CadsusProperties;
 import br.com.his.patient.dto.PacienteCpfSUSResponse;
@@ -44,7 +44,7 @@ public class CadsusLookupService {
     private final CadsusProperties properties;
     private final ResourceLoader resourceLoader;
     private final UnidadeFederativaRepository unidadeFederativaRepository;
-    private final CidadeRepository cidadeRepository;
+    private final MunicipioRepository MunicipioRepository;
     private final RacaCorRepository racaCorRepository;
     private final CepLookupService cepLookupService;
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -52,13 +52,13 @@ public class CadsusLookupService {
     public CadsusLookupService(CadsusProperties properties,
                                ResourceLoader resourceLoader,
                                UnidadeFederativaRepository unidadeFederativaRepository,
-                               CidadeRepository cidadeRepository,
+                               MunicipioRepository MunicipioRepository,
                                RacaCorRepository racaCorRepository,
                                CepLookupService cepLookupService) {
         this.properties = properties;
         this.resourceLoader = resourceLoader;
         this.unidadeFederativaRepository = unidadeFederativaRepository;
-        this.cidadeRepository = cidadeRepository;
+        this.MunicipioRepository = MunicipioRepository;
         this.racaCorRepository = racaCorRepository;
         this.cepLookupService = cepLookupService;
     }
@@ -218,30 +218,30 @@ public class CadsusLookupService {
             response.setBairro(textOf(envelope, "additionalLocator"));
 
             String ufSigla = textOf(envelope, "state");
-            String cidadeNome = firstCity(envelope);
+            String municipioNome = firstCity(envelope);
             UnidadeFederativa uf = null;
             if (ufSigla != null && !ufSigla.isBlank()) {
                 uf = unidadeFederativaRepository.findBySiglaIgnoreCase(ufSigla).orElse(null);
-            } else if (cidadeNome != null) {
-                Cidade cidade = cidadeRepository.findAll().stream()
-                        .filter(c -> normalizeForMatch(c.getNome()).equals(normalizeForMatch(cidadeNome)))
+            } else if (municipioNome != null) {
+                Municipio Municipio = MunicipioRepository.findAll().stream()
+                        .filter(c -> normalizeForMatch(c.getNome()).equals(normalizeForMatch(municipioNome)))
                         .findFirst()
                         .orElse(null);
-                if (cidade != null) {
-                    uf = cidade.getUnidadeFederativa();
-                    response.setCidadeId(cidade.getId());
+                if (Municipio != null) {
+                    uf = Municipio.getUnidadeFederativa();
+                    response.setMunicipioId(Municipio.getId());
                 }
             }
             if (uf != null) {
                 response.setUnidadeFederativaId(uf.getId());
-                if (response.getCidadeId() == null && cidadeNome != null) {
-                    Cidade cidade = matchCity(uf.getId(), cidadeNome);
-                    if (cidade != null) {
-                        response.setCidadeId(cidade.getId());
+                if (response.getMunicipioId() == null && municipioNome != null) {
+                    Municipio Municipio = matchCity(uf.getId(), municipioNome);
+                    if (Municipio != null) {
+                        response.setMunicipioId(Municipio.getId());
                     }
                 }
             }
-            if (response.getCidadeId() == null && response.getCep() != null) {
+            if (response.getMunicipioId() == null && response.getCep() != null) {
                 applyFallbackByCep(response);
             }
 
@@ -256,13 +256,13 @@ public class CadsusLookupService {
         }
     }
 
-    private Cidade matchCity(Long ufId, String cidadeNome) {
-        List<Cidade> cidades = cidadeRepository.findByUnidadeFederativaIdOrderByNome(ufId);
-        String target = normalizeForMatch(cidadeNome);
-        return cidades.stream()
+    private Municipio matchCity(Long ufId, String municipioNome) {
+        List<Municipio> Municipios = MunicipioRepository.findByUnidadeFederativaIdOrderByNome(ufId);
+        String target = normalizeForMatch(municipioNome);
+        return Municipios.stream()
                 .filter(c -> normalizeForMatch(c.getNome()).equals(target))
                 .findFirst()
-                .orElseGet(() -> cidades.stream()
+                .orElseGet(() -> Municipios.stream()
                         .filter(c -> normalizeForMatch(c.getNome()).contains(target) || target.contains(normalizeForMatch(c.getNome())))
                         .findFirst()
                         .orElse(null));
@@ -274,8 +274,8 @@ public class CadsusLookupService {
             if (response.getUnidadeFederativaId() == null && cepData.getUnidadeFederativaId() != null) {
                 response.setUnidadeFederativaId(cepData.getUnidadeFederativaId());
             }
-            if (cepData.getCidadeId() != null) {
-                response.setCidadeId(cepData.getCidadeId());
+            if (cepData.getMunicipioId() != null) {
+                response.setMunicipioId(cepData.getMunicipioId());
             }
             if ((response.getLogradouro() == null || response.getLogradouro().isBlank()) && cepData.getLogradouro() != null) {
                 response.setLogradouro(cepData.getLogradouro());
@@ -435,3 +435,4 @@ public class CadsusLookupService {
         return (message == null || message.isBlank()) ? current.getClass().getSimpleName() : message;
     }
 }
+

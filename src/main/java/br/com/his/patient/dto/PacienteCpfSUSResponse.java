@@ -18,7 +18,7 @@ public class PacienteCpfSUSResponse {
     private String complemento;
     private String bairro;
     private Long unidadeFederativaId;
-    private Long cidadeId;
+    private Long municipioId;
 
     public String getCpf() {
         return cpf;
@@ -148,11 +148,12 @@ public class PacienteCpfSUSResponse {
         this.unidadeFederativaId = unidadeFederativaId;
     }
 
-    public Long getCidadeId() {
-        return cidadeId;
+    public Long getMunicipioId() {
+        return municipioId;
     }
 
-    public void setCidadeId(Long cidadeId) {
-        this.cidadeId = cidadeId;
+    public void setMunicipioId(Long municipioId) {
+        this.municipioId = municipioId;
     }
 }
+

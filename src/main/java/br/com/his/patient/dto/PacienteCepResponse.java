@@ -8,8 +8,8 @@ public class PacienteCepResponse {
     private String complemento;
     private Long unidadeFederativaId;
     private String ufSigla;
-    private Long cidadeId;
-    private String cidadeNome;
+    private Long municipioId;
+    private String municipioNome;
 
     public String getCep() {
         return cep;
@@ -59,19 +59,20 @@ public class PacienteCepResponse {
         this.ufSigla = ufSigla;
     }
 
-    public Long getCidadeId() {
-        return cidadeId;
+    public Long getMunicipioId() {
+        return municipioId;
     }
 
-    public void setCidadeId(Long cidadeId) {
-        this.cidadeId = cidadeId;
+    public void setMunicipioId(Long municipioId) {
+        this.municipioId = municipioId;
     }
 
-    public String getCidadeNome() {
-        return cidadeNome;
+    public String getMunicipioNome() {
+        return municipioNome;
     }
 
-    public void setCidadeNome(String cidadeNome) {
-        this.cidadeNome = cidadeNome;
+    public void setMunicipioNome(String municipioNome) {
+        this.municipioNome = municipioNome;
     }
 }
+

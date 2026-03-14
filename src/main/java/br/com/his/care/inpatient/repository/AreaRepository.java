@@ -75,3 +75,5 @@ public interface AreaRepository extends JpaRepository<Area, Long> {
             """)
     List<Area> findAreasAtivasComLeito();
 }
+
+

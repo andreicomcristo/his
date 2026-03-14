@@ -37,9 +37,9 @@ public class EntradaForm {
 
     private Long procedenciaBairroId;
 
-    private Long procedenciaCidadeUfId;
+    private Long procedenciaMunicipioUfId;
 
-    private Long procedenciaCidadeId;
+    private Long procedenciaMunicipioId;
 
     @NotNull(message = "Forma de chegada e obrigatoria")
     private Long formaChegadaId;
@@ -111,20 +111,20 @@ public class EntradaForm {
         this.procedenciaBairroId = procedenciaBairroId;
     }
 
-    public Long getProcedenciaCidadeId() {
-        return procedenciaCidadeId;
+    public Long getProcedenciaMunicipioId() {
+        return procedenciaMunicipioId;
     }
 
-    public void setProcedenciaCidadeId(Long procedenciaCidadeId) {
-        this.procedenciaCidadeId = procedenciaCidadeId;
+    public void setProcedenciaMunicipioId(Long procedenciaMunicipioId) {
+        this.procedenciaMunicipioId = procedenciaMunicipioId;
     }
 
-    public Long getProcedenciaCidadeUfId() {
-        return procedenciaCidadeUfId;
+    public Long getProcedenciaMunicipioUfId() {
+        return procedenciaMunicipioUfId;
     }
 
-    public void setProcedenciaCidadeUfId(Long procedenciaCidadeUfId) {
-        this.procedenciaCidadeUfId = procedenciaCidadeUfId;
+    public void setProcedenciaMunicipioUfId(Long procedenciaMunicipioUfId) {
+        this.procedenciaMunicipioUfId = procedenciaMunicipioUfId;
     }
 
     public Long getFormaChegadaId() {
@@ -239,3 +239,4 @@ public class EntradaForm {
         this.guia = guia;
     }
 }
+

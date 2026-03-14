@@ -4,7 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
-public class CidadeForm {
+public class MunicipioForm {
 
     @NotNull(message = "UF e obrigatoria")
     private Long unidadeFederativaId;

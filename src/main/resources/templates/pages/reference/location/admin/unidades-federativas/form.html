@@ -9,9 +9,9 @@
                   th:action="${modoEdicao} ? @{'/ui/admin/unidades-federativas/' + ${itemId}} : @{/ui/admin/unidades-federativas}">
                 <div class="form-row">
                     <div class="form-group col-md-6">
-                        <label>Nome<span class="required-mark">*</span></label>
-                        <input type="text" class="form-control" th:field="*{nome}">
-                        <small class="text-danger" th:errors="*{nome}"></small>
+                        <label>Descricao<span class="required-mark">*</span></label>
+                        <input type="text" class="form-control" th:field="*{descricao}">
+                        <small class="text-danger" th:errors="*{descricao}"></small>
                     </div>
                     <div class="form-group col-md-3">
                         <label>Sigla<span class="required-mark">*</span></label>

@@ -14,21 +14,21 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import br.com.his.reference.location.dto.CidadeForm;
-import br.com.his.reference.location.service.CidadeAdminService;
+import br.com.his.reference.location.dto.MunicipioForm;
+import br.com.his.reference.location.service.MunicipioAdminService;
 import br.com.his.reference.location.service.UnidadeFederativaAdminService;
-import br.com.his.reference.location.model.Cidade;
+import br.com.his.reference.location.model.Municipio;
 import br.com.his.patient.dto.PacienteLookupOption;
 import jakarta.validation.Valid;
 
 @Controller
-@RequestMapping("/ui/admin/cidades")
-public class CidadeAdminController {
+@RequestMapping("/ui/admin/municipios")
+public class MunicipioAdminController {
 
-    private final CidadeAdminService service;
+    private final MunicipioAdminService service;
     private final UnidadeFederativaAdminService unidadeFederativaAdminService;
 
-    public CidadeAdminController(CidadeAdminService service, UnidadeFederativaAdminService unidadeFederativaAdminService) {
+    public MunicipioAdminController(MunicipioAdminService service, UnidadeFederativaAdminService unidadeFederativaAdminService) {
         this.service = service;
         this.unidadeFederativaAdminService = unidadeFederativaAdminService;
     }
@@ -37,32 +37,32 @@ public class CidadeAdminController {
     public String listar(@RequestParam(required = false) String q, Model model) {
         model.addAttribute("items", service.listar(q));
         model.addAttribute("q", q);
-        return "pages/reference/location/admin/cidades/list";
+        return "pages/reference/location/admin/municipios/list";
     }
 
     @GetMapping("/novo")
     public String novo(Model model) {
         if (!model.containsAttribute("form")) {
-            model.addAttribute("form", new CidadeForm());
+            model.addAttribute("form", new MunicipioForm());
         }
         populateModel(model);
         model.addAttribute("modoEdicao", false);
-        return "pages/reference/location/admin/cidades/form";
+        return "pages/reference/location/admin/municipios/form";
     }
 
     @PostMapping
-    public String criar(@Valid @ModelAttribute("form") CidadeForm form,
+    public String criar(@Valid @ModelAttribute("form") MunicipioForm form,
                         BindingResult bindingResult,
                         Model model,
                         RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
             populateModel(model);
             model.addAttribute("modoEdicao", false);
-            return "pages/reference/location/admin/cidades/form";
+            return "pages/reference/location/admin/municipios/form";
         }
         service.criar(form);
-        redirectAttributes.addFlashAttribute("successMessage", "Cidade cadastrada com sucesso");
-        return "redirect:/ui/admin/cidades";
+        redirectAttributes.addFlashAttribute("successMessage", "Municipio cadastrado com sucesso");
+        return "redirect:/ui/admin/municipios";
     }
 
     @GetMapping("/{id}/editar")
@@ -71,12 +71,12 @@ public class CidadeAdminController {
         populateModel(model);
         model.addAttribute("modoEdicao", true);
         model.addAttribute("itemId", id);
-        return "pages/reference/location/admin/cidades/form";
+        return "pages/reference/location/admin/municipios/form";
     }
 
     @PostMapping("/{id}")
     public String atualizar(@PathVariable Long id,
-                            @Valid @ModelAttribute("form") CidadeForm form,
+                            @Valid @ModelAttribute("form") MunicipioForm form,
                             BindingResult bindingResult,
                             Model model,
                             RedirectAttributes redirectAttributes) {
@@ -84,18 +84,18 @@ public class CidadeAdminController {
             populateModel(model);
             model.addAttribute("modoEdicao", true);
             model.addAttribute("itemId", id);
-            return "pages/reference/location/admin/cidades/form";
+            return "pages/reference/location/admin/municipios/form";
         }
         service.atualizar(id, form);
-        redirectAttributes.addFlashAttribute("successMessage", "Cidade atualizada com sucesso");
-        return "redirect:/ui/admin/cidades";
+        redirectAttributes.addFlashAttribute("successMessage", "Municipio atualizado com sucesso");
+        return "redirect:/ui/admin/municipios";
     }
 
     @PostMapping("/{id}/excluir")
     public String excluir(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         service.excluir(id);
-        redirectAttributes.addFlashAttribute("successMessage", "Cidade excluida com sucesso");
-        return "redirect:/ui/admin/cidades";
+        redirectAttributes.addFlashAttribute("successMessage", "Municipio excluido com sucesso");
+        return "redirect:/ui/admin/municipios";
     }
 
     @GetMapping("/por-uf/{unidadeFederativaId}")
@@ -107,8 +107,8 @@ public class CidadeAdminController {
                 .toList();
     }
 
-    private PacienteLookupOption toOption(Cidade cidade) {
-        return new PacienteLookupOption(cidade.getId(), cidade.getNome());
+    private PacienteLookupOption toOption(Municipio municipio) {
+        return new PacienteLookupOption(municipio.getId(), municipio.getNome());
     }
 
     private void populateModel(Model model) {

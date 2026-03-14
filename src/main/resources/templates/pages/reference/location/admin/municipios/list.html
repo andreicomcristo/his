@@ -1,15 +1,15 @@
 <!DOCTYPE html>
 <html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layout/base :: layout('Administracao - Cidades', ~{::content})}">
+      th:replace="~{layout/base :: layout('Administracao - Municipios', ~{::content})}">
 <th:block th:fragment="content">
     <div class="main-card mb-3 card">
         <div class="card-body">
             <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="card-title mb-0">Cidades</h5>
-                <a class="btn btn-primary btn-sm" th:href="@{/ui/admin/cidades/novo}">Nova cidade</a>
+                <h5 class="card-title mb-0">Municipios</h5>
+                <a class="btn btn-primary btn-sm" th:href="@{/ui/admin/municipios/novo}">Novo municipio</a>
             </div>
             <form method="get" class="form-inline mb-3">
-                <input type="text" name="q" class="form-control mr-2" placeholder="Buscar por cidade ou UF" th:value="${q}">
+                <input type="text" name="q" class="form-control mr-2" placeholder="Buscar por municipio ou UF" th:value="${q}">
                 <button class="btn btn-outline-secondary btn-sm" type="submit">Buscar</button>
             </form>
             <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
@@ -30,9 +30,9 @@
                     <td th:text="${item.unidadeFederativa.sigla}"></td>
                     <td th:text="${item.codigoIbge}"></td>
                     <td class="text-right">
-                        <a class="btn btn-sm btn-outline-primary" th:href="@{'/ui/admin/cidades/' + ${item.id} + '/editar'}">Editar</a>
-                        <form method="post" class="d-inline" th:action="@{'/ui/admin/cidades/' + ${item.id} + '/excluir'}">
-                            <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Excluir cidade?');">Excluir</button>
+                        <a class="btn btn-sm btn-outline-primary" th:href="@{'/ui/admin/municipios/' + ${item.id} + '/editar'}">Editar</a>
+                        <form method="post" class="d-inline" th:action="@{'/ui/admin/municipios/' + ${item.id} + '/excluir'}">
+                            <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Excluir municipio?');">Excluir</button>
                         </form>
                     </td>
                 </tr>

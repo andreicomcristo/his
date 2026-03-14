@@ -452,14 +452,14 @@
                                 <label>UF</label>
                                 <select class="form-control" th:field="*{pacienteForm.unidadeFederativaId}" id="unidadeFederativaId">
                                     <option value="">Selecione</option>
-                                    <option th:each="item : ${ufs}" th:value="${item.id}" th:text="${item.nome + ' - ' + item.sigla}"></option>
+                                    <option th:each="item : ${ufs}" th:value="${item.id}" th:text="${item.descricao + ' - ' + item.sigla}"></option>
                                 </select>
                             </div>
                             <div class="form-group col-md-6">
-                                <label>Cidade</label>
-                                <select class="form-control" th:field="*{pacienteForm.cidadeId}" id="cidadeId">
+                                <label>Municipio</label>
+                                <select class="form-control" th:field="*{pacienteForm.municipioId}" id="municipioId">
                                     <option value="">Selecione</option>
-                                    <option th:each="item : ${cidades}" th:value="${item.id}" th:text="${item.nome}"></option>
+                                    <option th:each="item : ${municipios}" th:value="${item.id}" th:text="${item.nome}"></option>
                                 </select>
                             </div>
                         </div>
@@ -536,22 +536,22 @@
                                         </select>
                                         <small class="text-danger" th:errors="*{entradaForm.procedenciaBairroId}"></small>
                                     </div>
-                                    <div class="form-group col-md-6" id="cidadeGroup" style="display:none;">
+                                    <div class="form-group col-md-6" id="MunicipioGroup" style="display:none;">
                                         <div class="form-row">
                                             <div class="form-group col-md-6">
                                                 <label>UF</label>
-                                                <select class="form-control" th:field="*{entradaForm.procedenciaCidadeUfId}" id="procedenciaCidadeUfId">
+                                                <select class="form-control" th:field="*{entradaForm.procedenciaMunicipioUfId}" id="procedenciaMunicipioUfId">
                                                     <option value="">Selecione</option>
-                                                    <option th:each="item : ${ufsEntrada}" th:value="${item.id}" th:text="${item.nome + ' - ' + item.sigla}"></option>
+                                                    <option th:each="item : ${ufsEntrada}" th:value="${item.id}" th:text="${item.descricao + ' - ' + item.sigla}"></option>
                                                 </select>
                                             </div>
                                             <div class="form-group col-md-6">
-                                                <label>Cidade<span class="required-mark">*</span></label>
-                                                <select class="form-control" th:field="*{entradaForm.procedenciaCidadeId}" id="procedenciaCidadeId">
+                                                <label>Municipio<span class="required-mark">*</span></label>
+                                                <select class="form-control" th:field="*{entradaForm.procedenciaMunicipioId}" id="procedenciaMunicipioId">
                                                     <option value="">Selecione</option>
-                                                    <option th:each="item : ${cidadesEntrada}" th:value="${item.id}" th:text="${item.descricao}" th:attr="data-uf-id=${item.relacionamentoId}"></option>
+                                                    <option th:each="item : ${municipiosEntrada}" th:value="${item.id}" th:text="${item.descricao}" th:attr="data-uf-id=${item.relacionamentoId}"></option>
                                                 </select>
-                                                <small class="text-danger" th:errors="*{entradaForm.procedenciaCidadeId}"></small>
+                                                <small class="text-danger" th:errors="*{entradaForm.procedenciaMunicipioId}"></small>
                                             </div>
                                         </div>
                                     </div>
@@ -665,41 +665,41 @@
                 const complementoInput = document.getElementById('complemento');
                 const numeroInput = document.getElementById('numero');
                 const ufSelect = document.getElementById('unidadeFederativaId');
-                const cidadeSelect = document.getElementById('cidadeId');
+                const MunicipioSelect = document.getElementById('municipioId');
 
-                function resetCidades() {
-                    if (!cidadeSelect) {
+                function resetMunicipios() {
+                    if (!MunicipioSelect) {
                         return;
                     }
-                    cidadeSelect.innerHTML = '<option value="">Selecione</option>';
+                    MunicipioSelect.innerHTML = '<option value="">Selecione</option>';
                 }
 
-                function carregarCidadesPorUf(ufId, cidadeIdSelecionada) {
-                    resetCidades();
+                function carregarMunicipiosPorUf(ufId, municipioIdSelecionada) {
+                    resetMunicipios();
                     if (!ufId) {
                         return;
                     }
-                    fetch('/ui/pacientes/cidades-por-uf/' + ufId)
+                    fetch('/ui/pacientes/municipios-por-uf/' + ufId)
                         .then(function (response) { return response.json(); })
                         .then(function (items) {
                             items.forEach(function (item) {
                                 var option = document.createElement('option');
                                 option.value = item.id;
                                 option.textContent = item.descricao;
-                                if (cidadeIdSelecionada && String(cidadeIdSelecionada) === String(item.id)) {
+                                if (municipioIdSelecionada && String(municipioIdSelecionada) === String(item.id)) {
                                     option.selected = true;
                                 }
-                                cidadeSelect.appendChild(option);
+                                MunicipioSelect.appendChild(option);
                             });
                         });
                 }
 
-                if (ufSelect && cidadeSelect) {
+                if (ufSelect && MunicipioSelect) {
                     ufSelect.addEventListener('change', function() {
-                        carregarCidadesPorUf(this.value, null);
+                        carregarMunicipiosPorUf(this.value, null);
                     });
                     if (ufSelect.value) {
-                        carregarCidadesPorUf(ufSelect.value, cidadeSelect.value);
+                        carregarMunicipiosPorUf(ufSelect.value, MunicipioSelect.value);
                     }
                 }
 
@@ -771,9 +771,9 @@
                             if (complementoInput && data.complemento) complementoInput.value = data.complemento;
                             if (ufSelect && data.ufId) {
                                 ufSelect.value = data.ufId;
-                                carregarCidadesPorUf(data.ufId, data.cidadeId || null);
+                                carregarMunicipiosPorUf(data.ufId, data.municipioId || null);
                             }
-                            if (cidadeSelect && data.cidadeId) cidadeSelect.value = data.cidadeId;
+                            if (MunicipioSelect && data.municipioId) MunicipioSelect.value = data.municipioId;
                             setCepFeedback('Endereco preenchido pelo CEP.', false);
                         } catch (e) {
                             setCepFeedback('Nao foi possivel localizar o CEP.', true);
@@ -784,10 +784,10 @@
                 const tipoProcedenciaSelect = document.getElementById('tipoProcedenciaId');
                 const procedenciaGroup = document.getElementById('procedenciaGroup');
                 const bairroGroup = document.getElementById('bairroGroup');
-                const cidadeGroup = document.getElementById('cidadeGroup');
+                const MunicipioGroup = document.getElementById('MunicipioGroup');
                 const procedenciaSelect = document.getElementById('procedenciaId');
-                const procedenciaCidadeUfSelect = document.getElementById('procedenciaCidadeUfId');
-                const procedenciaCidadeSelect = document.getElementById('procedenciaCidadeId');
+                const procedenciaMunicipioUfSelect = document.getElementById('procedenciaMunicipioUfId');
+                const procedenciaMunicipioSelect = document.getElementById('procedenciaMunicipioId');
 
                 function refreshProcedenciaView() {
                     if (!tipoProcedenciaSelect) {
@@ -796,10 +796,10 @@
                     const selectedOption = tipoProcedenciaSelect.options[tipoProcedenciaSelect.selectedIndex];
                     const tipoDescricao = ((selectedOption && selectedOption.textContent) || '').trim().toUpperCase();
                     const isBairro = tipoDescricao === 'BAIRRO';
-                    const isCidade = tipoDescricao === 'CIDADE';
-                    if (procedenciaGroup) procedenciaGroup.style.display = (!isBairro && !isCidade) ? '' : 'none';
+                    const isMunicipio = tipoDescricao === 'Municipio';
+                    if (procedenciaGroup) procedenciaGroup.style.display = (!isBairro && !isMunicipio) ? '' : 'none';
                     if (bairroGroup) bairroGroup.style.display = isBairro ? '' : 'none';
-                    if (cidadeGroup) cidadeGroup.style.display = isCidade ? '' : 'none';
+                    if (MunicipioGroup) MunicipioGroup.style.display = isMunicipio ? '' : 'none';
 
                     if (procedenciaSelect) {
                         const selectedTipoId = tipoProcedenciaSelect.value;
@@ -813,21 +813,21 @@
                     }
                 }
 
-                function refreshProcedenciaCidadeOptions() {
-                    if (!procedenciaCidadeSelect) {
+                function refreshProcedenciaMunicipioOptions() {
+                    if (!procedenciaMunicipioSelect) {
                         return;
                     }
-                    const selectedUfId = procedenciaCidadeUfSelect ? procedenciaCidadeUfSelect.value : '';
-                    const currentValue = procedenciaCidadeSelect.value;
-                    const options = Array.from(procedenciaCidadeSelect.querySelectorAll('option'));
-                    procedenciaCidadeSelect.innerHTML = '';
+                    const selectedUfId = procedenciaMunicipioUfSelect ? procedenciaMunicipioUfSelect.value : '';
+                    const currentValue = procedenciaMunicipioSelect.value;
+                    const options = Array.from(procedenciaMunicipioSelect.querySelectorAll('option'));
+                    procedenciaMunicipioSelect.innerHTML = '';
                     options.forEach(option => {
                         if (!option.value || !selectedUfId || option.dataset.ufId === selectedUfId) {
-                            procedenciaCidadeSelect.appendChild(option);
+                            procedenciaMunicipioSelect.appendChild(option);
                         }
                     });
-                    if (Array.from(procedenciaCidadeSelect.options).some(option => option.value === currentValue)) {
-                        procedenciaCidadeSelect.value = currentValue;
+                    if (Array.from(procedenciaMunicipioSelect.options).some(option => option.value === currentValue)) {
+                        procedenciaMunicipioSelect.value = currentValue;
                     }
                 }
 
@@ -836,9 +836,9 @@
                     refreshProcedenciaView();
                 }
 
-                if (procedenciaCidadeUfSelect) {
-                    procedenciaCidadeUfSelect.addEventListener('change', refreshProcedenciaCidadeOptions);
-                    refreshProcedenciaCidadeOptions();
+                if (procedenciaMunicipioUfSelect) {
+                    procedenciaMunicipioUfSelect.addEventListener('change', refreshProcedenciaMunicipioOptions);
+                    refreshProcedenciaMunicipioOptions();
                 }
             });
         </script>
@@ -846,3 +846,5 @@
 </th:block>
 </body>
 </html>
+
+

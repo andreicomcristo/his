@@ -36,8 +36,8 @@ public class PacienteResponse {
     private String complemento;
     private String bairro;
     private Long unidadeFederativaId;
-    private Long cidadeId;
-    private String cidade;
+    private Long municipioId;
+    private String Municipio;
     private String uf;
     private boolean temporario;
     private Integer idadeAparente;
@@ -295,20 +295,20 @@ public class PacienteResponse {
         this.unidadeFederativaId = unidadeFederativaId;
     }
 
-    public Long getCidadeId() {
-        return cidadeId;
+    public Long getMunicipioId() {
+        return municipioId;
     }
 
-    public void setCidadeId(Long cidadeId) {
-        this.cidadeId = cidadeId;
+    public void setMunicipioId(Long municipioId) {
+        this.municipioId = municipioId;
     }
 
-    public String getCidade() {
-        return cidade;
+    public String getMunicipio() {
+        return Municipio;
     }
 
-    public void setCidade(String cidade) {
-        this.cidade = cidade;
+    public void setMunicipio(String Municipio) {
+        this.Municipio = Municipio;
     }
 
     public String getUf() {
@@ -375,3 +375,4 @@ public class PacienteResponse {
         this.atualizadoEm = atualizadoEm;
     }
 }
+

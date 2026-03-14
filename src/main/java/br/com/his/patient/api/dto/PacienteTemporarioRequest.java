@@ -87,7 +87,7 @@ public class PacienteTemporarioRequest {
 
     private Long unidadeFederativaId;
 
-    private Long cidadeId;
+    private Long municipioId;
 
     @Min(value = 0, message = "idadeAparente invalida")
     @Max(value = 150, message = "idadeAparente invalida")
@@ -333,12 +333,12 @@ public class PacienteTemporarioRequest {
         this.unidadeFederativaId = unidadeFederativaId;
     }
 
-    public Long getCidadeId() {
-        return cidadeId;
+    public Long getMunicipioId() {
+        return municipioId;
     }
 
-    public void setCidadeId(Long cidadeId) {
-        this.cidadeId = cidadeId;
+    public void setMunicipioId(Long municipioId) {
+        this.municipioId = municipioId;
     }
 
     public Integer getIdadeAparente() {
@@ -349,3 +349,4 @@ public class PacienteTemporarioRequest {
         this.idadeAparente = idadeAparente;
     }
 }
+
