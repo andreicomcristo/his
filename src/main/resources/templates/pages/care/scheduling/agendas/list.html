@@ -9,16 +9,16 @@
                 <div class="btn-group btn-group-sm" role="group">
                     <a class="btn btn-outline-info"
                        th:if="${agendamentoHabilitado}"
-                       th:href="@{/ui/agendamentos/calendario}">Calendario</a>
+                       th:href="@{/ui/agendamentos/calendario}"><i class="nav-link-icon lnr-calendar-full mr-2"></i>Calendário</a>
                     <a class="btn btn-primary"
                        th:if="${agendamentoHabilitado}"
-                       th:href="@{/ui/agendamentos/novo}">Nova agenda</a>
+                       th:href="@{/ui/agendamentos/novo}"><i class="nav-link-icon lnr-plus-circle mr-2"></i>Agenda</a>
                 </div>
             </div>
 
             <div class="alert alert-warning"
                  th:if="${!agendamentoHabilitado}">
-                Agendamento nao habilitado para esta unidade. Configure em Administracao > Fluxo por unidade.
+                Agendamento nao habilitado para esta unidade. Configure em Administração > Fluxo por unidade.
             </div>
             <div class="alert alert-success" th:if="${successMessage}" th:text="${successMessage}"></div>
             <div class="alert alert-danger" th:if="${errorMessage}" th:text="${errorMessage}"></div>
@@ -49,18 +49,16 @@
                         </select>
                     </div>
                     <div class="form-group col-md-3">
-                        <label class="filtro-label">Data inicio</label>
+                        <label class="filtro-label">Data inicial</label>
                         <input type="date" name="dataInicio" class="form-control" th:value="${dataInicio}">
                     </div>
                     <div class="form-group col-md-3">
-                        <label class="filtro-label">Data fim</label>
+                        <label class="filtro-label">Data final</label>
                         <input type="date" name="dataFim" class="form-control" th:value="${dataFim}">
                     </div>
                     <div class="form-group col-md-2 d-flex align-items-end">
-                        <button type="submit" class="btn btn-primary btn-block">Filtrar</button>
-                    </div>
-                    <div class="form-group col-md-2 d-flex align-items-end">
-                        <a th:href="@{/ui/agendamentos}" class="btn btn-outline-secondary btn-block">Limpar</a>
+                        <button class="btn btn-primary mr-2" type="submit"><i class="nav-link-icon lnr-magnifier mr-2"></i>Filtrar</button>                
+                        <a th:href="@{/ui/agendamentos}" class="btn btn-secondary btn-block mr-2"><i class="nav-link-icon lnr-cross mr-2"></i>Limpar</a>
                     </div>
                 </div>
             </form>
@@ -71,11 +69,11 @@
                     <th>Data</th>
                     <th>Cargo</th>
                     <th>Especialidade</th>
-                    <th>Horario</th>
+                    <th>Horário</th>
                     <th>Vagas</th>
-                    <th>Disponiveis</th>
+                    <th>Disponíveis</th>
                     <th>Ativo</th>
-                    <th>Observacao</th>
+                    <th>Observações</th>
                     <th>Pacientes</th>
                     <th></th>
                 </tr>
@@ -87,7 +85,7 @@
                 <tr th:each="item : ${items}">
                     <td th:text="${#temporals.format(item.dataAgenda, 'dd/MM/yyyy')}"></td>
                     <td th:text="${item.cargoColaborador.descricao}"></td>
-                    <td th:text="${item.especialidade != null ? item.especialidade.descricao : 'NAO SE APLICA'}"></td>
+                    <td th:text="${item.especialidade != null ? item.especialidade.descricao : '-'}"></td>
                     <td th:text="${#temporals.format(item.horaInicio, 'HH:mm') + ' - ' + #temporals.format(item.horaFim, 'HH:mm')}"></td>
                     <td th:text="${item.vagasTotais + ' (retorno: ' + item.vagasRetorno + ')'}"></td>
                     <td>
@@ -100,18 +98,33 @@
                     <td>
                         <a class="btn btn-sm btn-outline-info"
                            th:if="${agendamentoHabilitado}"
-                           th:href="@{'/ui/agendamentos/' + ${item.id} + '/pacientes'}">Vincular</a>
+                           th:href="@{'/ui/agendamentos/' + ${item.id} + '/pacientes'}"><i class="nav-link-icon lnr-link mr-2"></i>Vincular</a>
                     </td>
                     <td class="text-right">
-                        <a class="btn btn-sm btn-outline-primary"
-                           th:href="@{'/ui/agendamentos/' + ${item.id} + '/editar'}"
-                           th:if="${agendamentoHabilitado}">Editar</a>
-                        <form method="post" class="d-inline"
-                              th:if="${agendamentoHabilitado}"
-                              th:action="@{'/ui/agendamentos/' + ${item.id} + '/excluir'}">
-                            <button type="submit" class="btn btn-sm btn-outline-danger"
-                                    onclick="return confirm('Excluir agenda?');">Excluir</button>
-                        </form>
+                        <div class="dropdown d-inline-block" th:if="${agendamentoHabilitado}">
+                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle"
+                                    type="button"
+                                    data-toggle="dropdown"
+                                    aria-haspopup="true"
+                                    aria-expanded="false">
+                                <i class="nav-link-icon lnr-menu"></i>
+                            </button>
+                            <div class="dropdown-menu dropdown-menu-right">
+                                <a class="dropdown-item"
+                                   th:href="@{'/ui/agendamentos/' + ${item.id} + '/editar'}">
+                                    <i class="nav-link-icon lnr-pencil mr-2"></i><span>Editar</span>
+                                </a>
+                                <form method="post"
+                                      class="m-0"
+                                      th:action="@{'/ui/agendamentos/' + ${item.id} + '/excluir'}">
+                                    <button type="submit"
+                                            class="dropdown-item text-danger"
+                                            onclick="return confirm('Excluir agenda?');">
+                                        <i class="nav-link-icon lnr-trash mr-2"></i><span>Excluir</span>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
                     </td>
                 </tr>
                 </tbody>
