@@ -41,6 +41,9 @@ public class PacienteCatalogoAdminController {
                          @RequestParam(required = false) String q,
                          Model model) {
         PacienteCatalogoTipo catalogo = PacienteCatalogoTipo.fromSlug(tipo);
+        if (catalogo == PacienteCatalogoTipo.PROCEDENCIA) {
+            return "redirect:/ui/admin/procedencias";
+        }
         model.addAttribute("catalogo", catalogo);
         model.addAttribute("items", pacienteCatalogoAdminService.listar(catalogo, q));
         model.addAttribute("q", q);
@@ -50,6 +53,9 @@ public class PacienteCatalogoAdminController {
     @GetMapping("/{tipo}/novo")
     public String novo(@PathVariable String tipo, Model model) {
         PacienteCatalogoTipo catalogo = PacienteCatalogoTipo.fromSlug(tipo);
+        if (catalogo == PacienteCatalogoTipo.PROCEDENCIA) {
+            return "redirect:/ui/admin/procedencias";
+        }
         if (!model.containsAttribute("form")) {
             model.addAttribute("form", new PacienteCatalogoForm());
         }
@@ -65,6 +71,9 @@ public class PacienteCatalogoAdminController {
                         Model model,
                         RedirectAttributes redirectAttributes) {
         PacienteCatalogoTipo catalogo = PacienteCatalogoTipo.fromSlug(tipo);
+        if (catalogo == PacienteCatalogoTipo.PROCEDENCIA) {
+            return "redirect:/ui/admin/procedencias";
+        }
         if (bindingResult.hasErrors()) {
             populateModel(model, catalogo);
             model.addAttribute("modoEdicao", false);
@@ -85,6 +94,9 @@ public class PacienteCatalogoAdminController {
     @GetMapping("/{tipo}/{id}/editar")
     public String editar(@PathVariable String tipo, @PathVariable Long id, Model model) {
         PacienteCatalogoTipo catalogo = PacienteCatalogoTipo.fromSlug(tipo);
+        if (catalogo == PacienteCatalogoTipo.PROCEDENCIA) {
+            return "redirect:/ui/admin/procedencias/" + id + "/editar";
+        }
         model.addAttribute("form", pacienteCatalogoAdminService.buscarFormulario(catalogo, id));
         populateModel(model, catalogo);
         model.addAttribute("modoEdicao", true);
@@ -100,6 +112,9 @@ public class PacienteCatalogoAdminController {
                             Model model,
                             RedirectAttributes redirectAttributes) {
         PacienteCatalogoTipo catalogo = PacienteCatalogoTipo.fromSlug(tipo);
+        if (catalogo == PacienteCatalogoTipo.PROCEDENCIA) {
+            return "redirect:/ui/admin/procedencias/" + id + "/editar";
+        }
         if (bindingResult.hasErrors()) {
             populateModel(model, catalogo);
             model.addAttribute("modoEdicao", true);
@@ -124,6 +139,9 @@ public class PacienteCatalogoAdminController {
                           @PathVariable Long id,
                           RedirectAttributes redirectAttributes) {
         PacienteCatalogoTipo catalogo = PacienteCatalogoTipo.fromSlug(tipo);
+        if (catalogo == PacienteCatalogoTipo.PROCEDENCIA) {
+            return "redirect:/ui/admin/procedencias";
+        }
         try {
             pacienteCatalogoAdminService.excluir(catalogo, id);
             redirectAttributes.addFlashAttribute("successMessage", catalogo.getTitulo() + " excluído(a) com sucesso");

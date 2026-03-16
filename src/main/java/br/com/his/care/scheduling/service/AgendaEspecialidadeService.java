@@ -223,6 +223,75 @@ public class AgendaEspecialidadeService {
         return agendaPacienteRepository.listarPorAgenda(agenda.getId());
     }
 
+    @Transactional(readOnly = true)
+    public List<AgendaEspecialidadePaciente> listarAgendamentosRecepcao(Long unidadeId,
+                                                                         Long cargoColaboradorId,
+                                                                         Long especialidadeId,
+                                                                         StatusAgendamentoPaciente status,
+                                                                         LocalDate dataInicio,
+                                                                         LocalDate dataFim) {
+        validarUnidadeComAgendamento(unidadeId);
+        LocalDate inicio = dataInicio == null ? LocalDate.now() : dataInicio;
+        LocalDate fim = dataFim == null ? inicio : dataFim;
+        if (fim.isBefore(inicio)) {
+            LocalDate tmp = inicio;
+            inicio = fim;
+            fim = tmp;
+        }
+        LocalDateTime inicioDt = inicio.atStartOfDay();
+        LocalDateTime fimDt = fim.plusDays(1).atStartOfDay();
+        return agendaPacienteRepository.listarParaRecepcao(
+                unidadeId,
+                cargoColaboradorId,
+                especialidadeId,
+                status,
+                inicioDt,
+                fimDt);
+    }
+
+    @Transactional(readOnly = true)
+    public AgendaEspecialidadePaciente buscarAgendamentoPaciente(Long unidadeId, Long agendaPacienteId) {
+        AgendaEspecialidadePaciente item = agendaPacienteRepository.buscarPorIdComRelacionamentos(agendaPacienteId)
+                .orElseThrow(() -> new IllegalArgumentException("Agendamento de paciente nao encontrado"));
+        Long unidadeAgendaId = item.getAgendaEspecialidade().getUnidade().getId();
+        if (!unidadeAgendaId.equals(unidadeId)) {
+            throw new IllegalArgumentException("Agendamento nao pertence a unidade atual");
+        }
+        return item;
+    }
+
+    @Transactional
+    public void registrarCheckinComAtendimento(Long unidadeId, Long agendaPacienteId, Long atendimentoId) {
+        AgendaEspecialidadePaciente item = buscarAgendamentoPaciente(unidadeId, agendaPacienteId);
+        StatusAgendamentoPaciente statusAtual = item.getStatus();
+        if (statusAtual == StatusAgendamentoPaciente.CANCELADO
+                || statusAtual == StatusAgendamentoPaciente.FALTOU
+                || statusAtual == StatusAgendamentoPaciente.ATENDIDO) {
+            throw new IllegalArgumentException("Status atual do agendamento nao permite check-in");
+        }
+        if (statusAtual == StatusAgendamentoPaciente.CONFIRMADO) {
+            return;
+        }
+
+        AgendaEspecialidade agenda = item.getAgendaEspecialidade();
+        AgendaEspecialidadeSlot slot = item.getAgendaSlot();
+        item.setStatus(StatusAgendamentoPaciente.CONFIRMADO);
+        agendaPacienteRepository.save(item);
+        ocuparSlot(slot);
+        registrarHistorico(
+                item,
+                AcaoAgendamentoHistorico.CONFIRMACAO,
+                statusAtual,
+                StatusAgendamentoPaciente.CONFIRMADO,
+                agenda,
+                agenda,
+                slot,
+                slot,
+                item.getHoraAtendimento(),
+                item.getHoraAtendimento(),
+                "Check-in na recepcao. Atendimento #" + atendimentoId);
+    }
+
     @Transactional
     public AgendaPacienteVinculoResultado vincularPaciente(Long unidadeId, Long agendaId, AgendaPacienteForm form) {
         AgendaEspecialidade agendaBase = buscar(unidadeId, agendaId);
@@ -880,7 +949,7 @@ public class AgendaEspecialidadeService {
         agendaPacienteRepository.save(item);
 
         if (novoStatus == StatusAgendamentoPaciente.CANCELADO) {
-            atualizarStatusSlot(slot);
+            atualizarStatusSlot(slot, item.getId());
         } else {
             ocuparSlot(slot);
         }
@@ -908,8 +977,15 @@ public class AgendaEspecialidadeService {
     }
 
     private void atualizarStatusSlot(AgendaEspecialidadeSlot slot) {
-        boolean possuiAgendamentoAtivo = agendaPacienteRepository.existsByAgendaSlotIdAndStatusNot(
-                slot.getId(), StatusAgendamentoPaciente.CANCELADO);
+        atualizarStatusSlot(slot, null);
+    }
+
+    private void atualizarStatusSlot(AgendaEspecialidadeSlot slot, Long agendaPacienteIgnorarId) {
+        boolean possuiAgendamentoAtivo = agendaPacienteIgnorarId == null
+                ? agendaPacienteRepository.existsByAgendaSlotIdAndStatusNot(
+                slot.getId(), StatusAgendamentoPaciente.CANCELADO)
+                : agendaPacienteRepository.existsByAgendaSlotIdAndIdNotAndStatusNot(
+                slot.getId(), agendaPacienteIgnorarId, StatusAgendamentoPaciente.CANCELADO);
         StatusAgendaSlot novoStatus;
         if (possuiAgendamentoAtivo) {
             novoStatus = StatusAgendaSlot.OCUPADO;

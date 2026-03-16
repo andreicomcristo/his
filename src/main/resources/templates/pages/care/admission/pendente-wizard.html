@@ -788,18 +788,47 @@
                 const procedenciaSelect = document.getElementById('procedenciaId');
                 const procedenciaMunicipioUfSelect = document.getElementById('procedenciaMunicipioUfId');
                 const procedenciaMunicipioSelect = document.getElementById('procedenciaMunicipioId');
+                const procedenciaBairroSelect = document.getElementById('procedenciaBairroId');
+
+                function normalizeTipoProcedenciaLabel(value) {
+                    if (!value) {
+                        return '';
+                    }
+                    return value
+                        .normalize('NFD')
+                        .replace(/[\u0300-\u036f]/g, '')
+                        .trim()
+                        .toUpperCase();
+                }
 
                 function refreshProcedenciaView() {
                     if (!tipoProcedenciaSelect) {
                         return;
                     }
                     const selectedOption = tipoProcedenciaSelect.options[tipoProcedenciaSelect.selectedIndex];
-                    const tipoDescricao = ((selectedOption && selectedOption.textContent) || '').trim().toUpperCase();
+                    const tipoDescricao = normalizeTipoProcedenciaLabel((selectedOption && selectedOption.textContent) || '');
                     const isBairro = tipoDescricao === 'BAIRRO';
-                    const isMunicipio = tipoDescricao === 'Municipio';
-                    if (procedenciaGroup) procedenciaGroup.style.display = (!isBairro && !isMunicipio) ? '' : 'none';
+                    const isMunicipio = tipoDescricao === 'MUNICIPIO' || tipoDescricao === 'CIDADE';
+                    const isOutros = tipoDescricao.indexOf('OUTRO') !== -1;
+                    if (procedenciaGroup) procedenciaGroup.style.display = (!isBairro && !isMunicipio && !isOutros) ? '' : 'none';
                     if (bairroGroup) bairroGroup.style.display = isBairro ? '' : 'none';
                     if (MunicipioGroup) MunicipioGroup.style.display = isMunicipio ? '' : 'none';
+
+                    if (isBairro && procedenciaSelect) {
+                        procedenciaSelect.value = '';
+                    }
+                    if (isOutros && procedenciaSelect) {
+                        procedenciaSelect.value = '';
+                    }
+                    if (!isBairro && procedenciaBairroSelect) {
+                        procedenciaBairroSelect.value = '';
+                    }
+                    if (!isMunicipio && procedenciaMunicipioUfSelect) {
+                        procedenciaMunicipioUfSelect.value = '';
+                    }
+                    if (!isMunicipio && procedenciaMunicipioSelect) {
+                        procedenciaMunicipioSelect.value = '';
+                    }
 
                     if (procedenciaSelect) {
                         const selectedTipoId = tipoProcedenciaSelect.value;
@@ -810,6 +839,9 @@
                             }
                             option.hidden = selectedTipoId && option.dataset.tipoId !== selectedTipoId;
                         });
+                        if (procedenciaSelect.selectedOptions.length && procedenciaSelect.selectedOptions[0].hidden) {
+                            procedenciaSelect.value = '';
+                        }
                     }
                 }
 
@@ -846,5 +878,3 @@
 </th:block>
 </body>
 </html>
-
-

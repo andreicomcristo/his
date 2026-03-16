@@ -39,6 +39,7 @@ public class AtendimentoWizardForm {
     private Integer idadeAparenteTemporario;
 
     private TipoAtendimento tipoAtendimento;
+    private Long agendaPacienteId;
 
     private final EntradaForm entradaForm = new EntradaForm();
     private final TriagemForm triagemForm = new TriagemForm();
@@ -181,6 +182,14 @@ public class AtendimentoWizardForm {
 
     public void setTipoAtendimento(TipoAtendimento tipoAtendimento) {
         this.tipoAtendimento = tipoAtendimento;
+    }
+
+    public Long getAgendaPacienteId() {
+        return agendaPacienteId;
+    }
+
+    public void setAgendaPacienteId(Long agendaPacienteId) {
+        this.agendaPacienteId = agendaPacienteId;
     }
 
     public EntradaForm getEntradaForm() {

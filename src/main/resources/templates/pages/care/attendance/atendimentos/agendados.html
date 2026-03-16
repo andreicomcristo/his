@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:replace="~{layout/base :: layout('HIS | Agendados da recepcao', ~{::section})}">
+    <section>
+        <div class="main-card card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="card-title mb-0" th:text="${pageTitle}">Agendados da recepcao</h5>
+                    <div>
+                        <a th:href="@{/ui/atendimentos}" class="btn btn-outline-secondary btn-sm">Voltar para atendimentos</a>
+                    </div>
+                </div>
+
+                <div class="alert alert-success" th:if="${successMessage}" th:text="${successMessage}"></div>
+                <div class="alert alert-danger" th:if="${errorMessage}" th:text="${errorMessage}"></div>
+
+                <form th:action="@{/ui/atendimentos/agendados}" method="get" class="mb-3">
+                    <div class="form-row">
+                        <div class="form-group col-md-3">
+                            <label for="cargoColaboradorId"><strong>Cargo assistencial</strong></label>
+                            <select id="cargoColaboradorId" name="cargoColaboradorId" class="form-control">
+                                <option value="">TODOS</option>
+                                <option th:each="cargo : ${cargosAssistenciais}"
+                                        th:value="${cargo.id}"
+                                        th:selected="${cargoColaboradorSelecionadoId == cargo.id}"
+                                        th:text="${cargo.descricao}"></option>
+                            </select>
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label for="especialidadeId"><strong>Especialidade</strong></label>
+                            <select id="especialidadeId" name="especialidadeId" class="form-control">
+                                <option value="">TODAS</option>
+                                <option th:each="especialidade : ${especialidades}"
+                                        th:value="${especialidade.id}"
+                                        th:selected="${especialidadeSelecionadaId == especialidade.id}"
+                                        th:text="${especialidade.descricao}"></option>
+                            </select>
+                        </div>
+                        <div class="form-group col-md-2">
+                            <label for="status"><strong>Status</strong></label>
+                            <select id="status" name="status" class="form-control">
+                                <option value="">TODOS</option>
+                                <option th:each="statusItem : ${statusAgendamentoOptions}"
+                                        th:value="${statusItem.name()}"
+                                        th:selected="${statusSelecionado != null and statusSelecionado.name() == statusItem.name()}"
+                                        th:text="${statusItem.name()}"></option>
+                            </select>
+                        </div>
+                        <div class="form-group col-md-2">
+                            <label for="dataInicio"><strong>Data inicio</strong></label>
+                            <input id="dataInicio" name="dataInicio" type="date" class="form-control" th:value="${dataInicio}">
+                        </div>
+                        <div class="form-group col-md-2">
+                            <label for="dataFim"><strong>Data fim</strong></label>
+                            <input id="dataFim" name="dataFim" type="date" class="form-control" th:value="${dataFim}">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-2">
+                            <button type="submit" class="btn btn-primary btn-block">Filtrar</button>
+                        </div>
+                        <div class="form-group col-md-2">
+                            <a th:href="@{/ui/atendimentos/agendados}" class="btn btn-outline-secondary btn-block">Limpar</a>
+                        </div>
+                    </div>
+                </form>
+
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover table-sm">
+                        <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Horario</th>
+                            <th>Paciente</th>
+                            <th>CPF</th>
+                            <th>Cargo</th>
+                            <th>Especialidade</th>
+                            <th>Tipo vaga</th>
+                            <th>Status</th>
+                            <th>Acoes</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:if="${#lists.isEmpty(agendamentos)}">
+                            <td colspan="9" class="text-center">Nenhum agendamento encontrado para os filtros informados.</td>
+                        </tr>
+                        <tr th:each="item : ${agendamentos}">
+                            <td th:text="${#temporals.format(item.agendaSlot.dataHoraInicio, 'dd/MM/yyyy')}">14/03/2026</td>
+                            <td th:text="${#temporals.format(item.agendaSlot.dataHoraInicio, 'HH:mm') + ' - ' + #temporals.format(item.agendaSlot.dataHoraFim, 'HH:mm')}">08:00 - 09:00</td>
+                            <td th:text="${item.paciente.nomeExibicao}">PACIENTE</td>
+                            <td th:text="${item.paciente.cpf != null ? item.paciente.cpf : '-'}">-</td>
+                            <td th:text="${item.agendaEspecialidade.cargoColaborador.descricao}">MEDICO</td>
+                            <td th:text="${item.agendaEspecialidade.especialidade != null ? item.agendaEspecialidade.especialidade.descricao : 'NAO SE APLICA'}">CLINICA MEDICA</td>
+                            <td th:text="${item.tipoVaga.name()}">NORMAL</td>
+                            <td>
+                                <span class="badge"
+                                      th:classappend="${
+                                          item.status.name() == 'PENDENTE' ? 'badge-secondary' :
+                                          item.status.name() == 'CONFIRMADO' ? 'badge-primary' :
+                                          item.status.name() == 'ATENDIDO' ? 'badge-success' :
+                                          item.status.name() == 'FALTOU' ? 'badge-warning' :
+                                          'badge-danger'
+                                      }"
+                                      th:text="${item.status.name()}">PENDENTE</span>
+                            </td>
+                            <td>
+                                <a th:if="${canCriarAtendimento and (item.status.name() == 'PENDENTE' or item.status.name() == 'CONFIRMADO')}"
+                                   class="btn btn-sm btn-primary"
+                                   th:href="@{'/ui/atendimentos/agendados/' + ${item.id} + '/checkin'}">
+                                    Check-in / iniciar
+                                </a>
+                                <span th:if="${!(canCriarAtendimento and (item.status.name() == 'PENDENTE' or item.status.name() == 'CONFIRMADO'))}"
+                                      class="text-muted">-</span>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+</th:block>
+</body>
+</html>

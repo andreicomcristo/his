@@ -43,6 +43,7 @@ import br.com.his.care.admission.dto.EntradaForm;
 import br.com.his.care.timeline.dto.TimelinePeriodoItem;
 import br.com.his.care.triage.dto.TriagemForm;
 import br.com.his.care.attendance.model.Atendimento;
+import br.com.his.care.admission.support.ProcedenciaEntradaRules;
 import br.com.his.care.timeline.model.AtendimentoEvento;
 import br.com.his.care.timeline.model.AtendimentoEventoTipo;
 import br.com.his.care.timeline.model.AtendimentoPeriodo;
@@ -562,6 +563,8 @@ public class AssistencialFlowService {
                         .orElseThrow(() -> new IllegalArgumentException("Grau de parentesco nao encontrado"));
         TipoProcedencia tipoProcedencia = tipoProcedenciaRepository.findById(form.getTipoProcedenciaId())
                 .orElseThrow(() -> new IllegalArgumentException("Tipo de procedencia nao encontrado"));
+        ProcedenciaEntradaRules.TipoCampo tipoCampoProcedencia = ProcedenciaEntradaRules.resolve(tipoProcedencia);
+        ProcedenciaEntradaRules.clearIrrelevantFields(form, tipoCampoProcedencia);
         Procedencia procedencia = null;
         Bairro bairro = null;
         Municipio Municipio = null;
@@ -588,10 +591,7 @@ public class AssistencialFlowService {
         if (situacaoOcupacional != null && !situacaoOcupacional.isAtivo()) {
             throw new IllegalArgumentException("Situacao ocupacional inativa");
         }
-        String descricaoTipoProcedencia = normalize(tipoProcedencia.getDescricao());
-        boolean tipoBairro = "BAIRRO".equalsIgnoreCase(descricaoTipoProcedencia);
-        boolean tipoMunicipio = "Municipio".equalsIgnoreCase(descricaoTipoProcedencia);
-        if (tipoBairro) {
+        if (tipoCampoProcedencia == ProcedenciaEntradaRules.TipoCampo.BAIRRO) {
             if (form.getProcedenciaBairroId() == null) {
                 throw new IllegalArgumentException("Bairro obrigatorio para o tipo de procedencia BAIRRO");
             }
@@ -601,13 +601,21 @@ public class AssistencialFlowService {
                     || !bairro.getMunicipio().getId().equals(atendimento.getUnidade().getMunicipio().getId())) {
                 throw new IllegalArgumentException("Bairro invalido para a Municipio da unidade atual");
             }
-        } else if (tipoMunicipio) {
+            procedencia = resolverOuCriarProcedenciaBairro(tipoProcedencia, bairro, atendimento.getUnidade());
+        } else if (tipoCampoProcedencia == ProcedenciaEntradaRules.TipoCampo.MUNICIPIO) {
             if (form.getProcedenciaMunicipioId() == null) {
                 throw new IllegalArgumentException("Municipio obrigatoria para o tipo de procedencia Municipio");
             }
             Municipio = MunicipioRepository.findById(form.getProcedenciaMunicipioId())
                     .orElseThrow(() -> new IllegalArgumentException("Municipio nao encontrada"));
-        } else {
+            procedencia = resolverOuCriarProcedenciaMunicipio(tipoProcedencia, Municipio, atendimento.getUnidade());
+        } else if (tipoCampoProcedencia == ProcedenciaEntradaRules.TipoCampo.OUTROS) {
+            String descricaoOutros = normalize(form.getProcedenciaObservacao());
+            if (descricaoOutros == null) {
+                throw new IllegalArgumentException("Descricao da procedencia e obrigatoria para o tipo OUTROS");
+            }
+            procedencia = resolverOuCriarProcedenciaDescricao(tipoProcedencia, descricaoOutros, atendimento.getUnidade());
+        } else if (tipoCampoProcedencia == ProcedenciaEntradaRules.TipoCampo.CATALOGO) {
             if (form.getProcedenciaId() == null) {
                 throw new IllegalArgumentException("Procedencia obrigatoria para o tipo selecionado");
             }
@@ -625,10 +633,7 @@ public class AssistencialFlowService {
         entrada.setAtendimento(atendimento);
         entrada.setArea(area);
         entrada.setFormaChegada(formaChegada);
-        entrada.setTipoProcedencia(tipoProcedencia);
         entrada.setProcedencia(procedencia);
-        entrada.setProcedenciaBairro(bairro);
-        entrada.setProcedenciaMunicipio(Municipio);
         entrada.setMotivoEntrada(motivoEntrada);
         entrada.setGrauParentesco(grauParentesco);
         entrada.setSituacaoOcupacional(situacaoOcupacional);
@@ -902,6 +907,10 @@ public class AssistencialFlowService {
         internacaoRepository.findByAtendimentoId(atendimentoId)
                 .map(internacao -> toTimelineInternacao(internacao, now))
                 .ifPresent(itens::add);
+        classificacaoReavaliacaoRepository.findByAtendimentoIdsOrderByDataHoraDesc(List.of(atendimentoId))
+                .stream()
+                .map(this::toTimelineReclassificacao)
+                .forEach(itens::add);
 
         return itens.stream()
                 .filter(item -> item.inicioEm() != null)
@@ -943,6 +952,20 @@ public class AssistencialFlowService {
                 durationMinutes(inicio, fim == null ? now : fim),
                 "-",
                 usuarioFim);
+    }
+
+    private TimelinePeriodoItem toTimelineReclassificacao(ClassificacaoReavaliacao reavaliacao) {
+        LocalDateTime dataHora = reavaliacao.getDataHora();
+        String label = "CLASSIFICACAO";
+        String usuario = firstNonBlank(reavaliacao.getUsuario(), usernameOrNull(reavaliacao.getUsuarioRegistro()));
+        return new TimelinePeriodoItem(
+                null,
+                label,
+                dataHora,
+                dataHora,
+                0L,
+                usuario,
+                usuario);
     }
 
     private long durationMinutes(LocalDateTime inicio, LocalDateTime fim) {
@@ -1394,6 +1417,51 @@ public class AssistencialFlowService {
                 .orElseThrow(() -> new IllegalArgumentException("Status de atendimento nao encontrado: " + codigo));
     }
 
+    private Procedencia resolverOuCriarProcedenciaBairro(TipoProcedencia tipoProcedencia, Bairro bairro, Unidade unidade) {
+        return procedenciaRepository
+                .findPrimeiraAtivaByTipoEPorBairro(tipoProcedencia.getId(), bairro.getId(), unidade.getId())
+                .orElseGet(() -> {
+                    Procedencia nova = new Procedencia();
+                    nova.setTipoProcedencia(tipoProcedencia);
+                    nova.setBairro(bairro);
+                    nova.setMunicipio(null);
+                    nova.setDescricao(normalize(bairro.getNome()));
+                    nova.setUnidade(null);
+                    nova.setAtivo(true);
+                    return procedenciaRepository.save(nova);
+                });
+    }
+
+    private Procedencia resolverOuCriarProcedenciaMunicipio(TipoProcedencia tipoProcedencia, Municipio municipio, Unidade unidade) {
+        return procedenciaRepository
+                .findPrimeiraAtivaByTipoEPorMunicipio(tipoProcedencia.getId(), municipio.getId(), unidade.getId())
+                .orElseGet(() -> {
+                    Procedencia nova = new Procedencia();
+                    nova.setTipoProcedencia(tipoProcedencia);
+                    nova.setBairro(null);
+                    nova.setMunicipio(municipio);
+                    nova.setDescricao(normalize(municipio.getNome()));
+                    nova.setUnidade(null);
+                    nova.setAtivo(true);
+                    return procedenciaRepository.save(nova);
+                });
+    }
+
+    private Procedencia resolverOuCriarProcedenciaDescricao(TipoProcedencia tipoProcedencia, String descricao, Unidade unidade) {
+        return procedenciaRepository
+                .findPrimeiraAtivaByTipoEDescricao(tipoProcedencia.getId(), descricao, unidade.getId())
+                .orElseGet(() -> {
+                    Procedencia nova = new Procedencia();
+                    nova.setTipoProcedencia(tipoProcedencia);
+                    nova.setBairro(null);
+                    nova.setMunicipio(null);
+                    nova.setDescricao(descricao);
+                    nova.setUnidade(null);
+                    nova.setAtivo(true);
+                    return procedenciaRepository.save(nova);
+                });
+    }
+
     private static String normalize(String value) {
         if (value == null || value.isBlank()) {
             return null;
@@ -1427,4 +1495,3 @@ public class AssistencialFlowService {
         return (fallback == null || fallback.isBlank()) ? null : fallback;
     }
 }
-

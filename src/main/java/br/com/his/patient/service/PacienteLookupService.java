@@ -87,7 +87,7 @@ public class PacienteLookupService {
     }
 
     public List<PacienteLookupOption> listarProcedencias() {
-        return listar("select id, descricao from procedencia %s and unidade_id is null order by descricao", "descricao");
+        return listar("select id, descricao from procedencia %s and unidade_id is null and ativo = true order by descricao", "descricao");
     }
 
     public List<ProcedenciaEntradaOption> listarProcedenciasEntrada(Long unidadeId) {
@@ -95,6 +95,7 @@ public class PacienteLookupService {
                 select p.id, p.descricao, p.tipo_procedencia_id
                 from procedencia p
                 where (unidade_id is null or unidade_id = ?)
+                  and p.ativo = true
                   and p.descricao not ilike '%%NÃO INFORMAD%%'
                   and p.descricao not ilike '%%NAO INFORMAD%%'
                   and p.descricao not ilike 'PREFIRO NÃO INFORMAR%%'
@@ -184,4 +185,3 @@ public class PacienteLookupService {
         }
     }
 }
-

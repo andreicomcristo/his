@@ -10,6 +10,48 @@
                 font-weight: 700;
             }
 
+            .entry-block {
+                border: 1px solid #d8dbe2;
+                border-radius: 6px;
+                overflow: hidden;
+                background: #fff;
+                margin-bottom: 24px;
+            }
+
+            .entry-block-header {
+                background: #f7f7f8;
+                padding: 14px 18px;
+                font-size: 1.15rem;
+                font-weight: 600;
+                color: #374151;
+                border-bottom: 1px solid #e5e7eb;
+            }
+
+            .entry-block-body {
+                padding: 18px;
+            }
+
+            .summary-grid {
+                display: grid;
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+                gap: 14px 18px;
+            }
+
+            .summary-item-wide {
+                grid-column: span 2;
+            }
+
+            .summary-label {
+                margin-right: 4px;
+                font-weight: 700;
+                color: #b14b42;
+            }
+
+            .summary-value {
+                color: #4b5563;
+                word-break: break-word;
+            }
+
             .pain-scale {
                 border: 1px solid #d8dbe2;
                 border-radius: 8px;
@@ -128,22 +170,74 @@
                 line-height: 1;
                 margin-top: 8px;
             }
+
+            @media (max-width: 991.98px) {
+                .summary-grid {
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                }
+
+                .summary-item-wide {
+                    grid-column: span 2;
+                }
+            }
+
+            @media (max-width: 575.98px) {
+                .summary-grid {
+                    grid-template-columns: 1fr;
+                }
+
+                .summary-item-wide {
+                    grid-column: span 1;
+                }
+            }
         </style>
         <div class="main-card card">
             <div class="card-body">
                 <h5 class="card-title"
                     th:text="${modoReclassificacao} ? 'Reclassificacao - Atendimento #' + atendimento.id : 'Triagem - Atendimento #' + atendimento.id">Triagem - Atendimento #</h5>
-                <p class="text-muted">Paciente: <span th:text="${atendimento.paciente.nomeExibicao}"></span></p>
 
                 <div class="alert alert-success" th:if="${successMessage}" th:text="${successMessage}"></div>
                 <div class="alert alert-danger" th:if="${errorMessage}" th:text="${errorMessage}"></div>
                 <div class="alert alert-info" th:if="${modoReclassificacao}">
                     Reclassificacao: os dados da classificacao inicial sao mantidos, e esta tela registra apenas a reavaliacao.
                 </div>
+                <div class="alert alert-info" th:if="${!modoReclassificacao and inicioTriagemCapturada != null}">
+                    Inicio da triagem capturado automaticamente:
+                    <strong th:text="${#temporals.format(inicioTriagemCapturada, 'dd/MM/yyyy HH:mm:ss')}"></strong>
+                </div>
 
-                <form th:if="${!triagemAberta and !modoReclassificacao}" th:action="@{/ui/triagem/{id}/iniciar(id=${atendimento.id})}" method="post" class="mb-3">
-                    <button type="submit" class="btn btn-outline-primary btn-sm">Iniciar triagem</button>
-                </form>
+                <div class="entry-block">
+                    <div class="entry-block-header">Resumo do atendimento</div>
+                    <div class="entry-block-body">
+                        <div class="summary-grid">
+                            <div class="summary-item-wide">
+                                <span class="summary-label">Paciente:</span>
+                                <span class="summary-value" th:text="${atendimento.paciente.nomeExibicao}"></span>
+                            </div>
+                            <div>
+                                <span class="summary-label">CPF:</span>
+                                <span class="summary-value" th:text="${atendimento.paciente.cpf ?: '-'}"></span>
+                            </div>
+                            <div>
+                                <span class="summary-label">Tipo:</span>
+                                <span class="summary-value" th:text="${atendimento.tipoAtendimento}"></span>
+                            </div>
+                            <div>
+                                <span class="summary-label">Chegada:</span>
+                                <span class="summary-value" th:text="${#temporals.format(atendimento.dataHoraChegada, 'dd/MM/yyyy HH:mm')}"></span>
+                            </div>
+                            <div>
+                                <span class="summary-label">Status:</span>
+                                <span class="summary-value" th:text="${atendimento.status != null ? atendimento.status.descricao : '-'}"></span>
+                            </div>
+                            <div class="summary-item-wide" th:if="${classificacaoResumo != null}">
+                                <span class="summary-label">Classificação:</span>
+                                <span class="summary-value"
+                                      th:text="${classificacaoResumo.classificacaoCor != null ? classificacaoResumo.classificacaoCor.descricao + ' - ' : ''} + ${classificacaoResumo.queixaPrincipal ?: 'SEM QUEIXA REGISTRADA'}"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
                 <form th:action="${modoReclassificacao} ? @{/ui/triagem/{id}/reclassificar(id=${atendimento.id})} : @{/ui/triagem/{id}/finalizar(id=${atendimento.id})}" method="post" th:object="${form}">
                     <div class="card mb-3">

@@ -37,12 +37,14 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import br.com.his.access.service.OperationalPermissionService;
 import br.com.his.care.admission.dto.EntradaPendenteForm;
 import br.com.his.care.admission.dto.EntradaForm;
+import br.com.his.care.admission.support.ProcedenciaEntradaRules;
 import br.com.his.care.attendance.model.Atendimento;
 import br.com.his.care.attendance.service.AssistencialFlowService;
 import br.com.his.reference.location.repository.MunicipioRepository;
 import br.com.his.reference.location.repository.UnidadeFederativaRepository;
 import br.com.his.patient.dto.PacienteForm;
 import br.com.his.patient.model.Paciente;
+import br.com.his.patient.repository.TipoProcedenciaRepository;
 import br.com.his.patient.service.PacienteLookupService;
 import br.com.his.patient.service.PacienteService;
 import jakarta.validation.Valid;
@@ -63,6 +65,7 @@ public class EntradaController {
     private final PacienteLookupService pacienteLookupService;
     private final PacienteService pacienteService;
     private final MunicipioRepository MunicipioRepository;
+    private final TipoProcedenciaRepository tipoProcedenciaRepository;
     private final SmartValidator validator;
 
     public EntradaController(AssistencialFlowService assistencialFlowService,
@@ -76,6 +79,7 @@ public class EntradaController {
                              PacienteLookupService pacienteLookupService,
                              PacienteService pacienteService,
                              MunicipioRepository MunicipioRepository,
+                             TipoProcedenciaRepository tipoProcedenciaRepository,
                              SmartValidator validator) {
         this.assistencialFlowService = assistencialFlowService;
         this.operationalPermissionService = operationalPermissionService;
@@ -88,6 +92,7 @@ public class EntradaController {
         this.pacienteLookupService = pacienteLookupService;
         this.pacienteService = pacienteService;
         this.MunicipioRepository = MunicipioRepository;
+        this.tipoProcedenciaRepository = tipoProcedenciaRepository;
         this.validator = validator;
     }
 
@@ -99,15 +104,16 @@ public class EntradaController {
                     .map(entrada -> {
                         EntradaForm f = new EntradaForm();
                         f.setAreaId(entrada.getArea() == null ? null : entrada.getArea().getId());
-                        f.setTipoProcedenciaId(entrada.getTipoProcedencia() == null
-                                ? (entrada.getProcedencia() == null || entrada.getProcedencia().getTipoProcedencia() == null
-                                        ? null : entrada.getProcedencia().getTipoProcedencia().getId())
-                                : entrada.getTipoProcedencia().getId());
+                        f.setTipoProcedenciaId(entrada.getProcedencia() == null || entrada.getProcedencia().getTipoProcedencia() == null
+                                ? null : entrada.getProcedencia().getTipoProcedencia().getId());
                         f.setProcedenciaId(entrada.getProcedencia() == null ? null : entrada.getProcedencia().getId());
-                        f.setProcedenciaBairroId(entrada.getProcedenciaBairro() == null ? null : entrada.getProcedenciaBairro().getId());
-                        f.setProcedenciaMunicipioUfId(entrada.getProcedenciaMunicipio() == null || entrada.getProcedenciaMunicipio().getUnidadeFederativa() == null
-                                ? null : entrada.getProcedenciaMunicipio().getUnidadeFederativa().getId());
-                        f.setProcedenciaMunicipioId(entrada.getProcedenciaMunicipio() == null ? null : entrada.getProcedenciaMunicipio().getId());
+                        f.setProcedenciaBairroId(entrada.getProcedencia() == null || entrada.getProcedencia().getBairro() == null
+                                ? null : entrada.getProcedencia().getBairro().getId());
+                        f.setProcedenciaMunicipioUfId(entrada.getProcedencia() == null || entrada.getProcedencia().getMunicipio() == null
+                                || entrada.getProcedencia().getMunicipio().getUnidadeFederativa() == null
+                                ? null : entrada.getProcedencia().getMunicipio().getUnidadeFederativa().getId());
+                        f.setProcedenciaMunicipioId(entrada.getProcedencia() == null || entrada.getProcedencia().getMunicipio() == null
+                                ? null : entrada.getProcedencia().getMunicipio().getId());
                         f.setFormaChegadaId(entrada.getFormaChegada() == null ? null : entrada.getFormaChegada().getId());
                         f.setMotivoEntradaId(entrada.getMotivoEntrada() == null ? null : entrada.getMotivoEntrada().getId());
                         f.setTelefoneComunicante(entrada.getTelefoneComunicante());
@@ -180,6 +186,7 @@ public class EntradaController {
                                        Model model,
                                        RedirectAttributes redirectAttributes) {
         requirePermission();
+        validateProcedencia(form, bindingResult, "");
         if (bindingResult.hasErrors()) {
             var atendimento = assistencialFlowService.buscarAtendimento(atendimentoId);
             model.addAttribute("atendimentoId", atendimentoId);
@@ -245,6 +252,7 @@ public class EntradaController {
         bindingResult.pushNestedPath("entradaForm");
         validator.validate(pendenteForm.getEntradaForm(), bindingResult);
         bindingResult.popNestedPath();
+        validateProcedencia(pendenteForm.getEntradaForm(), bindingResult, "entradaForm.");
         if (bindingResult.hasErrors()) {
             populatePendenteModel(model, atendimento, pendenteForm, 2);
             return "pages/care/admission/pendente-wizard";
@@ -343,15 +351,16 @@ public class EntradaController {
 
     private void copyEntradaToForm(br.com.his.care.admission.model.Entrada entrada, EntradaForm form) {
         form.setAreaId(entrada.getArea() == null ? null : entrada.getArea().getId());
-        form.setTipoProcedenciaId(entrada.getTipoProcedencia() == null
-                ? (entrada.getProcedencia() == null || entrada.getProcedencia().getTipoProcedencia() == null
-                        ? null : entrada.getProcedencia().getTipoProcedencia().getId())
-                : entrada.getTipoProcedencia().getId());
+        form.setTipoProcedenciaId(entrada.getProcedencia() == null || entrada.getProcedencia().getTipoProcedencia() == null
+                ? null : entrada.getProcedencia().getTipoProcedencia().getId());
         form.setProcedenciaId(entrada.getProcedencia() == null ? null : entrada.getProcedencia().getId());
-        form.setProcedenciaBairroId(entrada.getProcedenciaBairro() == null ? null : entrada.getProcedenciaBairro().getId());
-        form.setProcedenciaMunicipioUfId(entrada.getProcedenciaMunicipio() == null || entrada.getProcedenciaMunicipio().getUnidadeFederativa() == null
-                ? null : entrada.getProcedenciaMunicipio().getUnidadeFederativa().getId());
-        form.setProcedenciaMunicipioId(entrada.getProcedenciaMunicipio() == null ? null : entrada.getProcedenciaMunicipio().getId());
+        form.setProcedenciaBairroId(entrada.getProcedencia() == null || entrada.getProcedencia().getBairro() == null
+                ? null : entrada.getProcedencia().getBairro().getId());
+        form.setProcedenciaMunicipioUfId(entrada.getProcedencia() == null || entrada.getProcedencia().getMunicipio() == null
+                || entrada.getProcedencia().getMunicipio().getUnidadeFederativa() == null
+                ? null : entrada.getProcedencia().getMunicipio().getUnidadeFederativa().getId());
+        form.setProcedenciaMunicipioId(entrada.getProcedencia() == null || entrada.getProcedencia().getMunicipio() == null
+                ? null : entrada.getProcedencia().getMunicipio().getId());
         form.setFormaChegadaId(entrada.getFormaChegada() == null ? null : entrada.getFormaChegada().getId());
         form.setMotivoEntradaId(entrada.getMotivoEntrada() == null ? null : entrada.getMotivoEntrada().getId());
         form.setTelefoneComunicante(entrada.getTelefoneComunicante());
@@ -375,6 +384,49 @@ public class EntradaController {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Sem permissao para registrar entrada");
         }
     }
+
+    private void validateProcedencia(EntradaForm form, BindingResult bindingResult, String fieldPrefix) {
+        if (form.getTipoProcedenciaId() == null) {
+            return;
+        }
+
+        var tipoProcedenciaOpt = tipoProcedenciaRepository.findById(form.getTipoProcedenciaId());
+        if (tipoProcedenciaOpt.isEmpty()) {
+            bindingResult.rejectValue(fieldPrefix + "tipoProcedenciaId",
+                    "entrada.tipoProcedencia.invalid",
+                    "Tipo de procedencia invalido.");
+            return;
+        }
+
+        ProcedenciaEntradaRules.TipoCampo tipoCampoProcedencia = ProcedenciaEntradaRules.resolve(tipoProcedenciaOpt.get());
+        ProcedenciaEntradaRules.clearIrrelevantFields(form, tipoCampoProcedencia);
+
+        if (tipoCampoProcedencia == ProcedenciaEntradaRules.TipoCampo.BAIRRO
+                && form.getProcedenciaBairroId() == null) {
+            bindingResult.rejectValue(fieldPrefix + "procedenciaBairroId",
+                    "entrada.procedenciaBairro.required",
+                    "Bairro e obrigatorio.");
+            return;
+        }
+        if (tipoCampoProcedencia == ProcedenciaEntradaRules.TipoCampo.MUNICIPIO
+                && form.getProcedenciaMunicipioId() == null) {
+            bindingResult.rejectValue(fieldPrefix + "procedenciaMunicipioId",
+                    "entrada.procedenciaMunicipio.required",
+                    "Municipio e obrigatoria.");
+            return;
+        }
+        if (tipoCampoProcedencia == ProcedenciaEntradaRules.TipoCampo.OUTROS
+                && (form.getProcedenciaObservacao() == null || form.getProcedenciaObservacao().isBlank())) {
+            bindingResult.rejectValue(fieldPrefix + "procedenciaObservacao",
+                    "entrada.procedenciaObservacao.required",
+                    "Descricao da procedencia e obrigatoria.");
+            return;
+        }
+        if (tipoCampoProcedencia == ProcedenciaEntradaRules.TipoCampo.CATALOGO
+                && form.getProcedenciaId() == null) {
+            bindingResult.rejectValue(fieldPrefix + "procedenciaId",
+                    "entrada.procedencia.required",
+                    "Procedencia e obrigatoria.");
+        }
+    }
 }
-
-

@@ -780,16 +780,28 @@
                     });
                 }
 
+                function normalizeTipoProcedenciaLabel(value) {
+                    if (!value) {
+                        return '';
+                    }
+                    return value
+                        .normalize('NFD')
+                        .replace(/[\u0300-\u036f]/g, '')
+                        .trim()
+                        .toUpperCase();
+                }
+
                 function toggleProcedenciaFields() {
                     if (!tipoSelect) {
                         return;
                     }
                     var selectedOption = tipoSelect.options[tipoSelect.selectedIndex];
-                    var descricao = selectedOption ? selectedOption.textContent.trim().toUpperCase() : '';
+                    var descricao = normalizeTipoProcedenciaLabel(selectedOption ? selectedOption.textContent : '');
                     var isBairro = descricao === 'BAIRRO';
-                    var isMunicipio = descricao === 'Municipio';
+                    var isMunicipio = descricao === 'MUNICIPIO' || descricao === 'CIDADE';
+                    var isOutros = descricao.indexOf('OUTRO') !== -1;
                     if (procedenciaGroup) {
-                        procedenciaGroup.style.display = (isBairro || isMunicipio) ? 'none' : '';
+                        procedenciaGroup.style.display = (isBairro || isMunicipio || isOutros) ? 'none' : '';
                     }
                     if (bairroGroup) {
                         bairroGroup.style.display = isBairro ? '' : 'none';
@@ -798,6 +810,9 @@
                         MunicipioGroup.style.display = isMunicipio ? '' : 'none';
                     }
                     if (isBairro && procedenciaSelect) {
+                        procedenciaSelect.value = '';
+                    }
+                    if (isOutros && procedenciaSelect) {
                         procedenciaSelect.value = '';
                     }
                     if (!isBairro && bairroSelect) {
@@ -841,5 +856,3 @@
 </th:block>
 </body>
 </html>
-
-

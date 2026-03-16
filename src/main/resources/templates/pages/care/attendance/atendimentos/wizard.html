@@ -911,11 +911,26 @@
                         });
                     }
 
+                    function normalizeTipoProcedenciaLabel(value) {
+                        if (!value) {
+                            return '';
+                        }
+                        return value
+                            .normalize('NFD')
+                            .replace(/[\u0300-\u036f]/g, '')
+                            .trim()
+                            .toUpperCase();
+                    }
+
                     function toggleFields() {
-                        var isBairro = tipoSelect.value === '2';
-                        var isMunicipio = tipoSelect.value === '3';
+                        var selectedOption = tipoSelect.options[tipoSelect.selectedIndex];
+                        var normalizedLabel = normalizeTipoProcedenciaLabel(selectedOption ? selectedOption.textContent : '');
+                        var isBairro = normalizedLabel.indexOf('BAIRRO') !== -1;
+                        var isMunicipio = normalizedLabel.indexOf('MUNICIPIO') !== -1
+                            || normalizedLabel.indexOf('CIDADE') !== -1;
+                        var isOutros = normalizedLabel.indexOf('OUTRO') !== -1;
                         if (procedenciaGroup) {
-                            procedenciaGroup.style.display = (isBairro || isMunicipio) ? 'none' : '';
+                            procedenciaGroup.style.display = (isBairro || isMunicipio || isOutros) ? 'none' : '';
                         }
                         if (bairroGroup) {
                             bairroGroup.style.display = isBairro ? '' : 'none';
@@ -924,6 +939,9 @@
                             MunicipioGroup.style.display = isMunicipio ? '' : 'none';
                         }
                         if (isBairro && procedenciaSelect) {
+                            procedenciaSelect.value = '';
+                        }
+                        if (isOutros && procedenciaSelect) {
                             procedenciaSelect.value = '';
                         }
                         if (!isBairro && bairroSelect) {
@@ -1133,5 +1151,3 @@
 </th:block>
 </body>
 </html>
-
-

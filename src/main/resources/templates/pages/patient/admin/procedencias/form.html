@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(${modoEdicao} ? 'Administracao - Editar Procedencia' : 'Administracao - Nova Procedencia', ~{::content})}">
+<th:block th:fragment="content">
+    <div class="main-card mb-3 card">
+        <div class="card-body">
+            <h5 class="card-title" th:text="${modoEdicao} ? 'Editar procedencia' : 'Nova procedencia'">Procedencia</h5>
+
+            <div class="alert alert-danger" th:if="${errorMessage}" th:text="${errorMessage}"></div>
+
+            <form method="post"
+                  th:object="${form}"
+                  th:action="${modoEdicao} ? @{'/ui/admin/procedencias/' + ${itemId}} : @{/ui/admin/procedencias}">
+                <div class="form-row">
+                    <div class="form-group col-md-4">
+                        <label>Tipo de procedencia<span class="required-mark">*</span></label>
+                        <select class="form-control" th:field="*{tipoProcedenciaId}" id="tipoProcedenciaId">
+                            <option value="">Selecione</option>
+                            <option th:each="tipo : ${tiposProcedencia}"
+                                    th:with="campo=${camposPorTipoId[tipo.id]}"
+                                    th:value="${tipo.id}"
+                                    th:text="${campo == 'BAIRRO' or campo == 'MUNICIPIO' ? tipo.descricao : tipo.descricao + ' (nao suportado)'}"
+                                    th:disabled="${!(campo == 'BAIRRO' or campo == 'MUNICIPIO')}"
+                                    th:attr="data-campo=${campo}">BAIRRO</option>
+                        </select>
+                        <small class="form-text text-muted">Para cadastro de procedencia, use tipos CIDADE/MUNICIPIO ou BAIRRO.</small>
+                        <small class="text-danger" th:errors="*{tipoProcedenciaId}"></small>
+                    </div>
+
+                    <div class="form-group col-md-4">
+                        <label>Unidade (opcional)</label>
+                        <select class="form-control" th:field="*{unidadeId}">
+                            <option value="">GLOBAL</option>
+                            <option th:each="item : ${unidades}"
+                                    th:value="${item.id}"
+                                    th:text="${item.nome + (item.sigla != null and !#strings.isEmpty(item.sigla) ? ' - ' + item.sigla : '')}">
+                                TREINAMENTO
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="form-group col-md-2 d-flex align-items-center">
+                        <div class="form-check mt-4">
+                            <input type="checkbox" class="form-check-input" th:field="*{ativo}" id="ativo">
+                            <label class="form-check-label" for="ativo">Ativo</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group col-md-3" id="groupUf">
+                        <label>UF</label>
+                        <select class="form-control" th:field="*{unidadeFederativaId}" id="unidadeFederativaId">
+                            <option value="">Selecione</option>
+                            <option th:each="uf : ${ufs}"
+                                    th:value="${uf.id}"
+                                    th:text="${uf.descricao + ' - ' + uf.sigla}">ALAGOAS - AL</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group col-md-3" id="groupMunicipio">
+                        <label>Municipio</label>
+                        <select class="form-control" th:field="*{municipioId}" id="municipioId">
+                            <option value="">Selecione</option>
+                            <option th:each="item : ${municipios}"
+                                    th:value="${item.id}"
+                                    th:text="${item.nome}">MACEIO</option>
+                        </select>
+                        <small class="text-danger" th:errors="*{municipioId}"></small>
+                    </div>
+
+                    <div class="form-group col-md-3" id="groupBairro">
+                        <label>Bairro</label>
+                        <select class="form-control" th:field="*{bairroId}" id="bairroId">
+                            <option value="">Selecione</option>
+                            <option th:each="item : ${bairros}"
+                                    th:value="${item.id}"
+                                    th:text="${item.nome}">CENTRO</option>
+                        </select>
+                        <small class="text-danger" th:errors="*{bairroId}"></small>
+                    </div>
+
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-sm">Salvar</button>
+                <a th:href="@{/ui/admin/procedencias}" class="btn btn-secondary btn-sm">Voltar</a>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var tipoSelect = document.getElementById('tipoProcedenciaId');
+            var ufSelect = document.getElementById('unidadeFederativaId');
+            var municipioSelect = document.getElementById('municipioId');
+            var bairroSelect = document.getElementById('bairroId');
+            var groupUf = document.getElementById('groupUf');
+            var groupMunicipio = document.getElementById('groupMunicipio');
+            var groupBairro = document.getElementById('groupBairro');
+
+            function tipoCampoSelecionado() {
+                if (!tipoSelect || !tipoSelect.selectedOptions || !tipoSelect.selectedOptions.length) {
+                    return '';
+                }
+                return (tipoSelect.selectedOptions[0].dataset.campo || '').toUpperCase();
+            }
+
+            function resetSelect(select) {
+                if (!select) {
+                    return;
+                }
+                select.innerHTML = '<option value="">Selecione</option>';
+            }
+
+            function loadMunicipios(selectedMunicipioId) {
+                resetSelect(municipioSelect);
+                resetSelect(bairroSelect);
+                if (!ufSelect || !ufSelect.value) {
+                    return Promise.resolve();
+                }
+                return fetch('/ui/admin/procedencias/municipios-por-uf/' + ufSelect.value)
+                    .then(function (response) { return response.json(); })
+                    .then(function (items) {
+                        items.forEach(function (item) {
+                            var option = document.createElement('option');
+                            option.value = item.id;
+                            option.textContent = item.descricao;
+                            if (selectedMunicipioId && String(selectedMunicipioId) === String(item.id)) {
+                                option.selected = true;
+                            }
+                            municipioSelect.appendChild(option);
+                        });
+                    });
+            }
+
+            function loadBairros(selectedBairroId) {
+                resetSelect(bairroSelect);
+                if (!municipioSelect || !municipioSelect.value) {
+                    return Promise.resolve();
+                }
+                return fetch('/ui/admin/procedencias/bairros-por-municipio/' + municipioSelect.value)
+                    .then(function (response) { return response.json(); })
+                    .then(function (items) {
+                        items.forEach(function (item) {
+                            var option = document.createElement('option');
+                            option.value = item.id;
+                            option.textContent = item.descricao;
+                            if (selectedBairroId && String(selectedBairroId) === String(item.id)) {
+                                option.selected = true;
+                            }
+                            bairroSelect.appendChild(option);
+                        });
+                    });
+            }
+
+            function aplicarVisibilidade(clearFields) {
+                var tipoCampo = tipoCampoSelecionado();
+                var isBairro = tipoCampo === 'BAIRRO';
+                var isMunicipio = tipoCampo === 'MUNICIPIO';
+
+                if (groupUf) {
+                    groupUf.style.display = (isBairro || isMunicipio) ? '' : 'none';
+                }
+                if (groupMunicipio) {
+                    groupMunicipio.style.display = (isBairro || isMunicipio) ? '' : 'none';
+                }
+                if (groupBairro) {
+                    groupBairro.style.display = isBairro ? '' : 'none';
+                }
+
+                if (!clearFields) {
+                    return;
+                }
+
+                if (!isBairro && bairroSelect) {
+                    bairroSelect.value = '';
+                }
+                if (!(isBairro || isMunicipio)) {
+                    if (ufSelect) {
+                        ufSelect.value = '';
+                    }
+                    if (municipioSelect) {
+                        municipioSelect.value = '';
+                    }
+                    resetSelect(municipioSelect);
+                    resetSelect(bairroSelect);
+                }
+            }
+
+            var municipioInicial = municipioSelect ? municipioSelect.value : null;
+            var bairroInicial = bairroSelect ? bairroSelect.value : null;
+
+            aplicarVisibilidade(false);
+            if (ufSelect && ufSelect.value) {
+                loadMunicipios(municipioInicial).then(function () {
+                    if (municipioSelect && municipioSelect.value) {
+                        return loadBairros(bairroInicial);
+                    }
+                    return Promise.resolve();
+                });
+            }
+
+            if (tipoSelect) {
+                tipoSelect.addEventListener('change', function () {
+                    aplicarVisibilidade(true);
+                });
+            }
+            if (ufSelect) {
+                ufSelect.addEventListener('change', function () {
+                    loadMunicipios(null);
+                });
+            }
+            if (municipioSelect) {
+                municipioSelect.addEventListener('change', function () {
+                    loadBairros(null);
+                });
+            }
+        });
+    </script>
+</th:block>
+</html>

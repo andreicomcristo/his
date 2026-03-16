@@ -46,8 +46,10 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import br.com.his.access.context.UnidadeContext;
+import br.com.his.access.repository.CargoColaboradorRepository;
 import br.com.his.access.repository.UnidadeRepository;
 import br.com.his.access.service.OperationalPermissionService;
+import br.com.his.care.admission.support.ProcedenciaEntradaRules;
 import br.com.his.care.attendance.dto.AtendimentoWizardForm;
 import br.com.his.care.attendance.model.Desfecho;
 import br.com.his.care.attendance.model.Atendimento;
@@ -62,6 +64,9 @@ import br.com.his.care.inpatient.repository.InternacaoRepository;
 import br.com.his.care.inpatient.repository.ObservacaoRepository;
 import br.com.his.care.attendance.repository.StatusAtendimentoRepository;
 import br.com.his.care.attendance.service.AssistencialFlowService;
+import br.com.his.care.scheduling.model.StatusAgendamentoPaciente;
+import br.com.his.care.scheduling.service.AgendaEspecialidadeService;
+import br.com.his.care.scheduling.service.EspecialidadeAdminService;
 import br.com.his.reference.location.repository.MunicipioRepository;
 import br.com.his.reference.location.repository.UnidadeFederativaRepository;
 import br.com.his.patient.dto.PacienteForm;
@@ -69,6 +74,7 @@ import br.com.his.patient.model.Paciente;
 import br.com.his.patient.service.PacienteLookupService;
 import br.com.his.patient.service.PacienteService;
 import br.com.his.patient.validation.CpfUtils;
+import br.com.his.patient.repository.TipoProcedenciaRepository;
 import org.springframework.http.HttpStatus;
 
 @Controller
@@ -87,6 +93,9 @@ public class AtendimentoController {
     private final UnidadeContext unidadeContext;
     private final UnidadeRepository unidadeRepository;
     private final OperationalPermissionService operationalPermissionService;
+    private final AgendaEspecialidadeService agendaEspecialidadeService;
+    private final CargoColaboradorRepository cargoColaboradorRepository;
+    private final EspecialidadeAdminService especialidadeAdminService;
     private final PacienteService pacienteService;
     private final PacienteLookupService pacienteLookupService;
     private final UnidadeFederativaRepository unidadeFederativaRepository;
@@ -96,6 +105,7 @@ public class AtendimentoController {
     private final GrauParentescoRepository grauParentescoRepository;
     private final MotivoEntradaRepository motivoEntradaRepository;
     private final SituacaoOcupacionalRepository situacaoOcupacionalRepository;
+    private final TipoProcedenciaRepository tipoProcedenciaRepository;
 
     public AtendimentoController(AssistencialFlowService assistencialFlowService,
                                  DesfechoRepository desfechoRepository,
@@ -106,6 +116,9 @@ public class AtendimentoController {
                                  UnidadeContext unidadeContext,
                                  UnidadeRepository unidadeRepository,
                                  OperationalPermissionService operationalPermissionService,
+                                 AgendaEspecialidadeService agendaEspecialidadeService,
+                                 CargoColaboradorRepository cargoColaboradorRepository,
+                                 EspecialidadeAdminService especialidadeAdminService,
                                  PacienteService pacienteService,
                                  PacienteLookupService pacienteLookupService,
                                  UnidadeFederativaRepository unidadeFederativaRepository,
@@ -114,7 +127,8 @@ public class AtendimentoController {
                                  FormaChegadaRepository formaChegadaRepository,
                                  GrauParentescoRepository grauParentescoRepository,
                                  MotivoEntradaRepository motivoEntradaRepository,
-                                 SituacaoOcupacionalRepository situacaoOcupacionalRepository) {
+                                 SituacaoOcupacionalRepository situacaoOcupacionalRepository,
+                                 TipoProcedenciaRepository tipoProcedenciaRepository) {
         this.assistencialFlowService = assistencialFlowService;
         this.desfechoRepository = desfechoRepository;
         this.entradaRepository = entradaRepository;
@@ -124,6 +138,9 @@ public class AtendimentoController {
         this.unidadeContext = unidadeContext;
         this.unidadeRepository = unidadeRepository;
         this.operationalPermissionService = operationalPermissionService;
+        this.agendaEspecialidadeService = agendaEspecialidadeService;
+        this.cargoColaboradorRepository = cargoColaboradorRepository;
+        this.especialidadeAdminService = especialidadeAdminService;
         this.pacienteService = pacienteService;
         this.pacienteLookupService = pacienteLookupService;
         this.unidadeFederativaRepository = unidadeFederativaRepository;
@@ -133,6 +150,7 @@ public class AtendimentoController {
         this.grauParentescoRepository = grauParentescoRepository;
         this.motivoEntradaRepository = motivoEntradaRepository;
         this.situacaoOcupacionalRepository = situacaoOcupacionalRepository;
+        this.tipoProcedenciaRepository = tipoProcedenciaRepository;
     }
 
     @GetMapping
@@ -222,6 +240,68 @@ public class AtendimentoController {
         model.addAttribute("areaFilterLabel", "Porta de entrada");
         model.addAttribute("emptyMessage", "Nenhum atendimento aguardando classificacao");
         return "pages/care/attendance/atendimentos/list";
+    }
+
+    @GetMapping("/agendados")
+    public String agendadosRecepcao(@RequestParam(required = false) Long cargoColaboradorId,
+                                    @RequestParam(required = false) Long especialidadeId,
+                                    @RequestParam(required = false) StatusAgendamentoPaciente status,
+                                    @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicio,
+                                    @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFim,
+                                    Model model) {
+        requirePermission(OperationalPermissionService.PERM_RECEPCAO_EXECUTAR);
+        Long unidadeId = unidadeAtual();
+        LocalDate inicio = dataInicio == null ? LocalDate.now() : dataInicio;
+        LocalDate fim = dataFim == null ? inicio : dataFim;
+        if (fim.isBefore(inicio)) {
+            LocalDate tmp = inicio;
+            inicio = fim;
+            fim = tmp;
+        }
+
+        var agendamentos = agendaEspecialidadeService.listarAgendamentosRecepcao(
+                unidadeId, cargoColaboradorId, especialidadeId, status, inicio, fim);
+
+        model.addAttribute("agendamentos", agendamentos);
+        model.addAttribute("cargosAssistenciais", cargoColaboradorRepository.findAssistenciaisAtivosOrderByDescricaoAsc());
+        model.addAttribute("especialidades", especialidadeAdminService.listarAtivas());
+        model.addAttribute("statusAgendamentoOptions", StatusAgendamentoPaciente.values());
+        model.addAttribute("cargoColaboradorSelecionadoId", cargoColaboradorId);
+        model.addAttribute("especialidadeSelecionadaId", especialidadeId);
+        model.addAttribute("statusSelecionado", status);
+        model.addAttribute("dataInicio", inicio);
+        model.addAttribute("dataFim", fim);
+        model.addAttribute("pageTitle", "Agendados da recepcao");
+        return "pages/care/attendance/atendimentos/agendados";
+    }
+
+    @GetMapping("/agendados/{agendaPacienteId}/checkin")
+    public String iniciarCheckinAgendado(@PathVariable Long agendaPacienteId,
+                                         HttpSession session,
+                                         RedirectAttributes redirectAttributes) {
+        requireCreateAtendimentoPermission();
+        Long unidadeId = unidadeAtual();
+        try {
+            var agendamento = agendaEspecialidadeService.buscarAgendamentoPaciente(unidadeId, agendaPacienteId);
+            StatusAgendamentoPaciente statusAtual = agendamento.getStatus();
+            if (statusAtual == StatusAgendamentoPaciente.CANCELADO
+                    || statusAtual == StatusAgendamentoPaciente.FALTOU
+                    || statusAtual == StatusAgendamentoPaciente.ATENDIDO) {
+                throw new IllegalArgumentException("Agendamento com status atual nao permite iniciar atendimento");
+            }
+
+            AtendimentoWizardForm wizard = resetWizard(session, agendamento.getPaciente().getId());
+            wizard.setAgendaPacienteId(agendaPacienteId);
+            wizard.setCurrentStep(3);
+            wizard.setTipoAtendimento(TipoAtendimento.AMBULATORIAL);
+
+            redirectAttributes.addFlashAttribute("successMessage",
+                    "Check-in iniciado para " + agendamento.getPaciente().getNomeExibicao() + ". Complete o fluxo de entrada.");
+            return "redirect:/ui/atendimentos/novo?step=3";
+        } catch (IllegalArgumentException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+            return "redirect:/ui/atendimentos/agendados";
+        }
     }
 
     @GetMapping("/nao-identificados")
@@ -421,6 +501,15 @@ public class AtendimentoController {
                     wizard.getTipoAtendimento(),
                     chegada);
             assistencialFlowService.registrarEntradaPorAtendimento(atendimento.getId(), wizard.getEntradaForm());
+            Long agendaPacienteId = wizard.getAgendaPacienteId();
+            if (agendaPacienteId != null) {
+                try {
+                    agendaEspecialidadeService.registrarCheckinComAtendimento(unidadeAtual(), agendaPacienteId, atendimento.getId());
+                } catch (IllegalArgumentException ex) {
+                    redirectAttributes.addFlashAttribute("errorMessage",
+                            "Atendimento " + atendimento.getId() + " criado, mas o agendamento nao foi atualizado: " + ex.getMessage());
+                }
+            }
             session.removeAttribute(SESSION_ATENDIMENTO_WIZARD);
             redirectAttributes.addFlashAttribute("successMessage",
                     "Atendimento " + atendimento.getId() + " criado e entrada registrada com sucesso");
@@ -803,23 +892,35 @@ public class AtendimentoController {
 
     private Map<String, String> validateEntradaStep(AtendimentoWizardForm wizard) {
         Map<String, String> errors = new LinkedHashMap<>();
-        if (wizard.getEntradaForm().getTipoProcedenciaId() == null) {
+        EntradaForm entradaForm = wizard.getEntradaForm();
+        if (entradaForm.getTipoProcedenciaId() == null) {
             errors.put("entradaForm.tipoProcedenciaId", "Tipo de procedencia e obrigatorio.");
-        } else if (Long.valueOf(2L).equals(wizard.getEntradaForm().getTipoProcedenciaId())) {
-            if (wizard.getEntradaForm().getProcedenciaBairroId() == null) {
-                errors.put("entradaForm.procedenciaBairroId", "Bairro e obrigatorio.");
+        } else {
+            var tipoProcedenciaOpt = tipoProcedenciaRepository.findById(entradaForm.getTipoProcedenciaId());
+            if (tipoProcedenciaOpt.isEmpty()) {
+                errors.put("entradaForm.tipoProcedenciaId", "Tipo de procedencia invalido.");
+            } else {
+                ProcedenciaEntradaRules.TipoCampo tipoCampoProcedencia = ProcedenciaEntradaRules.resolve(tipoProcedenciaOpt.get());
+                ProcedenciaEntradaRules.clearIrrelevantFields(entradaForm, tipoCampoProcedencia);
+                if (tipoCampoProcedencia == ProcedenciaEntradaRules.TipoCampo.BAIRRO
+                        && entradaForm.getProcedenciaBairroId() == null) {
+                    errors.put("entradaForm.procedenciaBairroId", "Bairro e obrigatorio.");
+                } else if (tipoCampoProcedencia == ProcedenciaEntradaRules.TipoCampo.MUNICIPIO
+                        && entradaForm.getProcedenciaMunicipioId() == null) {
+                    errors.put("entradaForm.procedenciaMunicipioId", "Municipio e obrigatoria.");
+                } else if (tipoCampoProcedencia == ProcedenciaEntradaRules.TipoCampo.OUTROS
+                        && (entradaForm.getProcedenciaObservacao() == null || entradaForm.getProcedenciaObservacao().isBlank())) {
+                    errors.put("entradaForm.procedenciaObservacao", "Descricao da procedencia e obrigatoria.");
+                } else if (tipoCampoProcedencia == ProcedenciaEntradaRules.TipoCampo.CATALOGO
+                        && entradaForm.getProcedenciaId() == null) {
+                    errors.put("entradaForm.procedenciaId", "Procedencia e obrigatoria.");
+                }
             }
-        } else if (Long.valueOf(3L).equals(wizard.getEntradaForm().getTipoProcedenciaId())) {
-            if (wizard.getEntradaForm().getProcedenciaMunicipioId() == null) {
-                errors.put("entradaForm.procedenciaMunicipioId", "Municipio e obrigatoria.");
-            }
-        } else if (wizard.getEntradaForm().getProcedenciaId() == null) {
-            errors.put("entradaForm.procedenciaId", "Procedencia e obrigatoria.");
         }
-        if (wizard.getEntradaForm().getAreaId() == null) {
+        if (entradaForm.getAreaId() == null) {
             errors.put("entradaForm.areaId", "Area da entrada e obrigatoria.");
         }
-        if (wizard.getEntradaForm().getFormaChegadaId() == null) {
+        if (entradaForm.getFormaChegadaId() == null) {
             errors.put("entradaForm.formaChegadaId", "Forma de chegada e obrigatoria.");
         }
         return errors;
@@ -1030,5 +1131,3 @@ public class AtendimentoController {
         return novoMapa;
     }
 }
-
-

@@ -74,26 +74,30 @@
             <div class="row agenda-calendario-metricas mb-3">
                 <div class="col-12 col-sm-6 col-lg mb-2">
                     <span class="badge badge-secondary d-block py-2"
-                          th:text="${'Eventos no periodo: ' + #lists.size(eventosCalendario)}">Eventos no periodo</span>
+                    ><i class="fa fa-calendar mr-1"></i>
+                        <span th:text="${'Eventos no periodo: ' + #lists.size(eventosCalendario)}">Eventos no periodo</span>
+                    </span>
                 </div>
                 <div class="col-12 col-sm-6 col-lg mb-2" th:if="${mostrarLivres and horariosLivresDisponiveis}">
                     <span class="badge badge-success d-block py-2"
-                          th:text="${'Horarios livres: ' + qtdHorariosLivres}">Horarios livres</span>
+                    ><i class="fa fa-check-circle mr-1"></i>
+                        <span th:text="${'Horarios livres: ' + qtdHorariosLivres}">Horarios livres</span>
+                    </span>
                 </div>
                 <div class="col-12 col-sm-6 col-lg mb-2">
-                    <span class="badge badge-secondary d-block py-2" th:text="${'Pendente: ' + qtdPendente}">PENDENTE</span>
+                    <span class="badge badge-secondary d-block py-2"><i class="fa fa-clock mr-1"></i><span th:text="${'Pendente: ' + qtdPendente}">PENDENTE</span></span>
                 </div>
                 <div class="col-12 col-sm-6 col-lg mb-2">
-                    <span class="badge badge-primary d-block py-2" th:text="${'Confirmado: ' + qtdConfirmado}">CONFIRMADO</span>
+                    <span class="badge badge-primary d-block py-2"><i class="fa fa-check-circle mr-1"></i><span th:text="${'Confirmado: ' + qtdConfirmado}">CONFIRMADO</span></span>
                 </div>
                 <div class="col-12 col-sm-6 col-lg mb-2">
-                    <span class="badge badge-success d-block py-2" th:text="${'Atendido: ' + qtdAtendido}">ATENDIDO</span>
+                    <span class="badge badge-success d-block py-2"><i class="fa fa-stethoscope mr-1"></i><span th:text="${'Atendido: ' + qtdAtendido}">ATENDIDO</span></span>
                 </div>
                 <div class="col-12 col-sm-6 col-lg mb-2">
-                    <span class="badge badge-warning d-block py-2" th:text="${'Faltou: ' + qtdFaltou}">FALTOU</span>
+                    <span class="badge badge-warning d-block py-2"><i class="fa fa-exclamation-circle mr-1"></i><span th:text="${'Faltou: ' + qtdFaltou}">FALTOU</span></span>
                 </div>
                 <div class="col-12 col-sm-6 col-lg mb-2">
-                    <span class="badge badge-danger d-block py-2" th:text="${'Cancelado: ' + qtdCancelado}">CANCELADO</span>
+                    <span class="badge badge-cancelado-agenda d-block py-2"><i class="fa fa-ban mr-1"></i><span th:text="${'Cancelado: ' + qtdCancelado}">CANCELADO</span></span>
                 </div>
             </div>
 
@@ -178,14 +182,25 @@
                             <td th:text="${evento.tipoVaga}"></td>
                             <td>
                                 <span class="badge"
-                                      th:text="${evento.status}"
                                       th:classappend="${
                                           evento.status.name() == 'PENDENTE' ? 'badge-secondary' :
                                           evento.status.name() == 'CONFIRMADO' ? 'badge-primary' :
                                           evento.status.name() == 'ATENDIDO' ? 'badge-success' :
                                           evento.status.name() == 'FALTOU' ? 'badge-warning' :
-                                          'badge-danger'
-                                      }"></span>
+                                          evento.status.name() == 'CANCELADO' ? 'badge-cancelado-agenda' :
+                                          'badge-secondary'
+                                      }">
+                                    <i class="mr-1"
+                                       th:classappend="${
+                                           evento.status.name() == 'PENDENTE' ? 'fa fa-clock' :
+                                           evento.status.name() == 'CONFIRMADO' ? 'fa fa-check-circle' :
+                                           evento.status.name() == 'ATENDIDO' ? 'fa fa-stethoscope' :
+                                           evento.status.name() == 'FALTOU' ? 'fa fa-exclamation-circle' :
+                                           evento.status.name() == 'CANCELADO' ? 'fa fa-ban' :
+                                           'fa fa-info-circle'
+                                       }"></i>
+                                    <span th:text="${evento.status}">STATUS</span>
+                                </span>
                             </td>
                             <td th:text="${evento.observacao != null ? evento.observacao : '-'}"></td>
                             <td class="text-right">
@@ -419,8 +434,16 @@
             color: #212529;
         }
         #agendamento-calendar .fc-event.ev-status-cancelado {
-            background-color: #d92550;
-            border-color: #d92550;
+            background-color: #f7eeec;
+            border-color: #efc7bf;
+            color: #d95d42;
+            opacity: 0.95;
+        }
+        #agendamento-calendar .fc-event.ev-status-cancelado .fc-title,
+        #agendamento-calendar .fc-event.ev-status-cancelado .fc-time {
+            text-decoration: line-through;
+            text-decoration-thickness: 2px;
+            text-decoration-color: #d95d42;
         }
         #agendamento-calendar .fc-event.ev-status-livre {
             background-color: #e8f5ee;
@@ -446,6 +469,19 @@
         #agendamento-calendar .fc-agendaWeek-view,
         #agendamento-calendar .fc-agendaDay-view {
             min-height: 720px;
+        }
+
+        .badge-cancelado-agenda {
+            background-color: #f7eeec;
+            color: #d95d42;
+            border: 1px solid #efc7bf;
+            text-decoration: line-through;
+            text-decoration-thickness: 1.5px;
+            text-decoration-color: #d95d42;
+        }
+
+        .agenda-status-icon {
+            margin-right: 0.25rem;
         }
     </style>
 
@@ -585,9 +621,35 @@
                         return 'badge-warning';
                     }
                     if (statusCode === 'cancelado') {
-                        return 'badge-danger';
+                        return 'badge-cancelado-agenda';
                     }
                     return 'badge-secondary';
+                }
+
+                function classIconStatus(statusCode, isLivre) {
+                    if (isLivre || statusCode === 'livre') {
+                        return 'fa fa-check-circle';
+                    }
+                    if (statusCode === 'confirmado') {
+                        return 'fa fa-check-circle';
+                    }
+                    if (statusCode === 'atendido') {
+                        return 'fa fa-stethoscope';
+                    }
+                    if (statusCode === 'faltou') {
+                        return 'fa fa-exclamation-circle';
+                    }
+                    if (statusCode === 'cancelado') {
+                        return 'fa fa-ban';
+                    }
+                    if (statusCode === 'pendente') {
+                        return 'fa fa-clock';
+                    }
+                    return 'fa fa-info-circle';
+                }
+
+                function htmlIconStatus(statusCode, isLivre) {
+                    return '<i class="' + classIconStatus(statusCode, isLivre) + ' agenda-status-icon" aria-hidden="true"></i>';
                 }
 
                 function abrirModalAgendamento(event) {
@@ -609,9 +671,9 @@
                     modalEventoObservacaoEl.text(event.description || '-');
 
                     modalEventoStatusEl
-                        .removeClass('badge-secondary badge-primary badge-success badge-warning badge-danger')
+                        .removeClass('badge-secondary badge-primary badge-success badge-warning badge-danger badge-cancelado-agenda')
                         .addClass(classBadgeStatus(event.statusCode))
-                        .text(event.statusLabel || '-');
+                        .html(htmlIconStatus(event.statusCode, false) + (event.statusLabel || '-'));
 
                     var cancelado = event.statusCode === 'cancelado';
                     modalEventoConfirmarFormEl.toggleClass('d-none', cancelado || event.statusCode === 'confirmado');
@@ -620,6 +682,123 @@
                     modalEventoReagendarLinkEl.toggleClass('d-none', cancelado);
 
                     modalEventoEl.modal('show');
+                }
+
+                function prioridadeEmpilhamento(statusCode) {
+                    if (statusCode === 'confirmado') return 1;
+                    if (statusCode === 'pendente') return 2;
+                    if (statusCode === 'atendido') return 3;
+                    if (statusCode === 'faltou') return 4;
+                    if (statusCode === 'cancelado') return 5;
+                    if (statusCode === 'livre') return 6;
+                    return 9;
+                }
+
+                function empilharEventosMesmoHorario() {
+                    var grupos = {};
+                    calendarEl.find('.fc-time-grid-event[data-stacked-key]').each(function () {
+                        var el = $(this);
+                        var key = el.attr('data-stacked-key');
+                        if (!key) {
+                            return;
+                        }
+                        if (!grupos[key]) {
+                            grupos[key] = [];
+                        }
+                        grupos[key].push(el);
+                    });
+
+                    Object.keys(grupos).forEach(function (key) {
+                        var eventos = grupos[key];
+                        if (!eventos || eventos.length <= 1) {
+                            return;
+                        }
+
+                        eventos.sort(function (a, b) {
+                            return prioridadeEmpilhamento(a.attr('data-status-code'))
+                                - prioridadeEmpilhamento(b.attr('data-status-code'));
+                        });
+
+                        var metricas = eventos.map(function (el) {
+                            var topOriginal = parseFloat(el.attr('data-orig-top'));
+                            var alturaOriginal = parseFloat(el.attr('data-orig-height'));
+                            if (!isFinite(topOriginal) || !isFinite(alturaOriginal) || alturaOriginal <= 0) {
+                                topOriginal = parseFloat(el.css('top')) || 0;
+                                alturaOriginal = parseFloat(el.css('height')) || 0;
+                                el.attr('data-orig-top', String(topOriginal));
+                                el.attr('data-orig-height', String(alturaOriginal));
+                            }
+                            var leftOriginal = parseFloat(el.css('left'));
+                            var larguraOriginal = parseFloat(el.css('width'));
+                            if (!isFinite(leftOriginal)) {
+                                leftOriginal = 0;
+                            }
+                            if (!isFinite(larguraOriginal) || larguraOriginal <= 0) {
+                                larguraOriginal = el.outerWidth() || 0;
+                            }
+                            return {
+                                el: el,
+                                top: topOriginal,
+                                height: alturaOriginal,
+                                left: leftOriginal,
+                                width: larguraOriginal
+                            };
+                        });
+
+                        var topBase = metricas.reduce(function (min, item) {
+                            return Math.min(min, item.top);
+                        }, Number.POSITIVE_INFINITY);
+                        var leftBase = metricas.reduce(function (min, item) {
+                            return Math.min(min, item.left);
+                        }, Number.POSITIVE_INFINITY);
+                        var baseFim = metricas.reduce(function (max, item) {
+                            return Math.max(max, item.top + item.height);
+                        }, 0);
+                        var rightBase = metricas.reduce(function (max, item) {
+                            return Math.max(max, item.left + item.width);
+                        }, 0);
+                        var alturaBase = baseFim - topBase;
+                        var larguraBase = rightBase - leftBase;
+
+                        if (!isFinite(topBase) || !isFinite(leftBase) || alturaBase <= 0 || larguraBase <= 0) {
+                            return;
+                        }
+
+                        var dataHorarioInicio = key.split('|')[0];
+                        var dataDia = dataHorarioInicio ? dataHorarioInicio.split('T')[0] : null;
+                        if (dataDia) {
+                            var primeiroEvento = eventos[0];
+                            var offsetParent = primeiroEvento && primeiroEvento.offsetParent ? primeiroEvento.offsetParent() : null;
+                            var headerCell = calendarEl.find('.fc-day-header[data-date="' + dataDia + '"]').first();
+                            if (offsetParent && offsetParent.length && headerCell.length) {
+                                var parentOffset = offsetParent.offset();
+                                var headerOffset = headerCell.offset();
+                                var headerWidth = headerCell.outerWidth();
+                                if (parentOffset && headerOffset && isFinite(headerWidth) && headerWidth > 0) {
+                                    leftBase = (headerOffset.left - parentOffset.left) + 1;
+                                    larguraBase = Math.max(20, headerWidth - 2);
+                                }
+                            }
+                        }
+
+                        var espacamento = 2;
+                        var alturaPorEvento = Math.max(
+                            18,
+                            Math.floor((alturaBase - (espacamento * (eventos.length - 1))) / eventos.length)
+                        );
+
+                        eventos.forEach(function (el, index) {
+                            var novoTop = topBase + (index * (alturaPorEvento + espacamento));
+                            el.css({
+                                left: leftBase + 'px',
+                                right: 'auto',
+                                width: larguraBase + 'px',
+                                top: novoTop + 'px',
+                                bottom: 'auto',
+                                height: alturaPorEvento + 'px'
+                            });
+                        });
+                    });
                 }
 
                 calendarEl.fullCalendar({
@@ -659,6 +838,7 @@
                     editable: false,
                     eventLimit: true,
                     defaultView: 'agendaWeek',
+                    slotEventOverlap: true,
                     allDaySlot: false,
                     nowIndicator: true,
                     minTime: '06:00:00',
@@ -687,6 +867,28 @@
                     eventRender: function (event, element) {
                         if (event.description) {
                             element.attr('title', event.description);
+                        }
+                        var iconHtml = htmlIconStatus(event.statusCode, event.isLivre);
+                        var timeEl = element.find('.fc-time');
+                        if (timeEl.length) {
+                            timeEl.prepend(iconHtml);
+                        } else {
+                            var titleEl = element.find('.fc-title');
+                            if (titleEl.length) {
+                                titleEl.prepend(iconHtml);
+                            }
+                        }
+                        if (event.start && event.end && element && element.attr) {
+                            element.attr(
+                                'data-stacked-key',
+                                event.start.format('YYYY-MM-DDTHH:mm') + '|' + event.end.format('YYYY-MM-DDTHH:mm')
+                            );
+                            element.attr('data-status-code', event.statusCode || (event.isLivre ? 'livre' : 'pendente'));
+                        }
+                    },
+                    eventAfterAllRender: function (view) {
+                        if (view && (view.name === 'agendaWeek' || view.name === 'agendaDay')) {
+                            empilharEventosMesmoHorario();
                         }
                     },
                     eventClick: function (event) {

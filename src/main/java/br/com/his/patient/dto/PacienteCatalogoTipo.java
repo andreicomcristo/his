@@ -60,6 +60,8 @@ public enum PacienteCatalogoTipo {
     }
 
     public static List<PacienteCatalogoTipo> visiveis() {
-        return List.of(values());
+        return Arrays.stream(values())
+                .filter(item -> item != PROCEDENCIA)
+                .toList();
     }
 }

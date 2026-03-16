@@ -70,6 +70,10 @@
                             <input id="cpf" name="cpf" type="text" class="form-control" th:value="${cpf}">
                         </div>
                         <div class="form-group col-md-2">
+                            <label for="atendimentoId" class="filtro-label">Nº atendimento</label>
+                            <input id="atendimentoId" name="atendimentoId" type="number" min="1" class="form-control" th:value="${atendimentoId}">
+                        </div>
+                        <div class="form-group col-md-2">
                             <label for="tipoAtendimento" class="filtro-label">Tipo de atendimento</label>
                             <select id="tipoAtendimento" name="tipoAtendimento" class="form-control">
                                 <option value="">TODOS</option>
@@ -111,6 +115,7 @@
                 <table class="table table-bordered table-hover table-sm">
                     <thead>
                     <tr>
+                        <th>Atendimento</th>
                         <th>Chegada</th>
                         <th>Paciente</th>
                         <th>Tipo</th>
@@ -121,12 +126,15 @@
                     </thead>
                     <tbody>
                     <tr th:if="${#lists.isEmpty(atendimentos)}">
-                        <td colspan="6" class="text-center">Nenhum atendimento disponivel para classificacao</td>
+                        <td colspan="7" class="text-center">Nenhum atendimento disponivel para classificacao</td>
                     </tr>
                     <tr th:each="a : ${atendimentos}">
                         <td>
-                            <span class="fila-main" th:text="${#temporals.format(a.dataHoraChegada, 'dd/MM/yyyy - HH:mm')}"></span>
+                            <span class="fila-main" th:text="${'#' + a.id}"></span>
                             <span class="fila-line" th:text="${a.unidade.nome + '.' + #temporals.format(a.dataHoraChegada, 'yyyy') + '.' + a.id}"></span>
+                        </td>
+                        <td>
+                            <span class="fila-main" th:text="${#temporals.format(a.dataHoraChegada, 'dd/MM/yyyy - HH:mm')}"></span>
                         </td>
                         <td>
                             <span class="fila-main" th:text="${a.paciente.nomeExibicao}"></span>

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout('Administracao - Tipos de Procedencia', ~{::content})}">
+<th:block th:fragment="content">
+    <div class="main-card mb-3 card">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="card-title mb-0">Tipos de procedencia</h5>
+                <a class="btn btn-primary btn-sm" th:href="@{/ui/admin/tipos-procedencia/novo}">Novo tipo</a>
+            </div>
+
+            <form method="get" class="mb-3">
+                <div class="form-row">
+                    <div class="form-group col-md-5">
+                        <label class="filtro-label"><strong>Busca</strong></label>
+                        <input type="text" name="q" class="form-control"
+                               placeholder="Buscar por descricao"
+                               th:value="${q}">
+                    </div>
+                    <div class="form-group col-md-2 d-flex align-items-end">
+                        <button class="btn btn-outline-secondary btn-sm btn-block" type="submit">Buscar</button>
+                    </div>
+                    <div class="form-group col-md-2 d-flex align-items-end">
+                        <a class="btn btn-outline-secondary btn-sm btn-block" th:href="@{/ui/admin/tipos-procedencia}">Limpar</a>
+                    </div>
+                </div>
+            </form>
+
+            <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+            <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
+
+            <div class="table-responsive">
+                <table class="table table-sm table-striped">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Descricao</th>
+                        <th></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="item : ${items}">
+                        <td th:text="${item.id}">1</td>
+                        <td th:text="${item.descricao}">CIDADE</td>
+                        <td class="text-right">
+                            <a class="btn btn-sm btn-outline-primary"
+                               th:href="@{'/ui/admin/tipos-procedencia/' + ${item.id} + '/editar'}">Editar</a>
+                            <form method="post" class="d-inline"
+                                  th:action="@{'/ui/admin/tipos-procedencia/' + ${item.id} + '/excluir'}">
+                                <button type="submit"
+                                        class="btn btn-sm btn-outline-danger"
+                                        onclick="return confirm('Excluir tipo de procedencia?');">Excluir</button>
+                            </form>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(items)}">
+                        <td colspan="3" class="text-center text-muted">Nenhum tipo encontrado</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</th:block>
+</html>

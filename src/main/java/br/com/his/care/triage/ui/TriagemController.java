@@ -146,6 +146,7 @@ public class TriagemController {
     @GetMapping
     public String listar(@RequestParam(required = false) String nome,
                          @RequestParam(required = false) String cpf,
+                         @RequestParam(required = false) Long atendimentoId,
                          @RequestParam(required = false) TipoAtendimento tipoAtendimento,
                          @RequestParam(required = false) Long statusId,
                          @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicio,
@@ -156,6 +157,7 @@ public class TriagemController {
         List<Atendimento> atendimentos = assistencialFlowService.listarFilaClassificacao(unidadeId).stream()
                 .filter(atendimento -> matchesNome(atendimento, nome))
                 .filter(atendimento -> matchesCpf(atendimento, cpf))
+                .filter(atendimento -> matchesAtendimentoId(atendimento, atendimentoId))
                 .filter(atendimento -> tipoAtendimento == null || atendimento.getTipoAtendimento() == tipoAtendimento)
                 .filter(atendimento -> statusId == null
                         || (atendimento.getStatus() != null && statusId.equals(atendimento.getStatus().getId())))
@@ -168,6 +170,7 @@ public class TriagemController {
         model.addAttribute("canCriarPorClassificacao", unidadeComecaNaTriagem());
         model.addAttribute("nome", nome);
         model.addAttribute("cpf", cpf);
+        model.addAttribute("atendimentoId", atendimentoId);
         model.addAttribute("tipoAtendimentoSelecionado", tipoAtendimento);
         model.addAttribute("statusSelecionadoId", statusId);
         model.addAttribute("dataInicio", dataInicio);
@@ -338,12 +341,28 @@ public class TriagemController {
     @GetMapping("/{atendimentoId}")
     public String tela(@PathVariable Long atendimentoId, Model model) {
         requirePermission();
-        boolean triagemAberta = assistencialFlowService.buscarTriagemAberta(atendimentoId).isPresent();
+        var triagemAbertaOpt = assistencialFlowService.buscarTriagemAberta(atendimentoId);
+        boolean triagemAberta = triagemAbertaOpt.isPresent();
         boolean possuiClassificacaoFinalizada = assistencialFlowService.buscarUltimaClassificacaoFinalizada(atendimentoId).isPresent();
         boolean modoReclassificacao = !triagemAberta && possuiClassificacaoFinalizada;
-        model.addAttribute("atendimento", assistencialFlowService.buscarAtendimento(atendimentoId));
+
+        if (!triagemAberta && !modoReclassificacao) {
+            try {
+                assistencialFlowService.iniciarTriagem(atendimentoId);
+                triagemAbertaOpt = assistencialFlowService.buscarTriagemAberta(atendimentoId);
+                triagemAberta = triagemAbertaOpt.isPresent();
+            } catch (IllegalArgumentException ex) {
+                model.addAttribute("errorMessage", ex.getMessage());
+            }
+        }
+
+        Atendimento atendimento = assistencialFlowService.buscarAtendimento(atendimentoId);
+        model.addAttribute("atendimento", atendimento);
         model.addAttribute("triagemAberta", triagemAberta);
         model.addAttribute("modoReclassificacao", modoReclassificacao);
+        model.addAttribute("inicioTriagemCapturada", triagemAbertaOpt.map(ClassificacaoRisco::getDataInicio).orElse(null));
+        model.addAttribute("classificacaoResumo",
+                assistencialFlowService.mapaUltimaClassificacao(java.util.List.of(atendimentoId)).get(atendimentoId));
         if (!model.containsAttribute("form")) {
             model.addAttribute("form", new TriagemForm());
         }
@@ -883,6 +902,13 @@ public class TriagemController {
         String cpfPaciente = atendimento.getPaciente() == null ? null : atendimento.getPaciente().getCpf();
         String cpfDigits = cpfPaciente == null ? null : CpfUtils.digitsOnly(cpfPaciente);
         return filtro != null && filtro.equals(cpfDigits);
+    }
+
+    private boolean matchesAtendimentoId(Atendimento atendimento, Long atendimentoId) {
+        if (atendimentoId == null) {
+            return true;
+        }
+        return atendimentoId.equals(atendimento.getId());
     }
 
     private boolean matchesPeriodo(Atendimento atendimento, LocalDate dataInicio, LocalDate dataFim) {

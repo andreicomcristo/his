@@ -27,6 +27,7 @@ public class WebMvcUnitConfig implements WebMvcConfigurer {
                         "/ui/escolher-unidade/**",
                         "/ui/escolher-atuacao",
                         "/ui/escolher-atuacao/**",
+                        "/ui/minha-conta/**",
                         "/ui/sem-unidade",
                         "/ui/sem-atuacao",
                         "/login/**",

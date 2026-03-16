@@ -36,9 +36,6 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import br.com.his.patient.model.lookup.Procedencia;
 import br.com.his.patient.model.lookup.Profissao;
-import br.com.his.patient.model.lookup.TipoProcedencia;
-import br.com.his.reference.location.model.Bairro;
-import br.com.his.reference.location.model.Municipio;
 
 @Entity
 @Table(name = "entrada")
@@ -71,18 +68,6 @@ public class Entrada {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "procedencia_id")
     private Procedencia procedencia;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "tipo_procedencia_id")
-    private TipoProcedencia tipoProcedencia;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "procedencia_bairro_id")
-    private Bairro procedenciaBairro;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "procedencia_municipio_id")
-    private Municipio procedenciaMunicipio;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "motivo_entrada_id")
@@ -162,30 +147,6 @@ public class Entrada {
 
     public void setProcedencia(Procedencia procedencia) {
         this.procedencia = procedencia;
-    }
-
-    public TipoProcedencia getTipoProcedencia() {
-        return tipoProcedencia;
-    }
-
-    public void setTipoProcedencia(TipoProcedencia tipoProcedencia) {
-        this.tipoProcedencia = tipoProcedencia;
-    }
-
-    public Bairro getProcedenciaBairro() {
-        return procedenciaBairro;
-    }
-
-    public void setProcedenciaBairro(Bairro procedenciaBairro) {
-        this.procedenciaBairro = procedenciaBairro;
-    }
-
-    public Municipio getProcedenciaMunicipio() {
-        return procedenciaMunicipio;
-    }
-
-    public void setProcedenciaMunicipio(Municipio procedenciaMunicipio) {
-        this.procedenciaMunicipio = procedenciaMunicipio;
     }
 
     public FormaChegada getFormaChegada() {
@@ -332,4 +293,3 @@ public class Entrada {
         this.atualizadoPorUsuario = atualizadoPorUsuario;
     }
 }
-

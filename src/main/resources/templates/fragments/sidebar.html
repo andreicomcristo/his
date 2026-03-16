@@ -48,6 +48,9 @@
                                 <li th:if="${canAtendimentoAcessar}">
                                     <a th:href="@{/ui/atendimentos}">Lista de atendimentos</a>
                                 </li>
+                                <li th:if="${canRecepcaoExecutar and currentUnidadePermiteAgendamento}">
+                                    <a th:href="@{/ui/atendimentos/agendados}">Agendados (check-in)</a>
+                                </li>
                                 <li th:if="${canRegistrarEntrada and currentFluxoTriagemPrimeiro}">
                                     <a th:href="@{/ui/atendimentos/pendentes-entrada}">Pendentes de entrada</a>
                                 </li>
@@ -265,6 +268,12 @@
                                 <li>
                                     <a th:href="@{/ui/admin/situacoes-ocupacionais}">Situacao ocupacional</a>
                                 </li>
+                                <li>
+                                    <a th:href="@{/ui/admin/tipos-procedencia}">Tipo de procedencia</a>
+                                </li>
+                                <li>
+                                    <a th:href="@{/ui/admin/procedencias}">Procedencia</a>
+                                </li>
                             </ul>
                         </li>
                         <li>
@@ -308,9 +317,6 @@
                                 </li>
                                 <li>
                                     <a th:href="@{/ui/admin/paciente-catalogos/profissao}">Profissao</a>
-                                </li>
-                                <li>
-                                    <a th:href="@{/ui/admin/paciente-catalogos/procedencia}">Procedencia</a>
                                 </li>
                             </ul>
                         </li>

@@ -6,7 +6,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
-import org.springframework.security.oauth2.client.web.DefaultOAuth2AuthorizationRequestResolver;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestResolver;
 import org.springframework.security.web.SecurityFilterChain;
 
@@ -57,13 +56,6 @@ public class SecurityConfig {
 
     private OAuth2AuthorizationRequestResolver forceLoginAuthorizationRequestResolver(
             ClientRegistrationRepository clientRegistrationRepository) {
-        DefaultOAuth2AuthorizationRequestResolver resolver =
-                new DefaultOAuth2AuthorizationRequestResolver(
-                        clientRegistrationRepository, "/oauth2/authorization");
-
-        resolver.setAuthorizationRequestCustomizer(customizer ->
-                customizer.additionalParameters(parameters -> parameters.put("prompt", "login")));
-
-        return resolver;
+        return new KeycloakAuthorizationRequestResolver(clientRegistrationRepository, "/oauth2/authorization");
     }
 }

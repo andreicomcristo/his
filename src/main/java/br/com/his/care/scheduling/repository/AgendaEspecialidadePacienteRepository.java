@@ -42,6 +42,10 @@ public interface AgendaEspecialidadePacienteRepository extends JpaRepository<Age
 
     boolean existsByAgendaSlotIdAndStatusNot(Long agendaSlotId, StatusAgendamentoPaciente status);
 
+    boolean existsByAgendaSlotIdAndIdNotAndStatusNot(Long agendaSlotId,
+                                                      Long agendaPacienteId,
+                                                      StatusAgendamentoPaciente status);
+
     @Query("""
             select count(ap)
             from AgendaEspecialidadePaciente ap
@@ -98,7 +102,6 @@ public interface AgendaEspecialidadePacienteRepository extends JpaRepository<Age
               and (?3 is null or e.id = ?3)
               and s.dataHoraInicio >= ?4
               and s.dataHoraInicio < ?5
-              and ap.status <> br.com.his.care.scheduling.model.StatusAgendamentoPaciente.CANCELADO
             order by s.dataHoraInicio asc
             """)
     List<AgendaEspecialidadePaciente> listarParaCalendario(Long unidadeId,
@@ -106,4 +109,27 @@ public interface AgendaEspecialidadePacienteRepository extends JpaRepository<Age
                                                                             Long especialidadeId,
                                                                             java.time.LocalDateTime dataHoraInicio,
                                                                             java.time.LocalDateTime dataHoraFim);
+
+    @Query("""
+            select ap
+            from AgendaEspecialidadePaciente ap
+            join fetch ap.paciente p
+            join fetch ap.agendaEspecialidade a
+            join fetch a.cargoColaborador c
+            left join fetch a.especialidade e
+            join fetch ap.agendaSlot s
+            where a.unidade.id = ?1
+              and (?2 is null or c.id = ?2)
+              and (?3 is null or e.id = ?3)
+              and (?4 is null or ap.status = ?4)
+              and s.dataHoraInicio >= ?5
+              and s.dataHoraInicio < ?6
+            order by s.dataHoraInicio asc, p.nome asc
+            """)
+    List<AgendaEspecialidadePaciente> listarParaRecepcao(Long unidadeId,
+                                                          Long cargoColaboradorId,
+                                                          Long especialidadeId,
+                                                          StatusAgendamentoPaciente status,
+                                                          java.time.LocalDateTime dataHoraInicio,
+                                                          java.time.LocalDateTime dataHoraFim);
 }
