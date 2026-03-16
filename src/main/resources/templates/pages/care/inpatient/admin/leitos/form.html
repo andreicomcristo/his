@@ -1,17 +1,19 @@
 <!DOCTYPE html>
 <html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layout/base :: layout(${modoEdicao} ? 'Administracao - Editar Leito' : 'Administracao - Novo Leito', ~{::content})}">
+      th:replace="~{layout/base :: layout(${modoEdicao} ? 'Administração - Editar Leito' : 'Administração - Novo Leito', ~{::content})}">
 <th:block th:fragment="content">
     <div class="main-card mb-3 card">
         <div class="card-body">
-            <h5 class="card-title" th:text="${modoEdicao} ? 'Editar leito' : 'Novo leito'">Leito</h5>
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="card-title" th:text="${modoEdicao} ? 'Editar leito' : 'Novo leito'">Leito</h5>
+            </div>
             <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
             <form th:object="${form}" method="post"
                   th:action="${modoEdicao} ? @{'/ui/admin/leitos/' + ${itemId}} : @{/ui/admin/leitos}">
                 <div class="form-row">
                     <div class="form-group col-md-4">
                         <label>Unidade<span class="required-mark">*</span></label>
-                        <select class="form-control" th:field="*{unidadeId}">
+                        <select class="multiselect-dropdown form-control" th:field="*{unidadeId}">
                             <option value="">Selecione</option>
                             <option th:each="unidade : ${unidades}"
                                     th:value="${unidade.id}"
@@ -20,8 +22,8 @@
                         <small class="text-danger" th:errors="*{unidadeId}"></small>
                     </div>
                     <div class="form-group col-md-4">
-                        <label>Area<span class="required-mark">*</span></label>
-                        <select class="form-control" th:field="*{areaId}">
+                        <label>Área<span class="required-mark">*</span></label>
+                        <select class="multiselect-dropdown form-control" th:field="*{areaId}">
                             <option value="">Selecione</option>
                             <option th:each="area : ${areas}"
                                     th:value="${area.id}"
@@ -31,8 +33,11 @@
                         <small class="text-danger" th:errors="*{areaId}"></small>
                     </div>
                     <div class="form-group col-md-4">
-                        <label>Codigo<span class="required-mark">*</span></label>
-                        <input type="text" class="form-control" th:field="*{codigo}">
+                        <label>Código<span class="required-mark">*</span></label>
+                        <input type="text"
+                               class="form-control"
+                               th:field="*{codigo}"
+                               placeholder="Informe o código do leito">
                         <small class="text-danger" th:errors="*{codigo}"></small>
                     </div>
                 </div>
@@ -40,7 +45,7 @@
                 <div class="form-row">
                     <div class="form-group col-md-3">
                         <label>Tipo de leito<span class="required-mark">*</span></label>
-                        <select class="form-control" th:field="*{tipoLeitoId}">
+                        <select class="multiselect-dropdown form-control" th:field="*{tipoLeitoId}">
                             <option value="">Selecione</option>
                             <option th:each="item : ${tiposLeito}"
                                     th:value="${item.id}"
@@ -50,7 +55,7 @@
                     </div>
                     <div class="form-group col-md-3">
                         <label>Perfil de leito</label>
-                        <select class="form-control" th:field="*{perfilLeitoId}">
+                        <select class="multiselect-dropdown form-control" th:field="*{perfilLeitoId}">
                             <option value="">Selecione</option>
                             <option th:each="item : ${perfisLeito}"
                                     th:value="${item.id}"
@@ -60,7 +65,7 @@
                     </div>
                     <div class="form-group col-md-3">
                         <label>Natureza operacional<span class="required-mark">*</span></label>
-                        <select class="form-control" th:field="*{naturezaOperacionalId}">
+                        <select class="multiselect-dropdown form-control" th:field="*{naturezaOperacionalId}">
                             <option value="">Selecione</option>
                             <option th:each="item : ${naturezasOperacionais}"
                                     th:value="${item.id}"
@@ -69,8 +74,11 @@
                         <small class="text-danger" th:errors="*{naturezaOperacionalId}"></small>
                     </div>
                     <div class="form-group col-md-3">
-                        <label>Descricao</label>
-                        <input type="text" class="form-control" th:field="*{descricao}">
+                        <label>Descrição</label>
+                        <input type="text"
+                               class="form-control"
+                               th:field="*{descricao}"
+                               placeholder="Informe a descrição do leito">
                         <small class="text-danger" th:errors="*{descricao}"></small>
                     </div>
                 </div>
@@ -90,7 +98,7 @@
                                 </label>
                             </div>
                         </div>
-                        <small class="form-text text-muted">Selecione se o leito recebe observacao, internacao ou ambos.</small>
+                        <small class="form-text text-muted">Selecione se o leito recebe observação, internação ou ambos.</small>
                     </div>
                 </div>
 
@@ -121,8 +129,18 @@
                     </div>
                 </div>
 
-                <button type="submit" class="btn btn-primary btn-sm">Salvar</button>
-                <a class="btn btn-secondary btn-sm" th:href="@{/ui/admin/leitos}">Voltar</a>
+                <div class="form-row">
+                    <div class="form-group col-md-12 mb-0">
+                        <div class="d-flex">
+                            <button type="submit" class="btn btn-primary btn-sm mr-2">
+                                <i class="nav-link-icon lnr-checkmark-circle mr-2"></i>Salvar
+                            </button>
+                            <a class="btn btn-secondary btn-sm" th:href="@{/ui/admin/leitos}">
+                                <i class="nav-link-icon lnr-exit mr-2"></i>Voltar
+                            </a>
+                        </div>
+                    </div>
+                </div>
             </form>
             <script>
                 document.addEventListener('DOMContentLoaded', function () {
@@ -156,6 +174,10 @@
                         if (areaPlaceholder) {
                             areaPlaceholder.hidden = false;
                             areaPlaceholder.disabled = false;
+                        }
+
+                        if (window.jQuery && window.jQuery.fn && window.jQuery.fn.select2) {
+                            window.jQuery(areaSelect).trigger('change');
                         }
                     };
 

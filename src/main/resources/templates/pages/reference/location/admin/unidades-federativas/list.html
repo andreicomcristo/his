@@ -1,30 +1,45 @@
 <!DOCTYPE html>
 <html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layout/base :: layout('Administracao - UF', ~{::content})}">
+      th:replace="~{layout/base :: layout('Administração - UF', ~{::content})}">
 <th:block th:fragment="content">
     <div class="main-card mb-3 card">
         <div class="card-body">
-
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="card-title mb-0">Unidades Federativas</h5>
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="card-title">Unidades Federativas</h5>
                 <div class="btn-group btn-group-sm" role="group">
-                    <a class="btn btn-primary" th:href="@{/ui/admin/unidades-federativas/novo}">
-                        <i class="nav-link-icon lnr-plus-circle mr-2"></i>Unidade Federativa</a>
+                    <a class="btn btn-primary"
+                       th:href="@{/ui/admin/unidades-federativas/novo}"
+                       data-toggle="tooltip"
+                       data-placement="top"
+                       title="Adicionar uma nova unidade federativa">
+                        <i class="nav-link-icon lnr-plus-circle mr-2"></i>Adicionar</a>
                 </div>
             </div>
-            <form method="get" class="form-inline mb-3">
-                <input type="text" name="q" class="form-control col-lg-8 mr-2" placeholder="Buscar por descrição ou sigla" th:value="${q}">
-                <button class="btn btn-outline-secondary btn-lg" type="submit"><i class="nav-link-icon lnr-magnifier mr-2"></i>Buscar</button>
+
+            <form method="get">
+                <div class="form-row">
+                    <div class="form-group col-md-12">
+                        <label class="filtro-label">Pesquisa</label>
+                        <input type="text" name="q" class="form-control" placeholder="Buscar por descrição ou sigla" th:value="${q}">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-md-12 d-flex">
+                        <button class="btn btn-sm btn-primary mr-2" type="submit"><i class="nav-link-icon lnr-magnifier mr-2"></i>Buscar</button>
+                        <a th:href="@{/ui/admin/unidades-federativas}" class="btn btn-sm btn-secondary"><i class="nav-link-icon lnr-cross mr-2"></i>Limpar</a>
+                    </div>
+                </div>
             </form>
+
             <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
             <table class="table table-sm table-striped">
                 <thead>
                 <tr>
                     <th>ID</th>
-                    <th>Descricao</th>
+                    <th>Descrição</th>
                     <th>Sigla</th>
                     <!-- <th>Cod. IBGE</th> -->
-                    <th></th>
+                    <th class="text-center">Opções</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -33,7 +48,7 @@
                     <td th:text="${item.descricao}"></td>
                     <td th:text="${item.sigla}"></td>
                     <!-- <td th:text="${item.codigoIbge}"></td> -->
-                    <td class="text-right">
+                    <td class="text-center">
                         <div class="dropdown d-inline-block">
                             <button class="btn btn-sm btn-outline-secondary dropdown-toggle"
                                     type="button"
@@ -47,7 +62,7 @@
                                    th:href="@{'/ui/admin/unidades-federativas/' + ${item.id} + '/editar'}">
                                     <i class="nav-link-icon lnr-pencil mr-2"></i><span>Editar</span>
                                 </a>
-                                
+
                                 <form method="post"
                                       class="m-0"
                                       th:action="@{'/ui/admin/unidades-federativas/' + ${item.id} + '/excluir'}">

@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layout/base :: layout(${modoEdicao} ? 'Administracao - Editar Tipo de Unidade' : 'Administracao - Novo Tipo de Unidade', ~{::content})}">
+      th:replace="~{layout/base :: layout(${modoEdicao} ? 'Administração - Editar Tipo de Unidade' : 'Administração - Novo Tipo de Unidade', ~{::content})}">
 <th:block th:fragment="content">
     <div class="main-card mb-3 card">
         <div class="card-body">
@@ -13,13 +13,19 @@
                   th:action="${modoEdicao} ? @{'/ui/admin/tipos-unidade/' + ${itemId}} : @{/ui/admin/tipos-unidade}">
                 <div class="form-row">
                     <div class="form-group col-md-4">
-                        <label>Codigo<span class="required-mark">*</span></label>
-                        <input type="text" class="form-control" th:field="*{codigo}">
+                        <label>Código<span class="required-mark">*</span></label>
+                        <input type="text"
+                               class="form-control"
+                               th:field="*{codigo}"
+                               placeholder="Informe o código">
                         <small class="text-danger" th:errors="*{codigo}"></small>
                     </div>
                     <div class="form-group col-md-6">
-                        <label>Descricao<span class="required-mark">*</span></label>
-                        <input type="text" class="form-control" th:field="*{descricao}">
+                        <label>Descrição<span class="required-mark">*</span></label>
+                        <input type="text"
+                               class="form-control"
+                               th:field="*{descricao}"
+                               placeholder="Informe a descrição">
                         <small class="text-danger" th:errors="*{descricao}"></small>
                     </div>
                     <div class="form-group col-md-2 d-flex align-items-center">
@@ -30,8 +36,18 @@
                     </div>
                 </div>
 
-                <button type="submit" class="btn btn-primary btn-sm">Salvar</button>
-                <a th:href="@{/ui/admin/tipos-unidade}" class="btn btn-secondary btn-sm">Voltar</a>
+                <div class="form-row">
+                    <div class="form-group col-md-12 mb-0">
+                        <div class="d-flex">
+                            <button type="submit" class="btn btn-primary btn-sm mr-2">
+                                <i class="nav-link-icon lnr-checkmark-circle mr-2"></i>Salvar
+                            </button>
+                            <a th:href="@{/ui/admin/tipos-unidade}" class="btn btn-secondary btn-sm">
+                                <i class="nav-link-icon lnr-exit mr-2"></i>Voltar
+                            </a>
+                        </div>
+                    </div>
+                </div>
             </form>
         </div>
     </div>
