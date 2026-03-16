@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layout/base :: layout(${modoEdicao} ? 'Administracao - Editar Colaborador' : 'Administracao - Novo Colaborador', ~{::content})}">
+      th:replace="~{layout/base :: layout(${modoEdicao} ? 'Administração - Editar Colaborador' : 'Administração - Novo Colaborador', ~{::content})}">
 <th:block th:fragment="content">
     <div class="main-card mb-3 card">
         <div class="card-body">
-            <h5 class="card-title" th:text="${modoEdicao} ? 'Editar colaborador' : 'Novo colaborador'">Colaborador</h5>
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="card-title" th:text="${modoEdicao} ? 'Editar colaborador' : 'Novo colaborador'">Colaborador</h5>
+            </div>
 
             <div class="alert alert-danger" th:if="${errorMessage}" th:text="${errorMessage}"></div>
 
@@ -14,17 +16,23 @@
                 <div class="form-row">
                     <div class="form-group col-md-6">
                         <label>Nome<span class="required-mark">*</span></label>
-                        <input type="text" class="form-control" th:field="*{nome}">
+                        <input type="text"
+                               class="form-control"
+                               th:field="*{nome}"
+                               placeholder="Informe o nome do colaborador">
                         <small class="text-danger" th:errors="*{nome}"></small>
                     </div>
                     <div class="form-group col-md-3">
                         <label>CPF</label>
-                        <input type="text" class="form-control" th:field="*{cpf}">
+                        <input type="text"
+                               class="form-control"
+                               th:field="*{cpf}"
+                               placeholder="Informe o CPF do colaborador">
                         <small class="text-danger" th:errors="*{cpf}"></small>
                     </div>
                     <div class="form-group col-md-3">
                         <label>Cargo base</label>
-                        <select class="form-control" th:field="*{cargoColaboradorId}">
+                        <select class="multiselect-dropdown form-control" th:field="*{cargoColaboradorId}">
                             <option value="">Selecione</option>
                             <option th:each="cargo : ${cargos}"
                                     th:value="${cargo.id}"
@@ -32,6 +40,9 @@
                         </select>
                         <small class="text-danger" th:errors="*{cargoColaboradorId}"></small>
                     </div>
+                </div>
+
+                <div class="form-row">
                     <div class="form-group col-md-2 d-flex align-items-center">
                         <div class="form-check mt-4">
                             <input type="checkbox" class="form-check-input" th:field="*{ativo}">
@@ -40,8 +51,18 @@
                     </div>
                 </div>
 
-                <button type="submit" class="btn btn-primary btn-sm">Salvar</button>
-                <a th:href="@{/ui/admin/colaboradores}" class="btn btn-secondary btn-sm">Voltar</a>
+                <div class="form-row">
+                    <div class="form-group col-md-12 mb-0">
+                        <div class="d-flex">
+                            <button type="submit" class="btn btn-primary btn-sm mr-2">
+                                <i class="nav-link-icon lnr-checkmark-circle mr-2"></i>Salvar
+                            </button>
+                            <a th:href="@{/ui/admin/colaboradores}" class="btn btn-secondary btn-sm">
+                                <i class="nav-link-icon lnr-exit mr-2"></i>Voltar
+                            </a>
+                        </div>
+                    </div>
+                </div>
             </form>
         </div>
     </div>

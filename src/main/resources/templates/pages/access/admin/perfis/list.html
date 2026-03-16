@@ -1,16 +1,40 @@
 <!DOCTYPE html>
 <html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layout/base :: layout('Administracao - Perfis', ~{::content})}">
+      th:replace="~{layout/base :: layout('Administração - Perfis', ~{::content})}">
 <th:block th:fragment="content">
     <div class="main-card mb-3 card">
         <div class="card-body">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h5 class="card-title mb-0">Perfis</h5>
-                <a class="btn btn-primary btn-sm" th:href="@{/ui/admin/perfis/novo}">Novo perfil</a>
+                <div class="btn-group btn-group-sm" role="group">
+                    <a class="btn btn-primary"
+                       th:href="@{/ui/admin/perfis/novo}"
+                       data-toggle="tooltip"
+                       data-placement="top"
+                       title="Adicionar um novo perfil">
+                        <i class="nav-link-icon lnr-plus-circle mr-2"></i>Adicionar
+                    </a>
+                </div>
             </div>
-            <form method="get" th:action="@{/ui/admin/perfis}" class="form-inline mb-3">
-                <input type="text" name="q" class="form-control mr-2" placeholder="Nome do perfil" th:value="${q}">
-                <button class="btn btn-outline-secondary btn-sm" type="submit">Buscar</button>
+            <form method="get" th:action="@{/ui/admin/perfis}" class="mb-3">
+                <div class="form-row">
+                    <div class="form-group col-md-12">
+                        <label class="filtro-label">Pesquisa</label>
+                        <input type="text" name="q" class="form-control"
+                               placeholder="Buscar por nome do perfil"
+                               th:value="${q}">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-md-12 d-flex">
+                        <button class="btn btn-sm btn-primary mr-2" type="submit">
+                            <i class="nav-link-icon lnr-magnifier mr-2"></i>Buscar
+                        </button>
+                        <a class="btn btn-sm btn-secondary" th:href="@{/ui/admin/perfis}">
+                            <i class="nav-link-icon lnr-cross mr-2"></i>Limpar
+                        </a>
+                    </div>
+                </div>
             </form>
 
             <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
@@ -21,19 +45,36 @@
                 <tr>
                     <th>ID</th>
                     <th>Nome</th>
-                    <th></th>
+                    <th class="text-center">Opções</th>
                 </tr>
                 </thead>
                 <tbody>
                 <tr th:each="p : ${perfis}">
                     <td th:text="${p.id}"></td>
                     <td th:text="${p.nome}"></td>
-                    <td class="text-right">
-                        <a class="btn btn-sm btn-outline-primary" th:href="@{'/ui/admin/perfis/' + ${p.id} + '/editar'}">Editar</a>
-                        <a class="btn btn-sm btn-outline-info" th:href="@{'/ui/admin/perfis/' + ${p.id} + '/permissoes'}">Permissoes</a>
-                        <form th:action="@{'/ui/admin/perfis/' + ${p.id} + '/remover'}" method="post" class="d-inline">
-                            <button class="btn btn-sm btn-outline-danger" type="submit">Remover</button>
-                        </form>
+                    <td class="text-center">
+                        <div class="dropdown d-inline-block">
+                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle"
+                                    type="button"
+                                    data-toggle="dropdown"
+                                    aria-haspopup="true"
+                                    aria-expanded="false">
+                                <i class="nav-link-icon lnr-menu"></i>
+                            </button>
+                            <div class="dropdown-menu dropdown-menu-right">
+                                <a class="dropdown-item" th:href="@{'/ui/admin/perfis/' + ${p.id} + '/editar'}">
+                                    <i class="nav-link-icon lnr-pencil mr-2"></i><span>Editar</span>
+                                </a>
+                                <a class="dropdown-item" th:href="@{'/ui/admin/perfis/' + ${p.id} + '/permissoes'}">
+                                    <i class="nav-link-icon lnr-lock mr-2"></i><span>Permissões</span>
+                                </a>
+                                <form th:action="@{'/ui/admin/perfis/' + ${p.id} + '/remover'}" method="post" class="m-0">
+                                    <button class="dropdown-item text-danger" type="submit">
+                                        <i class="nav-link-icon lnr-trash mr-2"></i><span>Remover</span>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
                     </td>
                 </tr>
                 </tbody>

@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layout/base :: layout('Administracao - Perfil', ~{::content})}">
+      th:replace="~{layout/base :: layout('Administração - Perfil', ~{::content})}">
 <th:block th:fragment="content">
     <div class="main-card mb-3 card">
         <div class="card-body">
-            <h5 class="card-title" th:text="${modoEdicao} ? 'Editar perfil' : 'Novo perfil'"></h5>
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="card-title" th:text="${modoEdicao} ? 'Editar perfil' : 'Novo perfil'"></h5>
+            </div>
 
             <form th:action="${modoEdicao} ? @{'/ui/admin/perfis/' + ${perfilId}} : @{/ui/admin/perfis}"
                   method="post" th:object="${form}">
@@ -13,14 +15,29 @@
                     <div th:each="e : ${#fields.globalErrors()}" th:text="${e}"></div>
                 </div>
 
-                <div class="form-group">
-                    <label>Nome<span class="required-mark">*</span></label>
-                    <input class="form-control" type="text" th:field="*{nome}">
-                    <small class="text-danger" th:errors="*{nome}"></small>
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label>Nome<span class="required-mark">*</span></label>
+                        <input class="form-control"
+                               type="text"
+                               th:field="*{nome}"
+                               placeholder="Informe o nome do perfil">
+                        <small class="text-danger" th:errors="*{nome}"></small>
+                    </div>
                 </div>
 
-                <button class="btn btn-primary btn-sm" type="submit">Salvar</button>
-                <a th:href="@{/ui/admin/perfis}" class="btn btn-outline-secondary btn-sm">Voltar</a>
+                <div class="form-row">
+                    <div class="form-group col-md-12 mb-0">
+                        <div class="d-flex">
+                            <button class="btn btn-primary btn-sm mr-2" type="submit">
+                                <i class="nav-link-icon lnr-checkmark-circle mr-2"></i>Salvar
+                            </button>
+                            <a th:href="@{/ui/admin/perfis}" class="btn btn-secondary btn-sm">
+                                <i class="nav-link-icon lnr-exit mr-2"></i>Voltar
+                            </a>
+                        </div>
+                    </div>
+                </div>
             </form>
         </div>
     </div>

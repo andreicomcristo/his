@@ -20,8 +20,9 @@ public class UsuarioNovoForm {
     @Size(max = 120)
     private String sobrenome;
 
+    @NotBlank(message = "Senha temporaria e obrigatoria")
     @Size(max = 80)
-    private String senhaTemporaria;
+    private String senhaTemporaria = "12345";
 
     private boolean exigirTrocaSenha = true;
 

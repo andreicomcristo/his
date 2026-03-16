@@ -64,23 +64,23 @@ public class UsuarioAdminController {
         return "pages/access/admin/usuarios/list";
     }
 
-    @GetMapping("/novo")
+    @GetMapping("/criar")
     public String novo(Model model) {
         if (!model.containsAttribute("form")) {
             model.addAttribute("form", new UsuarioNovoForm());
         }
         popularCombosNovoUsuario(model);
-        return "pages/access/admin/usuarios/novo";
+        return "pages/access/admin/usuarios/create";
     }
 
-    @PostMapping
+    @PostMapping("/criar")
     public String criar(@Valid @ModelAttribute("form") UsuarioNovoForm form,
                         BindingResult bindingResult,
                         Model model,
         RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
             popularCombosNovoUsuario(model);
-            return "pages/access/admin/usuarios/novo";
+            return "pages/access/admin/usuarios/create";
         }
         try {
             var usuario = usuarioAdminService.criarNoKeycloakERegistrarEspelho(form);
@@ -90,7 +90,7 @@ public class UsuarioAdminController {
             bindingResult.reject("usuario", ex.getMessage());
             model.addAttribute("form", form);
             popularCombosNovoUsuario(model);
-            return "pages/access/admin/usuarios/novo";
+            return "pages/access/admin/usuarios/create";
         }
     }
 
@@ -103,7 +103,7 @@ public class UsuarioAdminController {
     @GetMapping("/{id}")
     public String detalhe(@PathVariable Long id, Model model) {
         popularTelaDetalhe(id, model);
-        return "pages/access/admin/usuarios/detail";
+        return "pages/access/admin/usuarios/update";
     }
 
     @PostMapping("/{id}/dados")
@@ -117,7 +117,7 @@ public class UsuarioAdminController {
             if (!model.containsAttribute("atuacaoForm")) {
                 model.addAttribute("atuacaoForm", new UsuarioAtuacaoForm());
             }
-            return "pages/access/admin/usuarios/detail";
+            return "pages/access/admin/usuarios/update";
         }
         try {
             usuarioAdminService.atualizarDados(id, usuarioForm);
@@ -152,7 +152,7 @@ public class UsuarioAdminController {
             if (!model.containsAttribute("usuarioForm")) {
                 model.addAttribute("usuarioForm", usuarioAdminService.toEdicaoForm(id));
             }
-            return "pages/access/admin/usuarios/detail";
+            return "pages/access/admin/usuarios/update";
         }
         try {
             usuarioAdminService.adicionarAtuacaoDoUsuario(id, atuacaoForm);

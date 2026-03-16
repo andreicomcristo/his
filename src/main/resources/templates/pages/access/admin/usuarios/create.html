@@ -1,12 +1,14 @@
 <!DOCTYPE html>
 <html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layout/base :: layout('Administracao - Novo Usuario', ~{::content})}">
+      th:replace="~{layout/base :: layout('Administração - Novo Usuário', ~{::content})}">
 <th:block th:fragment="content">
     <div class="main-card mb-3 card">
         <div class="card-body">
-            <h5 class="card-title">Novo usuario (Keycloak + espelho HIS)</h5>
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="card-title">Novo usuário (Keycloak + espelho HIS)</h5>
+            </div>
 
-            <form th:action="@{/ui/admin/usuarios}" method="post" th:object="${form}">
+            <form th:action="@{/ui/admin/usuarios/criar}" method="post" th:object="${form}">
                 <div th:if="${#fields.hasGlobalErrors()}" class="alert alert-danger">
                     <div th:each="e : ${#fields.globalErrors()}" th:text="${e}"></div>
                 </div>
@@ -14,12 +16,17 @@
                 <div class="form-row">
                     <div class="form-group col-md-6">
                         <label>Username<span class="required-mark">*</span></label>
-                        <input class="form-control" th:field="*{username}">
+                        <input class="form-control"
+                               th:field="*{username}"
+                               placeholder="Informe o username">
                         <small class="text-danger" th:errors="*{username}"></small>
                     </div>
                     <div class="form-group col-md-6">
                         <label>Email</label>
-                        <input class="form-control" type="email" th:field="*{email}">
+                        <input class="form-control"
+                               type="email"
+                               th:field="*{email}"
+                               placeholder="Informe o e-mail">
                         <small class="text-danger" th:errors="*{email}"></small>
                     </div>
                 </div>
@@ -27,18 +34,27 @@
                 <div class="form-row">
                     <div class="form-group col-md-6">
                         <label>Nome</label>
-                        <input class="form-control" th:field="*{nome}">
+                        <input class="form-control"
+                               th:field="*{nome}"
+                               placeholder="Informe o nome">
                     </div>
                     <div class="form-group col-md-6">
                         <label>Sobrenome</label>
-                        <input class="form-control" th:field="*{sobrenome}">
+                        <input class="form-control"
+                               th:field="*{sobrenome}"
+                               placeholder="Informe o sobrenome">
                     </div>
                 </div>
 
                 <div class="form-row">
                     <div class="form-group col-md-6">
-                        <label>Senha temporaria</label>
-                        <input class="form-control" type="text" th:field="*{senhaTemporaria}">
+                        <label>Senha temporária<span class="required-mark">*</span></label>
+                        <input class="form-control"
+                               type="text"
+                               th:field="*{senhaTemporaria}"
+                               placeholder="Informe a senha temporária"
+                               required>
+                        <small class="text-danger" th:errors="*{senhaTemporaria}"></small>
                     </div>
                     <div class="form-group col-md-6 mt-4">
                         <div class="custom-checkbox custom-control mt-2">
@@ -51,22 +67,24 @@
                 <hr>
                 <h6 class="mb-3">Colaborador (opcional)</h6>
                 <p class="text-muted small mb-3">
-                    Informe o CPF para vincular um colaborador existente ou criar um novo colaborador junto com o usuario.
+                    Informe o CPF para vincular um colaborador existente ou criar um novo colaborador junto com o usuário.
                 </p>
 
                 <div id="colaboradorLookupAlert" class="alert d-none" role="alert"></div>
 
                 <div class="form-row">
                     <div class="form-group col-md-4">
-                        <label>CPF do colaborador</label>
+                        <label>CPF do colaborador<span class="required-mark">*</span></label>
                         <input class="form-control" th:field="*{colaboradorCpf}" id="colaboradorCpf"
-                               placeholder="Somente numeros">
+                               placeholder="Somente números"
+                               required>
                         <small class="text-danger" th:errors="*{colaboradorCpf}"></small>
                     </div>
                     <div class="form-group col-md-8">
-                        <label>Nome do colaborador (obrigatorio ao criar novo)</label>
+                        <label>Nome do colaborador (obrigatório ao criar novo)<span class="required-mark">*</span></label>
                         <input class="form-control" th:field="*{colaboradorNome}" id="colaboradorNome"
-                               placeholder="Nome completo">
+                               placeholder="Nome completo"
+                               required>
                         <small class="text-danger" th:errors="*{colaboradorNome}"></small>
                     </div>
                 </div>
@@ -74,7 +92,7 @@
                 <div class="form-row">
                     <div class="form-group col-md-6">
                         <label>Cargo do colaborador (opcional)</label>
-                        <select class="form-control" th:field="*{colaboradorCargoId}" id="colaboradorCargoId">
+                        <select class="multiselect-dropdown form-control" th:field="*{colaboradorCargoId}" id="colaboradorCargoId">
                             <option value="">Selecione</option>
                             <option th:each="cargo : ${cargosColaborador}"
                                     th:value="${cargo.id}"
@@ -93,8 +111,18 @@
                     </div>
                 </div>
 
-                <button class="btn btn-primary btn-sm" type="submit">Criar usuario</button>
-                <a th:href="@{/ui/admin/usuarios}" class="btn btn-outline-secondary btn-sm">Voltar</a>
+                <div class="form-row">
+                    <div class="form-group col-md-12 mb-0">
+                        <div class="d-flex">
+                            <button class="btn btn-primary btn-sm mr-2" type="submit">
+                                <i class="nav-link-icon lnr-checkmark-circle mr-2"></i>Criar usuário
+                            </button>
+                            <a th:href="@{/ui/admin/usuarios}" class="btn btn-secondary btn-sm">
+                                <i class="nav-link-icon lnr-exit mr-2"></i>Voltar
+                            </a>
+                        </div>
+                    </div>
+                </div>
             </form>
         </div>
     </div>
@@ -110,15 +138,29 @@
                 return (value || '').replace(/\D/g, '');
             }
 
-            function showAlert(type, message) {
+            function showAlert(type, message, useHtml) {
                 alertBox.className = 'alert alert-' + type;
-                alertBox.textContent = message;
+                if (useHtml) {
+                    alertBox.innerHTML = message;
+                } else {
+                    alertBox.textContent = message;
+                }
                 alertBox.classList.remove('d-none');
             }
 
             function clearAlert() {
                 alertBox.className = 'alert d-none';
                 alertBox.textContent = '';
+                alertBox.innerHTML = '';
+            }
+
+            function escapeHtml(value) {
+                return String(value || '')
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#39;');
             }
 
             function setModoNovoColaborador() {
@@ -170,17 +212,22 @@
                     })
                     .then(function (result) {
                         if (!result.encontrado) {
-                            showAlert('info', 'CPF nao encontrado. Ao salvar, um novo colaborador sera criado com os dados informados.');
+                            showAlert('info', 'CPF não encontrado. Ao salvar, um novo colaborador será criado com os dados informados.');
                             setModoNovoColaborador();
                             cargoSelect.value = '';
                             return;
                         }
 
                         if (result.vinculadoUsuario) {
+                            var usuarioLabel = result.usuarioUsername || ('#' + result.usuarioId);
+                            var linkEditar = result.usuarioId
+                                ? ' <a class="alert-link ml-2" href="/ui/admin/usuarios/' + encodeURIComponent(String(result.usuarioId)) + '">Ir para editar</a>'
+                                : '';
                             showAlert(
                                 'danger',
-                                'CPF ja vinculado ao usuario ' + (result.usuarioUsername || ('#' + result.usuarioId))
-                                    + '. Nao e possivel associar a outro usuario.'
+                                'CPF já vinculado ao usuário ' + escapeHtml(usuarioLabel)
+                                    + '. Não é possível associar a outro usuário.' + linkEditar,
+                                true
                             );
                             nomeInput.value = result.colaboradorNome || '';
                             selecionarCargoDoColaborador(result);
@@ -198,7 +245,7 @@
                         setModoAssociarExistente();
                     })
                     .catch(function () {
-                        showAlert('warning', 'Nao foi possivel validar o CPF agora. Voce pode continuar e validar ao salvar.');
+                        showAlert('warning', 'Não foi possível validar o CPF agora. Você pode continuar e validar ao salvar.');
                         setModoNovoColaborador();
                     });
             }

@@ -104,6 +104,7 @@ public class UsuarioAdminService {
 
     @Transactional
     public Usuario criarNoKeycloakERegistrarEspelho(UsuarioNovoForm form) {
+        ColaboradorCadastroPlano colaboradorCadastroPlano = validarColaboradorNoCadastro(form);
         Usuario usuarioCriado;
         if (!keycloakAdminClient.isEnabled()) {
             String username = normalize(form.getUsername());
@@ -123,7 +124,7 @@ public class UsuarioAdminService {
             usuarioCriado = upsertEspelho(keycloakId, form.getUsername(), form.getEmail());
         }
 
-        processarColaboradorNoCadastro(usuarioCriado, form);
+        aplicarColaboradorNoCadastro(usuarioCriado, colaboradorCadastroPlano);
         return usuarioCriado;
     }
 
@@ -386,13 +387,13 @@ public class UsuarioAdminService {
         }
     }
 
-    private void processarColaboradorNoCadastro(Usuario usuario, UsuarioNovoForm form) {
+    private ColaboradorCadastroPlano validarColaboradorNoCadastro(UsuarioNovoForm form) {
         String cpf = normalizeCpf(form.getColaboradorCpf());
         String nome = normalizeUpper(form.getColaboradorNome());
         boolean informouDadosColaborador =
                 !isBlank(cpf) || !isBlank(nome) || form.getColaboradorCargoId() != null || form.isAssociarColaboradorExistente();
         if (!informouDadosColaborador) {
-            return;
+            return ColaboradorCadastroPlano.semAcaoPlano();
         }
         if (isBlank(cpf)) {
             throw new IllegalArgumentException("Informe o CPF do colaborador para vincular ou criar.");
@@ -406,8 +407,7 @@ public class UsuarioAdminService {
             }
             Optional<UsuarioColaborador> vinculoExistenteOpt =
                     usuarioColaboradorRepository.findByColaboradorIdComUsuario(colaboradorExistente.getId());
-            if (vinculoExistenteOpt.isPresent()
-                    && !vinculoExistenteOpt.get().getUsuario().getId().equals(usuario.getId())) {
+            if (vinculoExistenteOpt.isPresent()) {
                 String usernameVinculado = vinculoExistenteOpt.get().getUsuario().getUsername();
                 throw new IllegalArgumentException(
                         "CPF informado ja vinculado ao usuario "
@@ -418,8 +418,7 @@ public class UsuarioAdminService {
                 throw new IllegalArgumentException(
                         "Ja existe colaborador com este CPF. Marque a opcao para associar colaborador existente.");
             }
-            atualizarVinculoColaborador(usuario.getId(), colaboradorExistente.getId());
-            return;
+            return ColaboradorCadastroPlano.vincularExistente(colaboradorExistente.getId());
         }
 
         if (form.isAssociarColaboradorExistente()) {
@@ -429,10 +428,24 @@ public class UsuarioAdminService {
             throw new IllegalArgumentException("Informe o nome do colaborador para criar um novo cadastro.");
         }
 
+        CargoColaborador cargoColaborador = resolveCargo(form.getColaboradorCargoId());
+        return ColaboradorCadastroPlano.criarNovo(nome, cpf, cargoColaborador);
+    }
+
+    private void aplicarColaboradorNoCadastro(Usuario usuario, ColaboradorCadastroPlano colaboradorCadastroPlano) {
+        if (colaboradorCadastroPlano.semAcaoCadastro()) {
+            return;
+        }
+
+        if (colaboradorCadastroPlano.colaboradorExistenteId() != null) {
+            atualizarVinculoColaborador(usuario.getId(), colaboradorCadastroPlano.colaboradorExistenteId());
+            return;
+        }
+
         Colaborador novoColaborador = new Colaborador();
-        novoColaborador.setNome(nome);
-        novoColaborador.setCpf(cpf);
-        novoColaborador.setCargoColaborador(resolveCargo(form.getColaboradorCargoId()));
+        novoColaborador.setNome(colaboradorCadastroPlano.novoColaboradorNome());
+        novoColaborador.setCpf(colaboradorCadastroPlano.novoColaboradorCpf());
+        novoColaborador.setCargoColaborador(colaboradorCadastroPlano.novoColaboradorCargo());
         novoColaborador.setAtivo(true);
         Colaborador colaboradorSalvo = colaboradorRepository.save(novoColaborador);
         atualizarVinculoColaborador(usuario.getId(), colaboradorSalvo.getId());
@@ -492,6 +505,27 @@ public class UsuarioAdminService {
             base = base.substring(0, 10);
         }
         return "His@" + base + "123!";
+    }
+
+    private record ColaboradorCadastroPlano(boolean semAcaoCadastro,
+                                            Long colaboradorExistenteId,
+                                            String novoColaboradorNome,
+                                            String novoColaboradorCpf,
+                                            CargoColaborador novoColaboradorCargo) {
+
+        private static ColaboradorCadastroPlano semAcaoPlano() {
+            return new ColaboradorCadastroPlano(true, null, null, null, null);
+        }
+
+        private static ColaboradorCadastroPlano vincularExistente(Long colaboradorExistenteId) {
+            return new ColaboradorCadastroPlano(false, colaboradorExistenteId, null, null, null);
+        }
+
+        private static ColaboradorCadastroPlano criarNovo(String novoColaboradorNome,
+                                                          String novoColaboradorCpf,
+                                                          CargoColaborador novoColaboradorCargo) {
+            return new ColaboradorCadastroPlano(false, null, novoColaboradorNome, novoColaboradorCpf, novoColaboradorCargo);
+        }
     }
 
     public record ColaboradorCpfLookup(boolean encontrado,

@@ -1,30 +1,57 @@
 <!DOCTYPE html>
 <html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layout/base :: layout('Administracao - Usuarios', ~{::content})}">
+      th:replace="~{layout/base :: layout('Administração - Usuários', ~{::content})}">
 <th:block th:fragment="content">
     <div class="main-card mb-3 card">
         <div class="card-body">
             <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="card-title mb-0">Usuarios</h5>
-                <div>
+                <h5 class="card-title mb-0">Usuários</h5>
+                <div class="d-flex align-items-center">
                     <form th:action="@{/ui/admin/usuarios/reset-fluxo-assistencial}"
                           method="post"
-                          class="d-inline"
-                          onsubmit="return confirm('Confirmar reset do fluxo assistencial? Isso apagará atendimentos, triagens, episodios, entradas e timeline. Pacientes serão preservados.');">
-                        <button class="btn btn-outline-danger btn-sm mr-2" type="submit">Reset fluxo assistencial</button>
+                          class="d-inline mr-2"
+                          onsubmit="return confirm('Confirmar reset do fluxo assistencial? Isso apagará atendimentos, triagens, episódios, entradas e timeline. Pacientes serão preservados.');">
+                        <button class="btn btn-outline-danger btn-sm" type="submit">Reset fluxo assistencial</button>
                     </form>
                     <form th:action="@{/ui/admin/usuarios/reset-fluxo-agendamento}"
                           method="post"
-                          class="d-inline"
-                          onsubmit="return confirm('Confirmar reset do fluxo de agendamento? Isso apagará agendas, slots, vinculos, historicos e status de agendamento. Especialidades serão preservadas.');">
-                        <button class="btn btn-outline-danger btn-sm mr-2" type="submit">Reset fluxo agendamento</button>
+                          class="d-inline mr-2"
+                          onsubmit="return confirm('Confirmar reset do fluxo de agendamento? Isso apagará agendas, slots, vínculos, históricos e status de agendamento. Especialidades serão preservadas.');">
+                        <button class="btn btn-outline-danger btn-sm" type="submit">Reset fluxo agendamento</button>
                     </form>
-                    <a class="btn btn-primary btn-sm" th:href="@{/ui/admin/usuarios/novo}">Novo usuario</a>
+                    <div class="btn-group btn-group-sm" role="group">
+                        <a class="btn btn-primary"
+                           th:href="@{/ui/admin/usuarios/criar}"
+                           data-toggle="tooltip"
+                           data-placement="top"
+                           title="Adicionar um novo usuário">
+                            <i class="nav-link-icon lnr-plus-circle mr-2"></i>Adicionar
+                        </a>
+                    </div>
                 </div>
             </div>
-            <form method="get" th:action="@{/ui/admin/usuarios}" class="form-inline mb-3">
-                <input type="text" name="q" class="form-control mr-2" placeholder="Username/email" th:value="${q}">
-                <button class="btn btn-outline-secondary btn-sm" type="submit">Buscar</button>
+
+            <form method="get" th:action="@{/ui/admin/usuarios}" class="mb-3">
+                <div class="form-row">
+                    <div class="form-group col-md-12">
+                        <label class="filtro-label">Pesquisa</label>
+                        <input type="text"
+                               name="q"
+                               class="form-control"
+                               placeholder="Buscar por username ou e-mail"
+                               th:value="${q}">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-md-12 d-flex">
+                        <button class="btn btn-sm btn-primary mr-2" type="submit">
+                            <i class="nav-link-icon lnr-magnifier mr-2"></i>Buscar
+                        </button>
+                        <a class="btn btn-sm btn-secondary" th:href="@{/ui/admin/usuarios}">
+                            <i class="nav-link-icon lnr-cross mr-2"></i>Limpar
+                        </a>
+                    </div>
+                </div>
             </form>
 
             <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
@@ -38,7 +65,7 @@
                     <th>Email</th>
                     <th>Keycloak ID</th>
                     <th>Status</th>
-                    <th>Acoes</th>
+                    <th class="text-center">Opções</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -51,17 +78,33 @@
                         <span class="badge" th:classappend="${u.ativo} ? 'badge-success' : 'badge-secondary'"
                               th:text="${u.ativo} ? 'ATIVO' : 'INATIVO'"></span>
                     </td>
-                    <td>
-                        <form th:action="@{'/ui/admin/usuarios/' + ${u.id} + '/provisionar-keycloak'}"
-                              method="post"
-                              class="d-inline">
-                            <button class="btn btn-sm"
-                                    th:classappend="${u.keycloakId != null and #strings.startsWith(u.keycloakId, 'pending:')} ? 'btn-warning' : 'btn-outline-primary'"
-                                    type="submit"
-                                    th:text="${u.keycloakId != null and #strings.startsWith(u.keycloakId, 'pending:')} ? 'Provisionar Keycloak' : 'Recriar Keycloak'">
-                                Provisionar Keycloak
+                    <td class="text-center">
+                        <div class="dropdown d-inline-block">
+                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle"
+                                    type="button"
+                                    data-toggle="dropdown"
+                                    aria-haspopup="true"
+                                    aria-expanded="false">
+                                <i class="nav-link-icon lnr-menu"></i>
                             </button>
-                        </form>
+                            <div class="dropdown-menu dropdown-menu-right">
+                                <a class="dropdown-item" th:href="@{'/ui/admin/usuarios/' + ${u.id}}">
+                                    <i class="nav-link-icon lnr-pencil mr-2"></i><span>Editar</span>
+                                </a>
+                                <form th:action="@{'/ui/admin/usuarios/' + ${u.id} + '/provisionar-keycloak'}"
+                                      method="post"
+                                      class="m-0">
+                                    <button class="dropdown-item"
+                                            th:classappend="${u.keycloakId != null and #strings.startsWith(u.keycloakId, 'pending:')} ? ' text-warning' : ''"
+                                            type="submit">
+                                        <i class="nav-link-icon lnr-lock mr-2"></i>
+                                        <span th:text="${u.keycloakId != null and #strings.startsWith(u.keycloakId, 'pending:')} ? 'Provisionar Keycloak' : 'Recriar Keycloak'">
+                                            Provisionar Keycloak
+                                        </span>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
                     </td>
                 </tr>
                 </tbody>
