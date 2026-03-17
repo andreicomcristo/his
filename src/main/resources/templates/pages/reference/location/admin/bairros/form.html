@@ -14,16 +14,31 @@
                         <label>Unidade Federativa<span class="required-mark">*</span></label>
                         <select class="multiselect-dropdown form-control" th:field="*{unidadeFederativaId}" id="unidadeFederativaId">
                             <option value="">Selecione</option>
+                            <option th:if="${ufLegado != null}"
+                                    th:value="${ufLegado.id}"
+                                    th:text="${ufLegado.descricao + ' - ' + ufLegado.sigla + ' (cancelado - legado)'}"></option>
                             <option th:each="uf : ${ufs}" th:value="${uf.id}" th:text="${uf.descricao + ' - ' + uf.sigla}"></option>
                         </select>
+                        <small class="text-warning d-block" th:if="${ufLegado != null}">
+                            UF legada cancelada: pode manter este valor, mas novos vinculos devem usar UF ativa.
+                        </small>
                         <small class="text-danger" th:errors="*{unidadeFederativaId}"></small>
                     </div>
                     <div class="form-group col-md-4">
                         <label>Municipio<span class="required-mark">*</span></label>
-                        <select class="multiselect-dropdown form-control" th:field="*{municipioId}" id="municipioId">
+                        <select class="multiselect-dropdown form-control"
+                                th:field="*{municipioId}"
+                                id="municipioId"
+                                th:attr="data-legado-id=${municipioLegado != null ? municipioLegado.id : ''},data-legado-label=${municipioLegado != null ? municipioLegado.nome + ' (cancelado - legado)' : ''}">
                             <option value="">Selecione</option>
+                            <option th:if="${municipioLegado != null}"
+                                    th:value="${municipioLegado.id}"
+                                    th:text="${municipioLegado.nome + ' (cancelado - legado)'}"></option>
                             <option th:each="Municipio : ${municipios}" th:value="${Municipio.id}" th:text="${Municipio.nome}"></option>
                         </select>
+                        <small class="text-warning d-block" th:if="${municipioLegado != null}">
+                            Municipio legado cancelado: pode manter este valor, mas novos vinculos devem usar municipio ativo.
+                        </small>
                         <small class="text-danger" th:errors="*{municipioId}"></small>
                     </div>
                     <div class="form-group col-md-4">
@@ -67,18 +82,32 @@
                 if (!ufId) {
                     return;
                 }
+                var legacyId = MunicipioSelect.getAttribute('data-legado-id');
+                var legacyLabel = MunicipioSelect.getAttribute('data-legado-label');
                 fetch('/ui/admin/municipios/por-uf/' + ufId)
                     .then(function (response) { return response.json(); })
                     .then(function (items) {
+                        var selectedExists = false;
                         items.forEach(function (item) {
                             var option = document.createElement('option');
                             option.value = item.id;
                             option.textContent = item.descricao;
                             if (selectedMunicipioId && String(selectedMunicipioId) === String(item.id)) {
                                 option.selected = true;
+                                selectedExists = true;
                             }
                             MunicipioSelect.appendChild(option);
                         });
+                        if (selectedMunicipioId
+                                && legacyId
+                                && String(selectedMunicipioId) === String(legacyId)
+                                && !selectedExists) {
+                            var legacyOption = document.createElement('option');
+                            legacyOption.value = legacyId;
+                            legacyOption.textContent = legacyLabel || 'Municipio cancelado - legado';
+                            legacyOption.selected = true;
+                            MunicipioSelect.appendChild(legacyOption);
+                        }
                         if (window.jQuery && window.jQuery.fn && window.jQuery.fn.select2) {
                             window.jQuery(MunicipioSelect).trigger('change');
                         }
@@ -92,12 +121,17 @@
                 } else {
                     resetMunicipios();
                 }
-                $(ufSelect).on('change', function () {
-                    loadMunicipios(this.value, null);
-                });
+                if (window.jQuery && window.jQuery.fn) {
+                    window.jQuery(ufSelect).on('change', function () {
+                        loadMunicipios(this.value, null);
+                    });
+                } else {
+                    ufSelect.addEventListener('change', function () {
+                        loadMunicipios(this.value, null);
+                    });
+                }
             }
         });
     </script>
 </th:block>
 </html>
-

@@ -1,30 +1,23 @@
 <!DOCTYPE html>
 <html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layout/base :: layout('Administração - UF', ~{::content})}">
+      th:replace="~{layout/base :: layout('Administração - UFs Canceladas', ~{::content})}">
 <th:block th:fragment="content">
     <div class="main-card mb-3 card">
         <div class="card-body">
             <div class="d-flex justify-content-between align-items-center">
-                <h5 class="card-title">Unidades Federativas</h5>
+                <h5 class="card-title">Unidades Federativas canceladas</h5>
                 <div class="btn-group btn-group-sm" role="group">
-                    <a class="btn btn-outline-info"
-                       th:href="@{/ui/admin/unidades-federativas/cancelados}"
+                    <a class="btn btn-secondary"
+                       th:href="@{/ui/admin/unidades-federativas}"
                        data-toggle="tooltip"
                        data-placement="top"
-                       title="Visualizar UFs canceladas">
-                        <i class="nav-link-icon lnr-book mr-2"></i>Cancelados
-                    </a>
-                    <a class="btn btn-primary"
-                       th:href="@{/ui/admin/unidades-federativas/novo}"
-                       data-toggle="tooltip"
-                       data-placement="top"
-                       title="Adicionar uma nova unidade federativa">
-                        <i class="nav-link-icon lnr-plus-circle mr-2"></i>Adicionar
+                       title="Voltar para UFs">
+                        <i class="nav-link-icon lnr-arrow-left mr-2"></i>Voltar
                     </a>
                 </div>
             </div>
 
-            <form method="get" th:action="@{/ui/admin/unidades-federativas}">
+            <form method="get" th:action="@{/ui/admin/unidades-federativas/cancelados}">
                 <div class="form-row">
                     <div class="form-group col-md-12">
                         <label class="filtro-label">Pesquisa</label>
@@ -40,7 +33,7 @@
                         <button class="btn btn-sm btn-primary mr-2" type="submit">
                             <i class="nav-link-icon lnr-magnifier mr-2"></i>Buscar
                         </button>
-                        <a th:href="@{/ui/admin/unidades-federativas}" class="btn btn-sm btn-secondary">
+                        <a th:href="@{/ui/admin/unidades-federativas/cancelados}" class="btn btn-sm btn-secondary">
                             <i class="nav-link-icon lnr-cross mr-2"></i>Limpar
                         </a>
                     </div>
@@ -56,17 +49,19 @@
                     <th>ID</th>
                     <th>Descrição</th>
                     <th>Sigla</th>
+                    <th>Data cancelamento</th>
                     <th class="text-center">Opções</th>
                 </tr>
                 </thead>
                 <tbody>
                 <tr th:if="${#lists.isEmpty(items)}">
-                    <td colspan="4" class="text-center">Nenhuma UF encontrada</td>
+                    <td colspan="5" class="text-center">Nenhuma UF cancelada encontrada</td>
                 </tr>
                 <tr th:each="item : ${items}">
                     <td th:text="${item.id}"></td>
                     <td th:text="${item.descricao}"></td>
                     <td th:text="${item.sigla}"></td>
+                    <td th:text="${item.dtCancelamento != null ? #temporals.format(item.dtCancelamento, 'dd/MM/yyyy HH:mm') : '-'}"></td>
                     <td class="text-center">
                         <div class="dropdown d-inline-block">
                             <button class="btn btn-sm btn-outline-secondary dropdown-toggle"
@@ -77,16 +72,20 @@
                                 <i class="nav-link-icon lnr-menu"></i>
                             </button>
                             <div class="dropdown-menu dropdown-menu-right">
-                                <a class="dropdown-item text-warning"
-                                   th:href="@{'/ui/admin/unidades-federativas/' + ${item.id} + '/editar'}">
-                                    <i class="nav-link-icon lnr-pencil mr-2"></i><span>Editar</span>
-                                </a>
                                 <button type="button"
-                                        class="dropdown-item text-danger js-uf-action"
-                                        data-action="excluir"
-                                        th:data-action-url="@{'/ui/admin/unidades-federativas/' + ${item.id} + '/excluir'}"
+                                        class="dropdown-item text-info js-uf-cancelado-action"
+                                        data-action="restaurar"
+                                        th:data-action-url="@{'/ui/admin/unidades-federativas/' + ${item.id} + '/restaurar'}"
                                         th:data-item-nome="${item.descricao}">
-                                    <i class="nav-link-icon lnr-trash mr-2"></i><span>Excluir</span>
+                                    <i class="nav-link-icon pe-7s-refresh-2 mr-2"></i><span>Restaurar</span>
+                                </button>
+                                <hr>
+                                <button type="button"
+                                        class="dropdown-item text-danger js-uf-cancelado-action"
+                                        data-action="excluir-permanente"
+                                        th:data-action-url="@{'/ui/admin/unidades-federativas/' + ${item.id} + '/excluir-permanente'}"
+                                        th:data-item-nome="${item.descricao}">
+                                    <i class="nav-link-icon lnr-trash mr-2"></i><span>Excluir permanente</span>
                                 </button>
                             </div>
                         </div>
@@ -97,29 +96,29 @@
         </div>
     </div>
 
-    <form id="ufActionForm" method="post" class="d-none">
+    <form id="ufCanceladoActionForm" method="post" class="d-none">
         <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
     </form>
 
-    <div class="modal fade" id="ufActionModal" tabindex="-1" role="dialog" aria-labelledby="ufActionModalTitle"
+    <div class="modal fade" id="ufCanceladoActionModal" tabindex="-1" role="dialog" aria-labelledby="ufCanceladoActionModalTitle"
          aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="ufActionModalTitle">Excluir UF</h5>
+                    <h5 class="modal-title" id="ufCanceladoActionModalTitle">Confirmar ação</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
                 <div class="modal-body">
-                    <p class="mb-0" id="ufActionModalMessage"></p>
+                    <p class="mb-0" id="ufCanceladoActionModalMessage"></p>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">
                         <i class="nav-link-icon lnr-cross mr-2"></i>Cancelar
                     </button>
-                    <button type="button" class="btn btn-danger" id="ufActionModalConfirmBtn">
-                        <i class="nav-link-icon lnr-trash mr-2"></i>Excluir
+                    <button type="button" class="btn btn-primary" id="ufCanceladoActionModalConfirmBtn">
+                        <i class="nav-link-icon lnr-checkmark mr-2"></i>Confirmar
                     </button>
                 </div>
             </div>
@@ -128,18 +127,47 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            var actionButtons = document.querySelectorAll('.js-uf-action');
-            var actionForm = document.getElementById('ufActionForm');
-            var modalEl = document.getElementById('ufActionModal');
-            var modalMessageEl = document.getElementById('ufActionModalMessage');
-            var confirmBtn = document.getElementById('ufActionModalConfirmBtn');
+            var actionButtons = document.querySelectorAll('.js-uf-cancelado-action');
+            var actionForm = document.getElementById('ufCanceladoActionForm');
+            var modalEl = document.getElementById('ufCanceladoActionModal');
+            var modalTitleEl = document.getElementById('ufCanceladoActionModalTitle');
+            var modalMessageEl = document.getElementById('ufCanceladoActionModalMessage');
+            var confirmBtn = document.getElementById('ufCanceladoActionModalConfirmBtn');
             var pendingActionUrl = null;
+
+            function configByAction(action, itemNome) {
+                if (action === 'excluir-permanente') {
+                    return {
+                        title: 'Excluir UF permanentemente',
+                        message: 'Deseja excluir permanentemente a UF "' + itemNome + '"? Esta ação é irreversível.',
+                        buttonHtml: '<i class="nav-link-icon lnr-trash mr-2"></i>Excluir permanente',
+                        buttonClass: 'btn-danger'
+                    };
+                }
+                return {
+                    title: 'Restaurar UF',
+                    message: 'Deseja restaurar a UF "' + itemNome + '"?',
+                    buttonHtml: '<i class="nav-link-icon pe-7s-refresh-2 mr-2"></i>Restaurar',
+                    buttonClass: 'btn-info'
+                };
+            }
+
+            function clearButtonStyle() {
+                confirmBtn.classList.remove('btn-danger', 'btn-warning', 'btn-success', 'btn-primary', 'btn-info');
+            }
 
             actionButtons.forEach(function (button) {
                 button.addEventListener('click', function () {
                     pendingActionUrl = this.getAttribute('data-action-url');
                     var pendingNome = this.getAttribute('data-item-nome') || '';
-                    modalMessageEl.textContent = 'Deseja excluir a UF "' + pendingNome + '"? Ela receberá dt_cancelamento e não será mais listada.';
+                    var action = this.getAttribute('data-action') || 'restaurar';
+                    var config = configByAction(action, pendingNome);
+
+                    modalTitleEl.textContent = config.title;
+                    modalMessageEl.textContent = config.message;
+                    confirmBtn.innerHTML = config.buttonHtml;
+                    clearButtonStyle();
+                    confirmBtn.classList.add(config.buttonClass);
 
                     if (window.jQuery) {
                         var dropdown = window.jQuery(this).closest('.dropdown');

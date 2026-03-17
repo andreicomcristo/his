@@ -1,7 +1,10 @@
 package br.com.his.reference.location.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,14 +29,35 @@ public class MunicipioAdminService {
     public List<Municipio> listar(String q) {
         String filtro = normalize(q);
         if (filtro == null || filtro.isBlank()) {
-            return repository.findAllWithUnidadeFederativaOrderByNome();
+            return repository.findAtivosWithUnidadeFederativaOrderByNome();
         }
-        return repository.buscarPorFiltro(filtro);
+        return repository.buscarAtivosPorFiltro(filtro);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Municipio> listarCancelados(String q) {
+        String filtro = normalize(q);
+        if (filtro == null || filtro.isBlank()) {
+            return repository.findCanceladosWithUnidadeFederativaOrderByNome();
+        }
+        return repository.buscarCanceladosPorFiltro(filtro);
     }
 
     @Transactional(readOnly = true)
     public Municipio buscar(Long id) {
-        return repository.findById(id).orElseThrow(() -> new IllegalArgumentException("Municipio nao encontrado"));
+        return repository.findByIdAndDtCancelamentoIsNull(id)
+                .orElseThrow(() -> new IllegalArgumentException("Municipio nao encontrado"));
+    }
+
+    @Transactional(readOnly = true)
+    public Municipio buscarCancelado(Long id) {
+        return repository.findByIdAndDtCancelamentoIsNotNull(id)
+                .orElseThrow(() -> new IllegalArgumentException("Municipio cancelado nao encontrado"));
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<Municipio> buscarCanceladoOpcional(Long id) {
+        return repository.findByIdAndDtCancelamentoIsNotNull(id);
     }
 
     @Transactional(readOnly = true)
@@ -44,6 +68,7 @@ public class MunicipioAdminService {
     @Transactional
     public Municipio criar(MunicipioForm form) {
         Municipio municipio = new Municipio();
+        municipio.setDtCancelamento(null);
         apply(municipio, form);
         return repository.save(municipio);
     }
@@ -57,7 +82,27 @@ public class MunicipioAdminService {
 
     @Transactional
     public void excluir(Long id) {
-        repository.delete(buscar(id));
+        Municipio municipio = buscar(id);
+        municipio.setDtCancelamento(LocalDateTime.now());
+        repository.save(municipio);
+    }
+
+    @Transactional
+    public void restaurar(Long id) {
+        Municipio municipio = buscarCancelado(id);
+        municipio.setDtCancelamento(null);
+        repository.save(municipio);
+    }
+
+    @Transactional
+    public void excluirPermanente(Long id) {
+        Municipio municipio = buscarCancelado(id);
+        try {
+            repository.delete(municipio);
+            repository.flush();
+        } catch (DataIntegrityViolationException ex) {
+            throw new IllegalArgumentException("Municipio possui vinculos e nao pode ser excluido permanentemente");
+        }
     }
 
     public MunicipioForm toForm(Municipio municipio) {
@@ -69,8 +114,16 @@ public class MunicipioAdminService {
     }
 
     private void apply(Municipio municipio, MunicipioForm form) {
-        UnidadeFederativa uf = unidadeFederativaRepository.findById(form.getUnidadeFederativaId())
-                .orElseThrow(() -> new IllegalArgumentException("UF nao encontrada"));
+        UnidadeFederativa ufAtual = municipio.getUnidadeFederativa();
+        UnidadeFederativa uf;
+        if (ufAtual != null
+                && ufAtual.getId() != null
+                && ufAtual.getId().equals(form.getUnidadeFederativaId())) {
+            uf = ufAtual;
+        } else {
+            uf = unidadeFederativaRepository.findByIdAndDtCancelamentoIsNull(form.getUnidadeFederativaId())
+                    .orElseThrow(() -> new IllegalArgumentException("UF nao encontrada"));
+        }
         municipio.setNome(normalize(form.getNome()).toUpperCase());
         municipio.setCodigoIbge(normalize(form.getCodigoIbge()));
         municipio.setUnidadeFederativa(uf);

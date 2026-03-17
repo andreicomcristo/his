@@ -26,13 +26,17 @@ public class TipoUnidadeAdminController {
     }
 
     @GetMapping
-    public String listar(@RequestParam(required = false) String q,
-                         @RequestParam(required = false) Boolean ativo,
-                         Model model) {
-        model.addAttribute("items", service.listar(q, ativo));
+    public String listar(@RequestParam(required = false) String q, Model model) {
+        model.addAttribute("items", service.listar(q));
         model.addAttribute("q", q);
-        model.addAttribute("ativo", ativo);
         return "pages/access/admin/tipos-unidade/list";
+    }
+
+    @GetMapping("/cancelados")
+    public String listarCancelados(@RequestParam(required = false) String q, Model model) {
+        model.addAttribute("items", service.listarCancelados(q));
+        model.addAttribute("q", q);
+        return "pages/access/admin/tipos-unidade/cancel_list";
     }
 
     @GetMapping("/novo")
@@ -66,7 +70,7 @@ public class TipoUnidadeAdminController {
 
     @GetMapping("/{id}/editar")
     public String editar(@PathVariable Long id, Model model) {
-        model.addAttribute("form", service.toForm(service.buscar(id)));
+        model.addAttribute("form", service.toForm(service.buscarAtivo(id)));
         model.addAttribute("modoEdicao", true);
         model.addAttribute("itemId", id);
         return "pages/access/admin/tipos-unidade/form";
@@ -100,10 +104,34 @@ public class TipoUnidadeAdminController {
                           RedirectAttributes redirectAttributes) {
         try {
             service.excluir(id);
-            redirectAttributes.addFlashAttribute("successMessage", "Tipo de unidade excluido com sucesso");
+            redirectAttributes.addFlashAttribute("successMessage", "Tipo de unidade cancelado com sucesso");
         } catch (IllegalArgumentException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
         }
         return "redirect:/ui/admin/tipos-unidade";
+    }
+
+    @PostMapping("/{id}/restaurar")
+    public String restaurar(@PathVariable Long id,
+                            RedirectAttributes redirectAttributes) {
+        try {
+            service.restaurar(id);
+            redirectAttributes.addFlashAttribute("successMessage", "Tipo de unidade restaurado com sucesso");
+        } catch (IllegalArgumentException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+        }
+        return "redirect:/ui/admin/tipos-unidade/cancelados";
+    }
+
+    @PostMapping("/{id}/excluir-permanente")
+    public String excluirPermanente(@PathVariable Long id,
+                                    RedirectAttributes redirectAttributes) {
+        try {
+            service.excluirPermanente(id);
+            redirectAttributes.addFlashAttribute("successMessage", "Tipo de unidade excluido permanentemente com sucesso");
+        } catch (IllegalArgumentException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+        }
+        return "redirect:/ui/admin/tipos-unidade/cancelados";
     }
 }

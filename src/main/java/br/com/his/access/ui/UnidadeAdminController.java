@@ -13,6 +13,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import br.com.his.access.dto.UnidadeForm;
 import br.com.his.access.repository.TipoUnidadeRepository;
+import br.com.his.reference.location.model.Municipio;
 import br.com.his.reference.location.service.UnidadeFederativaAdminService;
 import br.com.his.access.service.UnidadeAdminService;
 import br.com.his.reference.location.repository.MunicipioRepository;
@@ -126,11 +127,33 @@ public class UnidadeAdminController {
     }
 
     private void populateModel(Model model, UnidadeForm form) {
-        model.addAttribute("ufs", unidadeFederativaAdminService.listarTodas());
-        model.addAttribute("tiposUnidade", tipoUnidadeRepository.findByAtivoOrderByDescricaoAsc(true));
+        var ufs = unidadeFederativaAdminService.listarTodas();
+        model.addAttribute("ufs", ufs);
+        var ufLegado = (form == null || form.getUnidadeFederativaId() == null)
+                ? null
+                : ufs.stream().anyMatch(uf -> uf.getId().equals(form.getUnidadeFederativaId()))
+                        ? null
+                        : unidadeFederativaAdminService.buscarCanceladaOpcional(form.getUnidadeFederativaId()).orElse(null);
+        model.addAttribute("ufLegado", ufLegado);
+        var tiposUnidade = tipoUnidadeRepository.findByDtCancelamentoIsNullOrderByDescricaoAsc();
+        model.addAttribute("tiposUnidade", tiposUnidade);
+        var tipoUnidadeLegado = (form == null || form.getTipoUnidadeId() == null)
+                ? null
+                : tiposUnidade.stream()
+                        .anyMatch(item -> item.getId().equals(form.getTipoUnidadeId()))
+                        ? null
+                        : tipoUnidadeRepository.findByIdAndDtCancelamentoIsNotNull(form.getTipoUnidadeId()).orElse(null);
+        model.addAttribute("tipoUnidadeLegado", tipoUnidadeLegado);
         Long unidadeFederativaId = form == null ? null : form.getUnidadeFederativaId();
-        model.addAttribute("municipios", unidadeFederativaId == null
+        java.util.List<Municipio> municipios = unidadeFederativaId == null
                 ? java.util.List.of()
-                : municipioRepository.findByUnidadeFederativaIdOrderByNome(unidadeFederativaId));
+                : municipioRepository.findByUnidadeFederativaIdOrderByNome(unidadeFederativaId);
+        model.addAttribute("municipios", municipios);
+        var municipioLegado = (form == null || form.getMunicipioId() == null)
+                ? null
+                : municipios.stream().anyMatch(item -> item.getId().equals(form.getMunicipioId()))
+                        ? null
+                        : municipioRepository.findByIdAndDtCancelamentoIsNotNull(form.getMunicipioId()).orElse(null);
+        model.addAttribute("municipioLegado", municipioLegado);
     }
 }

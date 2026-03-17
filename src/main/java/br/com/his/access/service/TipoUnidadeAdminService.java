@@ -1,5 +1,6 @@
 package br.com.his.access.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.dao.DataIntegrityViolationException;
@@ -20,22 +21,37 @@ public class TipoUnidadeAdminService {
     }
 
     @Transactional(readOnly = true)
-    public List<TipoUnidade> listar(String q, Boolean ativo) {
+    public List<TipoUnidade> listar(String q) {
         String filtro = normalize(q);
-        if (filtro == null) {
-            return ativo == null
-                    ? repository.findAllByOrderByDescricaoAsc()
-                    : repository.findByAtivoOrderByDescricaoAsc(ativo);
-        }
-        return ativo == null
-                ? repository.listarPorBusca(filtro)
-                : repository.listarPorFiltroComBusca(ativo, filtro);
+        return filtro == null
+                ? repository.findByDtCancelamentoIsNullOrderByDescricaoAsc()
+                : repository.listarAtivosPorBusca(filtro);
     }
 
     @Transactional(readOnly = true)
-    public TipoUnidade buscar(Long id) {
-        return repository.findById(id)
+    public List<TipoUnidade> listarCancelados(String q) {
+        String filtro = normalize(q);
+        return filtro == null
+                ? repository.listarCancelados()
+                : repository.listarCanceladosPorBusca(filtro);
+    }
+
+    @Transactional(readOnly = true)
+    public TipoUnidade buscarAtivo(Long id) {
+        return repository.findByIdAndDtCancelamentoIsNull(id)
                 .orElseThrow(() -> new IllegalArgumentException("Tipo de unidade nao encontrado"));
+    }
+
+    @Transactional(readOnly = true)
+    public TipoUnidade buscarCancelado(Long id) {
+        return repository.findByIdAndDtCancelamentoIsNotNull(id)
+                .orElseThrow(() -> new IllegalArgumentException("Tipo de unidade cancelado nao encontrado"));
+    }
+
+    @Transactional(readOnly = true)
+    public TipoUnidade buscarParaVinculoAtivo(Long id) {
+        return repository.findByIdAndDtCancelamentoIsNull(id)
+                .orElseThrow(() -> new IllegalArgumentException("Tipo de unidade invalido"));
     }
 
     @Transactional
@@ -43,20 +59,35 @@ public class TipoUnidadeAdminService {
         validarCodigoDuplicado(form.getCodigo(), null);
         TipoUnidade item = new TipoUnidade();
         apply(item, form);
+        item.setDtCancelamento(null);
         return repository.save(item);
     }
 
     @Transactional
     public TipoUnidade atualizar(Long id, TipoUnidadeForm form) {
         validarCodigoDuplicado(form.getCodigo(), id);
-        TipoUnidade item = buscar(id);
+        TipoUnidade item = buscarAtivo(id);
         apply(item, form);
         return repository.save(item);
     }
 
     @Transactional
     public void excluir(Long id) {
-        TipoUnidade item = buscar(id);
+        TipoUnidade item = buscarAtivo(id);
+        item.setDtCancelamento(LocalDateTime.now());
+        repository.save(item);
+    }
+
+    @Transactional
+    public void restaurar(Long id) {
+        TipoUnidade item = buscarCancelado(id);
+        item.setDtCancelamento(null);
+        repository.save(item);
+    }
+
+    @Transactional
+    public void excluirPermanente(Long id) {
+        TipoUnidade item = buscarCancelado(id);
         try {
             repository.delete(item);
             repository.flush();
@@ -70,7 +101,6 @@ public class TipoUnidadeAdminService {
         TipoUnidadeForm form = new TipoUnidadeForm();
         form.setCodigo(item.getCodigo());
         form.setDescricao(item.getDescricao());
-        form.setAtivo(item.isAtivo());
         return form;
     }
 
@@ -86,7 +116,6 @@ public class TipoUnidadeAdminService {
     private void apply(TipoUnidade item, TipoUnidadeForm form) {
         item.setCodigo(normalizeUpper(form.getCodigo()));
         item.setDescricao(normalizeUpper(form.getDescricao()));
-        item.setAtivo(form.isAtivo());
     }
 
     private static String normalize(String value) {

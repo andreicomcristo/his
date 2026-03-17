@@ -40,12 +40,19 @@ public class MunicipioAdminController {
         return "pages/reference/location/admin/municipios/list";
     }
 
+    @GetMapping("/cancelados")
+    public String listarCancelados(@RequestParam(required = false) String q, Model model) {
+        model.addAttribute("items", service.listarCancelados(q));
+        model.addAttribute("q", q);
+        return "pages/reference/location/admin/municipios/cancel_list";
+    }
+
     @GetMapping("/novo")
     public String novo(Model model) {
         if (!model.containsAttribute("form")) {
             model.addAttribute("form", new MunicipioForm());
         }
-        populateModel(model);
+        populateModel(model, (MunicipioForm) model.getAttribute("form"));
         model.addAttribute("modoEdicao", false);
         return "pages/reference/location/admin/municipios/form";
     }
@@ -54,9 +61,9 @@ public class MunicipioAdminController {
     public String criar(@Valid @ModelAttribute("form") MunicipioForm form,
                         BindingResult bindingResult,
                         Model model,
-                        RedirectAttributes redirectAttributes) {
+        RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
-            populateModel(model);
+            populateModel(model, form);
             model.addAttribute("modoEdicao", false);
             return "pages/reference/location/admin/municipios/form";
         }
@@ -67,8 +74,9 @@ public class MunicipioAdminController {
 
     @GetMapping("/{id}/editar")
     public String editar(@PathVariable Long id, Model model) {
-        model.addAttribute("form", service.toForm(service.buscar(id)));
-        populateModel(model);
+        MunicipioForm form = service.toForm(service.buscar(id));
+        model.addAttribute("form", form);
+        populateModel(model, form);
         model.addAttribute("modoEdicao", true);
         model.addAttribute("itemId", id);
         return "pages/reference/location/admin/municipios/form";
@@ -79,9 +87,9 @@ public class MunicipioAdminController {
                             @Valid @ModelAttribute("form") MunicipioForm form,
                             BindingResult bindingResult,
                             Model model,
-                            RedirectAttributes redirectAttributes) {
+        RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
-            populateModel(model);
+            populateModel(model, form);
             model.addAttribute("modoEdicao", true);
             model.addAttribute("itemId", id);
             return "pages/reference/location/admin/municipios/form";
@@ -93,9 +101,35 @@ public class MunicipioAdminController {
 
     @PostMapping("/{id}/excluir")
     public String excluir(@PathVariable Long id, RedirectAttributes redirectAttributes) {
-        service.excluir(id);
-        redirectAttributes.addFlashAttribute("successMessage", "Municipio excluido com sucesso");
+        try {
+            service.excluir(id);
+            redirectAttributes.addFlashAttribute("successMessage", "Municipio excluido com sucesso");
+        } catch (IllegalArgumentException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+        }
         return "redirect:/ui/admin/municipios";
+    }
+
+    @PostMapping("/{id}/restaurar")
+    public String restaurar(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        try {
+            service.restaurar(id);
+            redirectAttributes.addFlashAttribute("successMessage", "Municipio restaurado com sucesso");
+        } catch (IllegalArgumentException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+        }
+        return "redirect:/ui/admin/municipios/cancelados";
+    }
+
+    @PostMapping("/{id}/excluir-permanente")
+    public String excluirPermanente(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        try {
+            service.excluirPermanente(id);
+            redirectAttributes.addFlashAttribute("successMessage", "Municipio excluido permanentemente com sucesso");
+        } catch (IllegalArgumentException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+        }
+        return "redirect:/ui/admin/municipios/cancelados";
     }
 
     @GetMapping("/por-uf/{unidadeFederativaId}")
@@ -111,7 +145,14 @@ public class MunicipioAdminController {
         return new PacienteLookupOption(municipio.getId(), municipio.getNome());
     }
 
-    private void populateModel(Model model) {
-        model.addAttribute("ufs", unidadeFederativaAdminService.listarTodas());
+    private void populateModel(Model model, MunicipioForm form) {
+        var ufs = unidadeFederativaAdminService.listarTodas();
+        model.addAttribute("ufs", ufs);
+        var ufLegado = (form == null || form.getUnidadeFederativaId() == null)
+                ? null
+                : ufs.stream().anyMatch(uf -> uf.getId().equals(form.getUnidadeFederativaId()))
+                        ? null
+                        : unidadeFederativaAdminService.buscarCanceladaOpcional(form.getUnidadeFederativaId()).orElse(null);
+        model.addAttribute("ufLegado", ufLegado);
     }
 }

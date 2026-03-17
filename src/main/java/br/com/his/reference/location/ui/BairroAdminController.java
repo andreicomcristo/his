@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import br.com.his.reference.location.dto.BairroForm;
+import br.com.his.reference.location.model.Municipio;
 import br.com.his.reference.location.service.BairroAdminService;
 import br.com.his.reference.location.service.MunicipioAdminService;
 import br.com.his.reference.location.service.UnidadeFederativaAdminService;
@@ -147,11 +148,25 @@ public class BairroAdminController {
     }
 
     private void populateModel(Model model, BairroForm form) {
-        model.addAttribute("ufs", unidadeFederativaAdminService.listarTodas());
+        var ufs = unidadeFederativaAdminService.listarTodas();
+        model.addAttribute("ufs", ufs);
+        var ufLegado = (form == null || form.getUnidadeFederativaId() == null)
+                ? null
+                : ufs.stream().anyMatch(uf -> uf.getId().equals(form.getUnidadeFederativaId()))
+                        ? null
+                        : unidadeFederativaAdminService.buscarCanceladaOpcional(form.getUnidadeFederativaId()).orElse(null);
+        model.addAttribute("ufLegado", ufLegado);
         Long unidadeFederativaId = form == null ? null : form.getUnidadeFederativaId();
-        model.addAttribute("municipios", unidadeFederativaId == null
+        java.util.List<Municipio> municipios = unidadeFederativaId == null
                 ? java.util.List.of()
-                : MunicipioAdminService.listarPorUf(unidadeFederativaId));
+                : MunicipioAdminService.listarPorUf(unidadeFederativaId);
+        model.addAttribute("municipios", municipios);
+        var municipioLegado = (form == null || form.getMunicipioId() == null)
+                ? null
+                : municipios.stream().anyMatch(item -> item.getId().equals(form.getMunicipioId()))
+                        ? null
+                        : MunicipioAdminService.buscarCanceladoOpcional(form.getMunicipioId()).orElse(null);
+        model.addAttribute("municipioLegado", municipioLegado);
     }
 }
 

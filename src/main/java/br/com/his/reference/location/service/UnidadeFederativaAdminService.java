@@ -1,7 +1,10 @@
 package br.com.his.reference.location.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,24 +25,46 @@ public class UnidadeFederativaAdminService {
     public List<UnidadeFederativa> listar(String q) {
         String filtro = normalize(q);
         if (filtro == null || filtro.isBlank()) {
-            return repository.findAllByOrderByDescricaoAsc();
+            return repository.findAtivasOrderByDescricaoAsc();
         }
-        return repository.buscarPorFiltro(filtro);
+        return repository.buscarAtivasPorFiltro(filtro);
+    }
+
+    @Transactional(readOnly = true)
+    public List<UnidadeFederativa> listarCanceladas(String q) {
+        String filtro = normalize(q);
+        if (filtro == null || filtro.isBlank()) {
+            return repository.findCanceladasOrderByDescricaoAsc();
+        }
+        return repository.buscarCanceladasPorFiltro(filtro);
     }
 
     @Transactional(readOnly = true)
     public List<UnidadeFederativa> listarTodas() {
-        return repository.findAllByOrderByDescricaoAsc();
+        return repository.findAtivasOrderByDescricaoAsc();
     }
 
     @Transactional(readOnly = true)
     public UnidadeFederativa buscar(Long id) {
-        return repository.findById(id).orElseThrow(() -> new IllegalArgumentException("UF nao encontrada"));
+        return repository.findByIdAndDtCancelamentoIsNull(id)
+                .orElseThrow(() -> new IllegalArgumentException("UF nao encontrada"));
+    }
+
+    @Transactional(readOnly = true)
+    public UnidadeFederativa buscarCancelada(Long id) {
+        return repository.findByIdAndDtCancelamentoIsNotNull(id)
+                .orElseThrow(() -> new IllegalArgumentException("UF cancelada nao encontrada"));
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<UnidadeFederativa> buscarCanceladaOpcional(Long id) {
+        return repository.findByIdAndDtCancelamentoIsNotNull(id);
     }
 
     @Transactional
     public UnidadeFederativa criar(UnidadeFederativaForm form) {
         UnidadeFederativa uf = new UnidadeFederativa();
+        uf.setDtCancelamento(null);
         apply(uf, form);
         return repository.save(uf);
     }
@@ -53,7 +78,27 @@ public class UnidadeFederativaAdminService {
 
     @Transactional
     public void excluir(Long id) {
-        repository.delete(buscar(id));
+        UnidadeFederativa uf = buscar(id);
+        uf.setDtCancelamento(LocalDateTime.now());
+        repository.save(uf);
+    }
+
+    @Transactional
+    public void restaurar(Long id) {
+        UnidadeFederativa uf = buscarCancelada(id);
+        uf.setDtCancelamento(null);
+        repository.save(uf);
+    }
+
+    @Transactional
+    public void excluirPermanente(Long id) {
+        UnidadeFederativa uf = buscarCancelada(id);
+        try {
+            repository.delete(uf);
+            repository.flush();
+        } catch (DataIntegrityViolationException ex) {
+            throw new IllegalArgumentException("UF possui vinculos e nao pode ser excluida permanentemente");
+        }
     }
 
     public UnidadeFederativaForm toForm(UnidadeFederativa uf) {

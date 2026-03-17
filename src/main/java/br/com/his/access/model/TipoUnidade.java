@@ -1,5 +1,7 @@
 package br.com.his.access.model;
 
+import java.time.LocalDateTime;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -21,8 +23,8 @@ public class TipoUnidade {
     @Column(nullable = false, length = 100)
     private String descricao;
 
-    @Column(nullable = false)
-    private boolean ativo;
+    @Column(name = "dt_cancelamento")
+    private LocalDateTime dtCancelamento;
 
     public Long getId() {
         return id;
@@ -48,11 +50,11 @@ public class TipoUnidade {
         this.descricao = descricao;
     }
 
-    public boolean isAtivo() {
-        return ativo;
+    public LocalDateTime getDtCancelamento() {
+        return dtCancelamento;
     }
 
-    public void setAtivo(boolean ativo) {
-        this.ativo = ativo;
+    public void setDtCancelamento(LocalDateTime dtCancelamento) {
+        this.dtCancelamento = dtCancelamento;
     }
 }

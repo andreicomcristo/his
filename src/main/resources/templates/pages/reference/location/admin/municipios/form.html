@@ -14,8 +14,14 @@
                         <label>UF<span class="required-mark">*</span></label>
                         <select class="multiselect-dropdown form-control" th:field="*{unidadeFederativaId}">
                             <option value="">Selecione</option>
+                            <option th:if="${ufLegado != null}"
+                                    th:value="${ufLegado.id}"
+                                    th:text="${ufLegado.descricao + ' - ' + ufLegado.sigla + ' (cancelado - legado)'}"></option>
                             <option th:each="uf : ${ufs}" th:value="${uf.id}" th:text="${uf.descricao + ' - ' + uf.sigla}"></option>
                         </select>
+                        <small class="text-warning d-block" th:if="${ufLegado != null}">
+                            UF legada cancelada: pode manter este valor, mas novos vinculos devem usar UF ativa.
+                        </small>
                         <small class="text-danger" th:errors="*{unidadeFederativaId}"></small>
                     </div>
                     <div class="form-group col-md-5">

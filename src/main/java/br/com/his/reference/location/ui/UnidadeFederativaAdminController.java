@@ -32,6 +32,13 @@ public class UnidadeFederativaAdminController {
         return "pages/reference/location/admin/unidades-federativas/list";
     }
 
+    @GetMapping("/cancelados")
+    public String listarCancelados(@RequestParam(required = false) String q, Model model) {
+        model.addAttribute("items", service.listarCanceladas(q));
+        model.addAttribute("q", q);
+        return "pages/reference/location/admin/unidades-federativas/cancel_list";
+    }
+
     @GetMapping("/novo")
     public String novo(Model model) {
         if (!model.containsAttribute("form")) {
@@ -81,8 +88,34 @@ public class UnidadeFederativaAdminController {
 
     @PostMapping("/{id}/excluir")
     public String excluir(@PathVariable Long id, RedirectAttributes redirectAttributes) {
-        service.excluir(id);
-        redirectAttributes.addFlashAttribute("successMessage", "UF excluida com sucesso");
+        try {
+            service.excluir(id);
+            redirectAttributes.addFlashAttribute("successMessage", "UF excluida com sucesso");
+        } catch (IllegalArgumentException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+        }
         return "redirect:/ui/admin/unidades-federativas";
+    }
+
+    @PostMapping("/{id}/restaurar")
+    public String restaurar(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        try {
+            service.restaurar(id);
+            redirectAttributes.addFlashAttribute("successMessage", "UF restaurada com sucesso");
+        } catch (IllegalArgumentException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+        }
+        return "redirect:/ui/admin/unidades-federativas/cancelados";
+    }
+
+    @PostMapping("/{id}/excluir-permanente")
+    public String excluirPermanente(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        try {
+            service.excluirPermanente(id);
+            redirectAttributes.addFlashAttribute("successMessage", "UF excluida permanentemente com sucesso");
+        } catch (IllegalArgumentException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+        }
+        return "redirect:/ui/admin/unidades-federativas/cancelados";
     }
 }

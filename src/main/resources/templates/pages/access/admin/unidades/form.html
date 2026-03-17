@@ -48,10 +48,16 @@
                         <label>Tipo de unidade<span class="required-mark">*</span></label>
                         <select class="multiselect-dropdown form-control" th:field="*{tipoUnidadeId}">
                             <option value="">Selecione</option>
+                            <option th:if="${tipoUnidadeLegado != null}"
+                                    th:value="${tipoUnidadeLegado.id}"
+                                    th:text="${tipoUnidadeLegado.descricao + ' (cancelado - legado)'}"></option>
                             <option th:each="item : ${tiposUnidade}"
                                     th:value="${item.id}"
                                     th:text="${item.descricao}"></option>
                         </select>
+                        <small class="text-warning d-block" th:if="${tipoUnidadeLegado != null}">
+                            Tipo legado cancelado: este valor pode ser mantido, mas novos vinculos devem usar tipo ativo.
+                        </small>
                         <small class="text-danger" th:errors="*{tipoUnidadeId}"></small>
                     </div>
                     <div class="form-group col-md-4">
@@ -60,22 +66,35 @@
                                 th:field="*{unidadeFederativaId}"
                                 id="unidadeFederativaId">
                             <option value="">Selecione</option>
+                            <option th:if="${ufLegado != null}"
+                                    th:value="${ufLegado.id}"
+                                    th:text="${ufLegado.descricao + ' - ' + ufLegado.sigla + ' (cancelado - legado)'}"></option>
                             <option th:each="item : ${ufs}"
                                     th:value="${item.id}"
                                     th:text="${item.descricao + ' - ' + item.sigla}"></option>
                         </select>
+                        <small class="text-warning d-block" th:if="${ufLegado != null}">
+                            UF legada cancelada: pode manter este valor, mas novos vinculos devem usar UF ativa.
+                        </small>
                         <small class="text-danger" th:errors="*{unidadeFederativaId}"></small>
                     </div>
                     <div class="form-group col-md-4">
                         <label>Município<span class="required-mark">*</span></label>
                         <select class="multiselect-dropdown form-control"
                                 th:field="*{municipioId}"
-                                id="municipioId">
+                                id="municipioId"
+                                th:attr="data-legado-id=${municipioLegado != null ? municipioLegado.id : ''},data-legado-label=${municipioLegado != null ? municipioLegado.nome + ' (cancelado - legado)' : ''}">
                             <option value="">Selecione</option>
+                            <option th:if="${municipioLegado != null}"
+                                    th:value="${municipioLegado.id}"
+                                    th:text="${municipioLegado.nome + ' (cancelado - legado)'}"></option>
                             <option th:each="municipio : ${municipios}"
                                     th:value="${municipio.id}"
                                     th:text="${municipio.nome}"></option>
                         </select>
+                        <small class="text-warning d-block" th:if="${municipioLegado != null}">
+                            Municipio legado cancelado: pode manter este valor, mas novos vinculos devem usar municipio ativo.
+                        </small>
                         <small class="text-danger" th:errors="*{municipioId}"></small>
                     </div>
                 </div>
@@ -112,18 +131,32 @@
                 if (!ufId) {
                     return;
                 }
+                var legacyId = municipioSelect.getAttribute('data-legado-id');
+                var legacyLabel = municipioSelect.getAttribute('data-legado-label');
                 fetch('/ui/admin/municipios/por-uf/' + ufId)
                     .then(function (response) { return response.json(); })
                     .then(function (items) {
+                        var selectedExists = false;
                         items.forEach(function (item) {
                             var option = document.createElement('option');
                             option.value = item.id;
                             option.textContent = item.descricao;
                             if (selectedMunicipioId && String(selectedMunicipioId) === String(item.id)) {
                                 option.selected = true;
+                                selectedExists = true;
                             }
                             municipioSelect.appendChild(option);
                         });
+                        if (selectedMunicipioId
+                                && legacyId
+                                && String(selectedMunicipioId) === String(legacyId)
+                                && !selectedExists) {
+                            var legacyOption = document.createElement('option');
+                            legacyOption.value = legacyId;
+                            legacyOption.textContent = legacyLabel || 'Municipio cancelado - legado';
+                            legacyOption.selected = true;
+                            municipioSelect.appendChild(legacyOption);
+                        }
                         if (window.jQuery && window.jQuery.fn && window.jQuery.fn.select2) {
                             window.jQuery(municipioSelect).trigger('change');
                         }

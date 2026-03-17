@@ -13,6 +13,7 @@ import br.com.his.access.repository.TipoUnidadeRepository;
 import br.com.his.access.dto.UnidadeForm;
 import br.com.his.reference.location.model.Municipio;
 import br.com.his.reference.location.repository.MunicipioRepository;
+import br.com.his.reference.location.repository.UnidadeFederativaRepository;
 
 @Service
 public class UnidadeAdminService {
@@ -20,13 +21,16 @@ public class UnidadeAdminService {
     private final UnidadeRepository unidadeRepository;
     private final MunicipioRepository municipioRepository;
     private final TipoUnidadeRepository tipoUnidadeRepository;
+    private final UnidadeFederativaRepository unidadeFederativaRepository;
 
     public UnidadeAdminService(UnidadeRepository unidadeRepository,
                                MunicipioRepository municipioRepository,
-                               TipoUnidadeRepository tipoUnidadeRepository) {
+                               TipoUnidadeRepository tipoUnidadeRepository,
+                               UnidadeFederativaRepository unidadeFederativaRepository) {
         this.unidadeRepository = unidadeRepository;
         this.municipioRepository = municipioRepository;
         this.tipoUnidadeRepository = tipoUnidadeRepository;
+        this.unidadeFederativaRepository = unidadeFederativaRepository;
     }
 
     @Transactional(readOnly = true)
@@ -48,7 +52,7 @@ public class UnidadeAdminService {
     @Transactional
     public Unidade criar(UnidadeForm form) {
         Unidade unidade = new Unidade();
-        apply(form, unidade, municipioRepository, tipoUnidadeRepository);
+        apply(form, unidade, municipioRepository, tipoUnidadeRepository, unidadeFederativaRepository);
         unidade.setAtivo(true);
         return salvar(unidade);
     }
@@ -56,7 +60,7 @@ public class UnidadeAdminService {
     @Transactional
     public Unidade atualizar(Long id, UnidadeForm form) {
         Unidade unidade = buscarPorId(id);
-        apply(form, unidade, municipioRepository, tipoUnidadeRepository);
+        apply(form, unidade, municipioRepository, tipoUnidadeRepository, unidadeFederativaRepository);
         return salvar(unidade);
     }
 
@@ -78,11 +82,35 @@ public class UnidadeAdminService {
     private static void apply(UnidadeForm form,
                               Unidade unidade,
                               MunicipioRepository municipioRepository,
-                              TipoUnidadeRepository tipoUnidadeRepository) {
-        Municipio municipio = municipioRepository.findById(form.getMunicipioId())
-                .orElseThrow(() -> new IllegalArgumentException("Municipio invalida"));
-        TipoUnidade tipoUnidade = tipoUnidadeRepository.findById(form.getTipoUnidadeId())
-                .orElseThrow(() -> new IllegalArgumentException("Tipo de unidade invalido"));
+                              TipoUnidadeRepository tipoUnidadeRepository,
+                              UnidadeFederativaRepository unidadeFederativaRepository) {
+        Municipio municipioAtual = unidade.getMunicipio();
+        Municipio municipio;
+        if (municipioAtual != null
+                && municipioAtual.getId() != null
+                && municipioAtual.getId().equals(form.getMunicipioId())) {
+            municipio = municipioAtual;
+        } else {
+            municipio = municipioRepository.findByIdAndDtCancelamentoIsNull(form.getMunicipioId())
+                    .orElseThrow(() -> new IllegalArgumentException("Municipio invalido"));
+        }
+        Long unidadeFederativaAtualId = unidade.getMunicipio() == null || unidade.getMunicipio().getUnidadeFederativa() == null
+                ? null
+                : unidade.getMunicipio().getUnidadeFederativa().getId();
+        if (unidadeFederativaAtualId == null || !unidadeFederativaAtualId.equals(form.getUnidadeFederativaId())) {
+            unidadeFederativaRepository.findByIdAndDtCancelamentoIsNull(form.getUnidadeFederativaId())
+                    .orElseThrow(() -> new IllegalArgumentException("UF invalida"));
+        }
+        TipoUnidade tipoUnidadeAtual = unidade.getTipoUnidade();
+        TipoUnidade tipoUnidade;
+        if (tipoUnidadeAtual != null
+                && tipoUnidadeAtual.getId() != null
+                && tipoUnidadeAtual.getId().equals(form.getTipoUnidadeId())) {
+            tipoUnidade = tipoUnidadeAtual;
+        } else {
+            tipoUnidade = tipoUnidadeRepository.findByIdAndDtCancelamentoIsNull(form.getTipoUnidadeId())
+                    .orElseThrow(() -> new IllegalArgumentException("Tipo de unidade invalido"));
+        }
         if (form.getUnidadeFederativaId() == null || municipio.getUnidadeFederativa() == null
                 || !municipio.getUnidadeFederativa().getId().equals(form.getUnidadeFederativaId())) {
             throw new IllegalArgumentException("Municipio nao pertence a UF informada");

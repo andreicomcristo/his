@@ -12,16 +12,21 @@ import br.com.his.reference.location.model.Bairro;
 import br.com.his.reference.location.model.Municipio;
 import br.com.his.reference.location.repository.BairroRepository;
 import br.com.his.reference.location.repository.MunicipioRepository;
+import br.com.his.reference.location.repository.UnidadeFederativaRepository;
 
 @Service
 public class BairroAdminService {
 
     private final BairroRepository repository;
     private final MunicipioRepository MunicipioRepository;
+    private final UnidadeFederativaRepository unidadeFederativaRepository;
 
-    public BairroAdminService(BairroRepository repository, MunicipioRepository MunicipioRepository) {
+    public BairroAdminService(BairroRepository repository,
+                              MunicipioRepository MunicipioRepository,
+                              UnidadeFederativaRepository unidadeFederativaRepository) {
         this.repository = repository;
         this.MunicipioRepository = MunicipioRepository;
+        this.unidadeFederativaRepository = unidadeFederativaRepository;
     }
 
     @Transactional(readOnly = true)
@@ -104,14 +109,29 @@ public class BairroAdminService {
     }
 
     private void apply(Bairro bairro, BairroForm form) {
-        Municipio Municipio = MunicipioRepository.findById(form.getMunicipioId())
-                .orElseThrow(() -> new IllegalArgumentException("Municipio nao encontrada"));
-        if (form.getUnidadeFederativaId() == null || Municipio.getUnidadeFederativa() == null
-                || !Municipio.getUnidadeFederativa().getId().equals(form.getUnidadeFederativaId())) {
+        Long unidadeFederativaAtualId = bairro.getMunicipio() == null || bairro.getMunicipio().getUnidadeFederativa() == null
+                ? null
+                : bairro.getMunicipio().getUnidadeFederativa().getId();
+        if (unidadeFederativaAtualId == null || !unidadeFederativaAtualId.equals(form.getUnidadeFederativaId())) {
+            unidadeFederativaRepository.findByIdAndDtCancelamentoIsNull(form.getUnidadeFederativaId())
+                    .orElseThrow(() -> new IllegalArgumentException("UF nao encontrada"));
+        }
+        Municipio municipioAtual = bairro.getMunicipio();
+        Municipio municipio;
+        if (municipioAtual != null
+                && municipioAtual.getId() != null
+                && municipioAtual.getId().equals(form.getMunicipioId())) {
+            municipio = municipioAtual;
+        } else {
+            municipio = MunicipioRepository.findByIdAndDtCancelamentoIsNull(form.getMunicipioId())
+                    .orElseThrow(() -> new IllegalArgumentException("Municipio nao encontrado"));
+        }
+        if (form.getUnidadeFederativaId() == null || municipio.getUnidadeFederativa() == null
+                || !municipio.getUnidadeFederativa().getId().equals(form.getUnidadeFederativaId())) {
             throw new IllegalArgumentException("Municipio nao pertence a UF informada");
         }
         bairro.setNome(normalize(form.getNome()).toUpperCase());
-        bairro.setMunicipio(Municipio);
+        bairro.setMunicipio(municipio);
     }
 
     private String normalize(String value) {

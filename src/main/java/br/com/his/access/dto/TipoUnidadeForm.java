@@ -13,8 +13,6 @@ public class TipoUnidadeForm {
     @Size(max = 100, message = "Descricao deve ter no maximo 100 caracteres")
     private String descricao;
 
-    private boolean ativo = true;
-
     public String getCodigo() {
         return codigo;
     }
@@ -31,11 +29,4 @@ public class TipoUnidadeForm {
         this.descricao = descricao;
     }
 
-    public boolean isAtivo() {
-        return ativo;
-    }
-
-    public void setAtivo(boolean ativo) {
-        this.ativo = ativo;
-    }
 }

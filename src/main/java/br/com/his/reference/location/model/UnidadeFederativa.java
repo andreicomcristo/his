@@ -1,5 +1,7 @@
 package br.com.his.reference.location.model;
 
+import java.time.LocalDateTime;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -23,6 +25,9 @@ public class UnidadeFederativa {
 
     @Column(name = "codigo_ibge", length = 2)
     private String codigoIbge;
+
+    @Column(name = "dt_cancelamento")
+    private LocalDateTime dtCancelamento;
 
     public Long getId() {
         return id;
@@ -54,5 +59,13 @@ public class UnidadeFederativa {
 
     public void setCodigoIbge(String codigoIbge) {
         this.codigoIbge = codigoIbge;
+    }
+
+    public LocalDateTime getDtCancelamento() {
+        return dtCancelamento;
+    }
+
+    public void setDtCancelamento(LocalDateTime dtCancelamento) {
+        this.dtCancelamento = dtCancelamento;
     }
 }
