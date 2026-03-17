@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layout/base :: layout('Administracao - Unidade', ~{::content})}">
+      th:replace="~{layout/base :: layout(${modoEdicao} ? 'Administração - Editar Unidade' : 'Administração - Nova Unidade', ~{::content})}">
 <th:block th:fragment="content">
     <div class="main-card mb-3 card">
         <div class="card-body">
-            <h5 class="card-title" th:text="${modoEdicao} ? 'Editar unidade' : 'Nova unidade'">Unidade</h5>
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="card-title" th:text="${modoEdicao} ? 'Editar unidade' : 'Nova unidade'">Unidade</h5>
+            </div>
 
             <form th:action="${modoEdicao} ? @{'/ui/admin/unidades/' + ${unidadeId}} : @{/ui/admin/unidades}"
                   method="post" th:object="${form}">
@@ -13,53 +15,83 @@
                     <div th:each="e : ${#fields.globalErrors()}" th:text="${e}"></div>
                 </div>
 
-                <div class="form-group">
-                    <label>Nome<span class="required-mark">*</span></label>
-                    <input class="form-control" type="text" th:field="*{nome}">
-                    <small class="text-danger" th:errors="*{nome}"></small>
-                </div>
-                <div class="form-group">
-                    <label>Sigla</label>
-                    <input class="form-control" type="text" th:field="*{sigla}" maxlength="20">
-                    <small class="text-danger" th:errors="*{sigla}"></small>
-                </div>
-                <div class="form-group">
-                    <label>Tipo de unidade<span class="required-mark">*</span></label>
-                    <select class="form-control form-select chat-input" th:field="*{tipoUnidadeId}">
-                        <option value="">Selecione</option>
-                        <option th:each="item : ${tiposUnidade}"
-                                th:value="${item.id}"
-                                th:text="${item.descricao}"></option>
-                    </select>
-                    <small class="text-danger" th:errors="*{tipoUnidadeId}"></small>
-                </div>
-                <div class="form-group">
-                    <label>CNES</label>
-                    <input class="form-control" type="text" th:field="*{cnes}">
-                </div>
-                <div class="form-group">
-                    <label>UF<span class="required-mark">*</span></label>
-                    <select class="form-control form-select chat-input" th:field="*{unidadeFederativaId}" id="unidadeFederativaId">
-                        <option value="">Selecione</option>
-                        <option th:each="item : ${ufs}"
-                                th:value="${item.id}"
-                                th:text="${item.descricao + ' - ' + item.sigla}"></option>
-                    </select>
-                    <small class="text-danger" th:errors="*{unidadeFederativaId}"></small>
-                </div>
-                <div class="form-group">
-                    <label>Municipio<span class="required-mark">*</span></label>
-                    <select class="form-control form-select chat-input" th:field="*{municipioId}" id="municipioId">
-                        <option value="">Selecione</option>
-                        <option th:each="municipio : ${municipios}"
-                                th:value="${municipio.id}"
-                                th:text="${municipio.nome}"></option>
-                    </select>
-                    <small class="text-danger" th:errors="*{municipioId}"></small>
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label>Nome<span class="required-mark">*</span></label>
+                        <input class="form-control"
+                               type="text"
+                               th:field="*{nome}"
+                               placeholder="Informe o nome da unidade">
+                        <small class="text-danger" th:errors="*{nome}"></small>
+                    </div>
+                    <div class="form-group col-md-3">
+                        <label>Sigla</label>
+                        <input class="form-control"
+                               type="text"
+                               th:field="*{sigla}"
+                               maxlength="20"
+                               placeholder="Informe a sigla">
+                        <small class="text-danger" th:errors="*{sigla}"></small>
+                    </div>
+                    <div class="form-group col-md-3">
+                        <label>CNES</label>
+                        <input class="form-control"
+                               type="text"
+                               th:field="*{cnes}"
+                               maxlength="20"
+                               placeholder="Informe o CNES">
+                    </div>
                 </div>
 
-                <button class="btn btn-primary btn-sm" type="submit">Salvar</button>
-                <a th:href="@{/ui/admin/unidades}" class="btn btn-outline-secondary btn-sm">Voltar</a>
+                <div class="form-row">
+                    <div class="form-group col-md-4">
+                        <label>Tipo de unidade<span class="required-mark">*</span></label>
+                        <select class="multiselect-dropdown form-control" th:field="*{tipoUnidadeId}">
+                            <option value="">Selecione</option>
+                            <option th:each="item : ${tiposUnidade}"
+                                    th:value="${item.id}"
+                                    th:text="${item.descricao}"></option>
+                        </select>
+                        <small class="text-danger" th:errors="*{tipoUnidadeId}"></small>
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label>Unidade Federativa<span class="required-mark">*</span></label>
+                        <select class="multiselect-dropdown form-control"
+                                th:field="*{unidadeFederativaId}"
+                                id="unidadeFederativaId">
+                            <option value="">Selecione</option>
+                            <option th:each="item : ${ufs}"
+                                    th:value="${item.id}"
+                                    th:text="${item.descricao + ' - ' + item.sigla}"></option>
+                        </select>
+                        <small class="text-danger" th:errors="*{unidadeFederativaId}"></small>
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label>Município<span class="required-mark">*</span></label>
+                        <select class="multiselect-dropdown form-control"
+                                th:field="*{municipioId}"
+                                id="municipioId">
+                            <option value="">Selecione</option>
+                            <option th:each="municipio : ${municipios}"
+                                    th:value="${municipio.id}"
+                                    th:text="${municipio.nome}"></option>
+                        </select>
+                        <small class="text-danger" th:errors="*{municipioId}"></small>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group col-md-12 mb-0">
+                        <div class="d-flex">
+                            <button type="submit" class="btn btn-primary btn-sm mr-2">
+                                <i class="nav-link-icon lnr-checkmark-circle mr-2"></i>Salvar
+                            </button>
+                            <a th:href="@{/ui/admin/unidades}" class="btn btn-secondary btn-sm">
+                                <i class="nav-link-icon lnr-exit mr-2"></i>Voltar
+                            </a>
+                        </div>
+                    </div>
+                </div>
             </form>
         </div>
     </div>
@@ -70,6 +102,9 @@
 
             function resetMunicipios() {
                 municipioSelect.innerHTML = '<option value="">Selecione</option>';
+                if (window.jQuery && window.jQuery.fn && window.jQuery.fn.select2) {
+                    window.jQuery(municipioSelect).trigger('change');
+                }
             }
 
             function loadMunicipios(ufId, selectedMunicipioId) {
@@ -89,19 +124,28 @@
                             }
                             municipioSelect.appendChild(option);
                         });
+                        if (window.jQuery && window.jQuery.fn && window.jQuery.fn.select2) {
+                            window.jQuery(municipioSelect).trigger('change');
+                        }
                     });
             }
 
-            if (ufSelect) {
+            if (ufSelect && municipioSelect) {
                 var selectedMunicipioId = municipioSelect.value;
                 if (ufSelect.value) {
                     loadMunicipios(ufSelect.value, selectedMunicipioId);
                 } else {
                     resetMunicipios();
                 }
-                ufSelect.addEventListener('change', function () {
-                    loadMunicipios(this.value, null);
-                });
+                if (window.jQuery && window.jQuery.fn) {
+                    window.jQuery(ufSelect).on('change', function () {
+                        loadMunicipios(this.value, null);
+                    });
+                } else {
+                    ufSelect.addEventListener('change', function () {
+                        loadMunicipios(this.value, null);
+                    });
+                }
             }
         });
     </script>
