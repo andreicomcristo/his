@@ -45,6 +45,13 @@ public class BairroAdminController {
         return "pages/reference/location/admin/bairros/list";
     }
 
+    @GetMapping("/cancelados")
+    public String listarCancelados(@RequestParam(required = false) String q, Model model) {
+        model.addAttribute("items", service.listarCancelados(q));
+        model.addAttribute("q", q);
+        return "pages/reference/location/admin/bairros/cancel_list";
+    }
+
     @GetMapping("/novo")
     public String novo(Model model) {
         if (!model.containsAttribute("form")) {
@@ -104,12 +111,33 @@ public class BairroAdminController {
         return "redirect:/ui/admin/bairros";
     }
 
+    @PostMapping("/{id}/restaurar")
+    public String restaurar(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        try {
+            service.restaurar(id);
+            redirectAttributes.addFlashAttribute("successMessage", "Bairro restaurado com sucesso");
+        } catch (IllegalArgumentException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+        }
+        return "redirect:/ui/admin/bairros/cancelados";
+    }
+
+    @PostMapping("/{id}/excluir-permanente")
+    public String excluirPermanente(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        try {
+            service.excluirPermanente(id);
+            redirectAttributes.addFlashAttribute("successMessage", "Bairro excluido permanentemente com sucesso");
+        } catch (IllegalArgumentException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+        }
+        return "redirect:/ui/admin/bairros/cancelados";
+    }
+
     @GetMapping("/por-municipio/{municipioId}")
     @ResponseBody
     public List<PacienteLookupOption> listarPorMunicipio(@PathVariable Long municipioId) {
         return service.listarPorMunicipio(municipioId)
                 .stream()
-                .filter(Bairro::isAtivo)
                 .map(this::toOption)
                 .toList();
     }

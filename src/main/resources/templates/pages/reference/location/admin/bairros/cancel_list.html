@@ -1,31 +1,30 @@
 <!DOCTYPE html>
 <html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layout/base :: layout('Administração - Bairros', ~{::content})}">
+      th:replace="~{layout/base :: layout('Administração - Bairros Cancelados', ~{::content})}">
 <th:block th:fragment="content">
     <div class="main-card mb-3 card">
         <div class="card-body">
             <div class="d-flex justify-content-between align-items-center">
-                <h5 class="card-title">Bairros</h5>
+                <h5 class="card-title">Bairros cancelados</h5>
                 <div class="btn-group btn-group-sm" role="group">
-                    <a class="btn btn-outline-info"
-                       th:href="@{/ui/admin/bairros/cancelados}"
+                    <a class="btn btn-secondary"
+                       th:href="@{/ui/admin/bairros}"
                        data-toggle="tooltip"
                        data-placement="top"
-                       title="Visualizar bairros cancelados">
-                        <i class="nav-link-icon lnr-book mr-2"></i>Cancelados</a>
-                    <a class="btn btn-primary"
-                       th:href="@{/ui/admin/bairros/novo}"
-                       data-toggle="tooltip"
-                       data-placement="top"
-                       title="Adicionar um novo bairro">
-                        <i class="nav-link-icon lnr-plus-circle mr-2"></i>Adicionar</a>
+                       title="Voltar para bairros">
+                        <i class="nav-link-icon lnr-arrow-left mr-2"></i>Voltar</a>
                 </div>
             </div>
-            <form method="get">
+
+            <form method="get" th:action="@{/ui/admin/bairros/cancelados}">
                 <div class="form-row">
                     <div class="form-group col-md-12">
                         <label class="filtro-label">Pesquisa</label>
-                        <input type="text" name="q" class="form-control" placeholder="Buscar por bairro, município ou UF" th:value="${q}">
+                        <input type="text"
+                               name="q"
+                               class="form-control"
+                               placeholder="Buscar por bairro, município ou UF"
+                               th:value="${q}">
                     </div>
                 </div>
                 <div class="form-row">
@@ -33,7 +32,7 @@
                         <button class="btn btn-sm btn-primary mr-2" type="submit">
                             <i class="nav-link-icon lnr-magnifier mr-2"></i>Buscar
                         </button>
-                        <a th:href="@{/ui/admin/bairros}" class="btn btn-sm btn-secondary">
+                        <a th:href="@{/ui/admin/bairros/cancelados}" class="btn btn-sm btn-secondary">
                             <i class="nav-link-icon lnr-cross mr-2"></i>Limpar
                         </a>
                     </div>
@@ -41,6 +40,8 @@
             </form>
 
             <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+            <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
+
             <table class="table table-sm table-striped">
                 <thead>
                 <tr>
@@ -48,15 +49,20 @@
                     <th>Nome</th>
                     <th>Município</th>
                     <th>UF</th>
+                    <th>Data cancelamento</th>
                     <th class="text-center">Opções</th>
                 </tr>
                 </thead>
                 <tbody>
+                <tr th:if="${#lists.isEmpty(items)}">
+                    <td colspan="6" class="text-center">Nenhum bairro cancelado encontrado</td>
+                </tr>
                 <tr th:each="item : ${items}">
                     <td th:text="${item.id}"></td>
                     <td th:text="${item.nome}"></td>
                     <td th:text="${item.Municipio.nome}"></td>
                     <td th:text="${item.Municipio.unidadeFederativa.sigla}"></td>
+                    <td th:text="${item.dtCancelamento != null ? #temporals.format(item.dtCancelamento, 'dd/MM/yyyy HH:mm') : '-'}"></td>
                     <td class="text-center">
                         <div class="dropdown d-inline-block">
                             <button class="btn btn-sm btn-outline-secondary dropdown-toggle"
@@ -67,16 +73,20 @@
                                 <i class="nav-link-icon lnr-menu"></i>
                             </button>
                             <div class="dropdown-menu dropdown-menu-right">
-                                <a class="dropdown-item text-warning"
-                                   th:href="@{'/ui/admin/bairros/' + ${item.id} + '/editar'}">
-                                    <i class="nav-link-icon lnr-pencil mr-2"></i><span>Editar</span>
-                                </a>
+                                <button type="button"
+                                        class="dropdown-item text-info js-bairro-action"
+                                        data-action="restaurar"
+                                        th:data-action-url="@{'/ui/admin/bairros/' + ${item.id} + '/restaurar'}"
+                                        th:data-item-nome="${item.nome}">
+                                    <i class="nav-link-icon pe-7s-refresh-2 mr-2"></i><span>Restaurar</span>
+                                </button>
+                                <hr>
                                 <button type="button"
                                         class="dropdown-item text-danger js-bairro-action"
-                                        data-action="excluir"
-                                        th:data-action-url="@{'/ui/admin/bairros/' + ${item.id} + '/excluir'}"
+                                        data-action="excluir-permanente"
+                                        th:data-action-url="@{'/ui/admin/bairros/' + ${item.id} + '/excluir-permanente'}"
                                         th:data-item-nome="${item.nome}">
-                                    <i class="nav-link-icon lnr-trash mr-2"></i><span>Excluir</span>
+                                    <i class="nav-link-icon lnr-trash mr-2"></i><span>Excluir permanente</span>
                                 </button>
                             </div>
                         </div>
@@ -126,12 +136,20 @@
             var confirmBtn = document.getElementById('bairroActionModalConfirmBtn');
             var pendingActionUrl = null;
 
-            function configByAction() {
+            function configByAction(action, itemNome) {
+                if (action === 'excluir-permanente') {
+                    return {
+                        title: 'Excluir bairro permanentemente',
+                        message: 'Deseja excluir permanentemente o bairro "' + itemNome + '"? Esta ação é irreversível.',
+                        buttonHtml: '<i class="nav-link-icon lnr-trash mr-2"></i>Excluir permanente',
+                        buttonClass: 'btn-danger'
+                    };
+                }
                 return {
-                    title: 'Excluir bairro',
-                    message: 'Deseja excluir o bairro "' + pendingNome + '"? Ele receberá dt_cancelamento e não será mais listado.',
-                    buttonHtml: '<i class="nav-link-icon lnr-trash mr-2"></i>Excluir',
-                    buttonClass: 'btn-danger'
+                    title: 'Restaurar bairro',
+                    message: 'Deseja restaurar o bairro "' + itemNome + '"?',
+                    buttonHtml: '<i class="nav-link-icon pe-7s-refresh-2 mr-2"></i>Restaurar',
+                    buttonClass: 'btn-info'
                 };
             }
 
@@ -139,13 +157,12 @@
                 confirmBtn.classList.remove('btn-danger', 'btn-warning', 'btn-success', 'btn-primary');
             }
 
-            var pendingNome = '';
-
             actionButtons.forEach(function (button) {
                 button.addEventListener('click', function () {
                     pendingActionUrl = this.getAttribute('data-action-url');
-                    pendingNome = this.getAttribute('data-item-nome') || '';
-                    var config = configByAction();
+                    var pendingNome = this.getAttribute('data-item-nome') || '';
+                    var action = this.getAttribute('data-action') || 'restaurar';
+                    var config = configByAction(action, pendingNome);
 
                     modalTitleEl.textContent = config.title;
                     modalMessageEl.textContent = config.message;

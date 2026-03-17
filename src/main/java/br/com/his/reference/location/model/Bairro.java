@@ -1,5 +1,7 @@
 package br.com.his.reference.location.model;
 
+import java.time.LocalDateTime;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -25,8 +27,8 @@ public class Bairro {
     @Column(nullable = false, length = 100)
     private String nome;
 
-    @Column(nullable = false)
-    private boolean ativo = true;
+    @Column(name = "dt_cancelamento")
+    private LocalDateTime dtCancelamento;
 
     public Long getId() {
         return id;
@@ -52,12 +54,11 @@ public class Bairro {
         this.nome = nome;
     }
 
-    public boolean isAtivo() {
-        return ativo;
+    public LocalDateTime getDtCancelamento() {
+        return dtCancelamento;
     }
 
-    public void setAtivo(boolean ativo) {
-        this.ativo = ativo;
+    public void setDtCancelamento(LocalDateTime dtCancelamento) {
+        this.dtCancelamento = dtCancelamento;
     }
 }
-

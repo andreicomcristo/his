@@ -16,8 +16,6 @@ public class BairroForm {
     @Size(max = 100)
     private String nome;
 
-    private boolean ativo = true;
-
     public Long getUnidadeFederativaId() {
         return unidadeFederativaId;
     }
@@ -42,12 +40,5 @@ public class BairroForm {
         this.nome = nome;
     }
 
-    public boolean isAtivo() {
-        return ativo;
-    }
-
-    public void setAtivo(boolean ativo) {
-        this.ativo = ativo;
-    }
 }
 
