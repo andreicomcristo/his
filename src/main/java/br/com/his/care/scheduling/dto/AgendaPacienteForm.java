@@ -18,7 +18,6 @@ public class AgendaPacienteForm {
     @NotNull(message = "Tipo de vaga e obrigatorio")
     private TipoVagaAgenda tipoVaga = TipoVagaAgenda.NORMAL;
 
-    @NotNull(message = "Horario e obrigatorio")
     @DateTimeFormat(pattern = "HH:mm")
     private LocalTime horaAtendimento;
 

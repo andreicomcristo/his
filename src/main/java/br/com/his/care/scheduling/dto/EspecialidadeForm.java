@@ -1,9 +1,7 @@
 package br.com.his.care.scheduling.dto;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 public class EspecialidadeForm {
@@ -16,7 +14,8 @@ public class EspecialidadeForm {
     @Size(max = 120)
     private String descricao;
 
-    private List<Long> cargoColaboradorIds = new ArrayList<>();
+    @NotNull(message = "Cargo assistencial e obrigatorio")
+    private Long cargoColaboradorId;
 
     private boolean ativo = true;
 
@@ -36,12 +35,12 @@ public class EspecialidadeForm {
         this.descricao = descricao;
     }
 
-    public List<Long> getCargoColaboradorIds() {
-        return cargoColaboradorIds;
+    public Long getCargoColaboradorId() {
+        return cargoColaboradorId;
     }
 
-    public void setCargoColaboradorIds(List<Long> cargoColaboradorIds) {
-        this.cargoColaboradorIds = cargoColaboradorIds;
+    public void setCargoColaboradorId(Long cargoColaboradorId) {
+        this.cargoColaboradorId = cargoColaboradorId;
     }
 
     public boolean isAtivo() {

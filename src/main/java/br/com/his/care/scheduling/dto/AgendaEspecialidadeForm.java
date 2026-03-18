@@ -7,7 +7,7 @@ import java.util.Set;
 
 import org.springframework.format.annotation.DateTimeFormat;
 
-import jakarta.validation.constraints.Min;
+import br.com.his.care.scheduling.model.ModoAgendaEspecialidade;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
@@ -18,37 +18,33 @@ public class AgendaEspecialidadeForm {
 
     private Long especialidadeId;
 
-    @NotNull(message = "Data e obrigatoria")
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     private LocalDate dataAgenda;
 
-    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-    private LocalDate dataFim;
+    @Size(max = 7, message = "Competencia invalida")
+    private String competencia;
+
+    private Set<Integer> diasSelecionados = new LinkedHashSet<>();
 
     @NotNull(message = "Hora inicial e obrigatoria")
     @DateTimeFormat(pattern = "HH:mm")
     private LocalTime horaInicio;
 
-    @NotNull(message = "Hora final e obrigatoria")
     @DateTimeFormat(pattern = "HH:mm")
     private LocalTime horaFim;
 
-    private Integer vagasTotais = 0;
+    private Integer intervaloMinutos = 60;
 
-    @NotNull(message = "Vagas de retorno e obrigatorio")
-    @Min(value = 0, message = "Vagas de retorno nao pode ser negativo")
-    private Integer vagasRetorno = 0;
+    @NotNull(message = "Quantidade de vagas e obrigatoria")
+    private Integer vagasTotais = 1;
 
-    @NotNull(message = "Intervalo e obrigatorio")
-    @Min(value = 1, message = "Intervalo deve ser maior que zero")
-    private Integer intervaloMinutos = 15;
+    @NotNull(message = "Tipo de agenda e obrigatorio")
+    private ModoAgendaEspecialidade modoAgenda = ModoAgendaEspecialidade.CAPACIDADE_TURNO;
 
     @Size(max = 255, message = "Observacao deve ter no maximo 255 caracteres")
     private String observacao;
 
     private boolean ativo = true;
-
-    private Set<String> diasNaoAtende = new LinkedHashSet<>();
 
     public Long getCargoColaboradorId() {
         return cargoColaboradorId;
@@ -74,12 +70,20 @@ public class AgendaEspecialidadeForm {
         this.dataAgenda = dataAgenda;
     }
 
-    public LocalDate getDataFim() {
-        return dataFim;
+    public String getCompetencia() {
+        return competencia;
     }
 
-    public void setDataFim(LocalDate dataFim) {
-        this.dataFim = dataFim;
+    public void setCompetencia(String competencia) {
+        this.competencia = competencia;
+    }
+
+    public Set<Integer> getDiasSelecionados() {
+        return diasSelecionados;
+    }
+
+    public void setDiasSelecionados(Set<Integer> diasSelecionados) {
+        this.diasSelecionados = diasSelecionados;
     }
 
     public LocalTime getHoraInicio() {
@@ -90,14 +94,6 @@ public class AgendaEspecialidadeForm {
         this.horaInicio = horaInicio;
     }
 
-    public LocalTime getHoraFim() {
-        return horaFim;
-    }
-
-    public void setHoraFim(LocalTime horaFim) {
-        this.horaFim = horaFim;
-    }
-
     public Integer getVagasTotais() {
         return vagasTotais;
     }
@@ -106,12 +102,12 @@ public class AgendaEspecialidadeForm {
         this.vagasTotais = vagasTotais;
     }
 
-    public Integer getVagasRetorno() {
-        return vagasRetorno;
+    public LocalTime getHoraFim() {
+        return horaFim;
     }
 
-    public void setVagasRetorno(Integer vagasRetorno) {
-        this.vagasRetorno = vagasRetorno;
+    public void setHoraFim(LocalTime horaFim) {
+        this.horaFim = horaFim;
     }
 
     public Integer getIntervaloMinutos() {
@@ -120,6 +116,14 @@ public class AgendaEspecialidadeForm {
 
     public void setIntervaloMinutos(Integer intervaloMinutos) {
         this.intervaloMinutos = intervaloMinutos;
+    }
+
+    public ModoAgendaEspecialidade getModoAgenda() {
+        return modoAgenda;
+    }
+
+    public void setModoAgenda(ModoAgendaEspecialidade modoAgenda) {
+        this.modoAgenda = modoAgenda;
     }
 
     public String getObservacao() {
@@ -136,13 +140,5 @@ public class AgendaEspecialidadeForm {
 
     public void setAtivo(boolean ativo) {
         this.ativo = ativo;
-    }
-
-    public Set<String> getDiasNaoAtende() {
-        return diasNaoAtende;
-    }
-
-    public void setDiasNaoAtende(Set<String> diasNaoAtende) {
-        this.diasNaoAtende = diasNaoAtende;
     }
 }

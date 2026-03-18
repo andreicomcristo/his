@@ -3,7 +3,8 @@ package br.com.his.care.scheduling.service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.DayOfWeek;
+import java.time.YearMonth;
+import java.time.DateTimeException;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -27,7 +28,9 @@ import br.com.his.care.attendance.model.UnidadeConfigFluxo;
 import br.com.his.care.attendance.repository.UnidadeConfigFluxoRepository;
 import br.com.his.care.scheduling.dto.AgendaCalendarioLivreDto;
 import br.com.his.care.scheduling.dto.AgendaCalendarioEventoDto;
+import br.com.his.care.scheduling.dto.AgendaCalendarioSessaoDto;
 import br.com.his.care.scheduling.dto.AgendaEspecialidadeForm;
+import br.com.his.care.scheduling.dto.AgendaMapaMensalItemDto;
 import br.com.his.care.scheduling.dto.AgendaPacienteForm;
 import br.com.his.care.scheduling.dto.AgendaPacienteVinculoResultado;
 import br.com.his.care.scheduling.dto.AgendaReagendamentoForm;
@@ -38,6 +41,7 @@ import br.com.his.care.scheduling.model.AgendaEspecialidadePaciente;
 import br.com.his.care.scheduling.model.AgendaEspecialidadePacienteHistorico;
 import br.com.his.care.scheduling.model.AgendaEspecialidadeSlot;
 import br.com.his.care.scheduling.model.Especialidade;
+import br.com.his.care.scheduling.model.ModoAgendaEspecialidade;
 import br.com.his.care.scheduling.model.StatusAgendaSlot;
 import br.com.his.care.scheduling.model.StatusAgendamentoPaciente;
 import br.com.his.care.scheduling.model.TipoVagaAgenda;
@@ -54,6 +58,7 @@ import br.com.his.patient.repository.PacienteRepository;
 public class AgendaEspecialidadeService {
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
 
     private final AgendaEspecialidadeRepository agendaRepository;
     private final AgendaEspecialidadePacienteRepository agendaPacienteRepository;
@@ -106,13 +111,7 @@ public class AgendaEspecialidadeService {
         if (agendas == null || agendas.isEmpty()) {
             return Map.of();
         }
-        List<Long> agendaIds = agendas.stream()
-                .map(AgendaEspecialidade::getId)
-                .toList();
-        Map<Long, Long> agendadosPorAgendaId = agendaPacienteRepository.contarAgendadosPorAgendaIds(agendaIds).stream()
-                .collect(Collectors.toMap(
-                        linha -> (Long) linha[0],
-                        linha -> ((Number) linha[1]).longValue()));
+        Map<Long, Long> agendadosPorAgendaId = calcularAgendadosAtivosPorAgenda(agendas);
 
         Map<Long, Long> vagasDisponiveis = new LinkedHashMap<>();
         for (AgendaEspecialidade agenda : agendas) {
@@ -121,6 +120,19 @@ public class AgendaEspecialidadeService {
             vagasDisponiveis.put(agenda.getId(), disponiveis);
         }
         return vagasDisponiveis;
+    }
+
+    private Map<Long, Long> calcularAgendadosAtivosPorAgenda(List<AgendaEspecialidade> agendas) {
+        if (agendas == null || agendas.isEmpty()) {
+            return Map.of();
+        }
+        List<Long> agendaIds = agendas.stream()
+                .map(AgendaEspecialidade::getId)
+                .toList();
+        return agendaPacienteRepository.contarAgendadosPorAgendaIds(agendaIds).stream()
+                .collect(Collectors.toMap(
+                        linha -> (Long) linha[0],
+                        linha -> ((Number) linha[1]).longValue()));
     }
 
     @Transactional(readOnly = true)
@@ -144,8 +156,7 @@ public class AgendaEspecialidadeService {
         CargoColaborador cargoColaborador = resolveCargoColaborador(form.getCargoColaboradorId());
         Especialidade especialidade = resolveEspecialidadeOpcional(form.getEspecialidadeId());
         validarCompatibilidadeCargoEspecialidade(cargoColaborador, especialidade);
-        recalcularVagasTotais(form);
-        List<LocalDate> datasAgenda = calcularDatasParaCriacao(form);
+        List<LocalDate> datasAgenda = calcularDatasParaCriacaoMensal(form);
         for (LocalDate dataAgenda : datasAgenda) {
             validarFormulario(unidadeId, form, cargoColaborador, especialidade, null, dataAgenda);
         }
@@ -183,16 +194,19 @@ public class AgendaEspecialidadeService {
         CargoColaborador cargoColaborador = resolveCargoColaborador(form.getCargoColaboradorId());
         Especialidade especialidade = resolveEspecialidadeOpcional(form.getEspecialidadeId());
         validarCompatibilidadeCargoEspecialidade(cargoColaborador, especialidade);
-        recalcularVagasTotais(form);
         validarFormulario(unidadeId, form, cargoColaborador, especialidade, id, form.getDataAgenda());
 
         AgendaEspecialidade item = buscar(unidadeId, id);
+        ModoAgendaEspecialidade modoAtual = modoAgenda(item);
+        ModoAgendaEspecialidade modoNovo = modoAgenda(form.getModoAgenda());
         boolean gradeAlterada = !item.getDataAgenda().equals(form.getDataAgenda())
                 || !item.getHoraInicio().equals(form.getHoraInicio())
                 || !item.getHoraFim().equals(form.getHoraFim())
-                || !item.getIntervaloMinutos().equals(form.getIntervaloMinutos());
+                || !item.getIntervaloMinutos().equals(form.getIntervaloMinutos())
+                || !item.getVagasTotais().equals(form.getVagasTotais())
+                || modoAtual != modoNovo;
         if (gradeAlterada && agendaPacienteRepository.countByAgendaEspecialidadeId(id) > 0) {
-            throw new IllegalArgumentException("Nao e permitido alterar grade de horarios com agendamentos ativos. Reagende ou cancele antes.");
+            throw new IllegalArgumentException("Nao e permitido alterar tipo/horario/capacidade com agendamentos ativos. Reagende ou cancele antes.");
         }
 
         item.setCargoColaborador(cargoColaborador);
@@ -302,9 +316,6 @@ public class AgendaEspecialidadeService {
         }
 
         LocalTime horarioAtendimento = form.getHoraAtendimento();
-        if (horarioAtendimento == null) {
-            throw new IllegalArgumentException("Horario e obrigatorio");
-        }
         TipoVagaAgenda tipoVaga = form.getTipoVaga() == null ? TipoVagaAgenda.NORMAL : form.getTipoVaga();
         int totalOcorrencias = quantidadeOcorrenciasSolicitadas(form);
         List<String> avisos = new ArrayList<>();
@@ -368,18 +379,19 @@ public class AgendaEspecialidadeService {
         if (agendaBase.getDataAgenda().equals(dataOcorrencia)) {
             return agendaBase;
         }
+        LocalTime horarioBase = horarioAtendimento == null ? agendaBase.getHoraInicio() : horarioAtendimento;
         Long especialidadeId = agendaBase.getEspecialidade() == null ? null : agendaBase.getEspecialidade().getId();
         return agendaRepository.listarAtivasPorContextoDataEHorario(
                         unidadeId,
                         agendaBase.getCargoColaborador().getId(),
                         especialidadeId,
                         dataOcorrencia,
-                        horarioAtendimento)
+                        horarioBase)
                 .stream()
                 .findFirst()
                 .orElseGet(() -> {
                     avisos.add("Data " + dataOcorrencia.format(DATE_FORMATTER)
-                            + ": nao existe agenda ativa para este cargo/especialidade/horario.");
+                            + ": nao existe agenda ativa para este cargo/especialidade/sessao.");
                     return null;
                 });
     }
@@ -390,26 +402,21 @@ public class AgendaEspecialidadeService {
                                                                  LocalTime horarioAtendimento,
                                                                  String observacao,
                                                                  boolean recorrente) {
+        ModoAgendaEspecialidade modoAgenda = modoAgenda(agenda);
         if (agendaPacienteRepository.existsByAgendaEspecialidadeIdAndPacienteIdAndStatusNot(
                 agenda.getId(), paciente.getId(), StatusAgendamentoPaciente.CANCELADO)) {
             throw new IllegalArgumentException("Paciente ja vinculado nesta agenda");
         }
-        AgendaEspecialidadeSlot slot = obterSlotLivre(agenda, horarioAtendimento);
+        if (modoAgenda == ModoAgendaEspecialidade.HORARIO_SESSAO && horarioAtendimento == null) {
+            throw new IllegalArgumentException("Selecione um horario disponivel para agenda por horario");
+        }
+        AgendaEspecialidadeSlot slot = horarioAtendimento == null
+                ? obterPrimeiroSlotLivre(agenda)
+                : obterSlotLivre(agenda, horarioAtendimento);
 
         long totalAgendado = agendaPacienteRepository.countByAgendaEspecialidadeId(agenda.getId());
         if (totalAgendado >= agenda.getVagasTotais()) {
             throw new IllegalArgumentException("Nao ha mais vagas disponiveis nesta agenda");
-        }
-
-        if (tipoVaga == TipoVagaAgenda.RETORNO) {
-            if (agenda.getVagasRetorno() == null || agenda.getVagasRetorno() <= 0) {
-                throw new IllegalArgumentException("Esta agenda nao possui vagas de retorno");
-            }
-            long totalRetorno = agendaPacienteRepository.countByAgendaEspecialidadeIdAndTipoVaga(
-                    agenda.getId(), TipoVagaAgenda.RETORNO);
-            if (totalRetorno >= agenda.getVagasRetorno()) {
-                throw new IllegalArgumentException("Nao ha mais vagas de retorno disponiveis");
-            }
         }
 
         AgendaEspecialidadePaciente item = new AgendaEspecialidadePaciente();
@@ -418,7 +425,7 @@ public class AgendaEspecialidadeService {
         item.setAgendaSlot(slot);
         item.setTipoVaga(tipoVaga);
         item.setStatus(StatusAgendamentoPaciente.PENDENTE);
-        item.setHoraAtendimento(horarioAtendimento);
+        item.setHoraAtendimento(slot.getDataHoraInicio().toLocalTime());
         item.setObservacao(normalizeUpper(observacao));
         item.setCriadoEm(LocalDateTime.now());
         item.setCriadoPor(usuarioAuditoriaService.usernameAtualOuSistema());
@@ -436,7 +443,7 @@ public class AgendaEspecialidadeService {
                 null,
                 slot,
                 null,
-                horarioAtendimento,
+                slot.getDataHoraInicio().toLocalTime(),
                 recorrente ? "Vinculo recorrente semanal" : "Vinculo inicial");
         return salvo;
     }
@@ -575,6 +582,30 @@ public class AgendaEspecialidadeService {
     }
 
     @Transactional(readOnly = true)
+    public List<AgendaMapaMensalItemDto> listarMapaMensal(Long unidadeId,
+                                                           Long cargoColaboradorId,
+                                                           Long especialidadeId,
+                                                           YearMonth competencia) {
+        validarUnidadeComAgendamento(unidadeId);
+        if (cargoColaboradorId == null || competencia == null) {
+            return List.of();
+        }
+        LocalDate inicio = competencia.atDay(1);
+        LocalDate fim = competencia.atEndOfMonth();
+        return agendaRepository.listarPorContextoNoPeriodo(unidadeId, cargoColaboradorId, especialidadeId, inicio, fim)
+                .stream()
+                .map(agenda -> new AgendaMapaMensalItemDto(
+                        agenda.getId(),
+                        agenda.getDataAgenda().getDayOfMonth(),
+                        agenda.getHoraInicio().format(TIME_FORMATTER),
+                        agenda.getHoraFim().format(TIME_FORMATTER),
+                        agenda.getModoAgenda() == null ? ModoAgendaEspecialidade.CAPACIDADE_TURNO.name() : agenda.getModoAgenda().name(),
+                        agenda.getVagasTotais(),
+                        agenda.isAtivo()))
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
     public List<AgendaCalendarioEventoDto> listarEventosCalendario(Long unidadeId,
                                                                     Long cargoColaboradorId,
                                                                     Long especialidadeId,
@@ -593,17 +624,31 @@ public class AgendaEspecialidadeService {
 
         return agendaPacienteRepository.listarParaCalendario(unidadeId, cargoColaboradorId, especialidadeId, inicioDt, fimDt)
                 .stream()
-                .map(item -> new AgendaCalendarioEventoDto(
-                        item.getId(),
-                        item.getAgendaEspecialidade().getId(),
-                        item.getAgendaEspecialidade().getCargoColaborador().getDescricao(),
-                        descricaoEspecialidade(item.getAgendaEspecialidade().getEspecialidade()),
-                        item.getPaciente().getNomeExibicao(),
-                        item.getTipoVaga().name(),
-                        item.getStatus(),
-                        item.getAgendaSlot().getDataHoraInicio(),
-                        item.getAgendaSlot().getDataHoraFim(),
-                        item.getObservacao()))
+                .map(item -> {
+                    ModoAgendaEspecialidade modoAgenda = modoAgenda(item.getAgendaEspecialidade());
+                    LocalDateTime inicioSessao;
+                    LocalDateTime fimSessao;
+                    if (modoAgenda == ModoAgendaEspecialidade.HORARIO_SESSAO) {
+                        inicioSessao = item.getAgendaSlot().getDataHoraInicio();
+                        fimSessao = item.getAgendaSlot().getDataHoraFim();
+                    } else {
+                        inicioSessao = LocalDateTime.of(
+                                item.getAgendaEspecialidade().getDataAgenda(),
+                                item.getAgendaEspecialidade().getHoraInicio());
+                        fimSessao = inicioSessao.plusMinutes(30);
+                    }
+                    return new AgendaCalendarioEventoDto(
+                            item.getId(),
+                            item.getAgendaEspecialidade().getId(),
+                            item.getAgendaEspecialidade().getCargoColaborador().getDescricao(),
+                            descricaoEspecialidade(item.getAgendaEspecialidade().getEspecialidade()),
+                            item.getPaciente().getNomeExibicao(),
+                            item.getTipoVaga().name(),
+                            item.getStatus(),
+                            inicioSessao,
+                            fimSessao,
+                            item.getObservacao());
+                })
                 .toList();
     }
 
@@ -641,20 +686,62 @@ public class AgendaEspecialidadeService {
     }
 
     @Transactional(readOnly = true)
+    public List<AgendaCalendarioSessaoDto> listarSessoesCalendario(Long unidadeId,
+                                                                    Long cargoColaboradorId,
+                                                                    Long especialidadeId,
+                                                                    LocalDate dataInicio,
+                                                                    LocalDate dataFim) {
+        validarUnidadeComAgendamento(unidadeId);
+        LocalDate inicio = dataInicio == null ? LocalDate.now() : dataInicio;
+        LocalDate fim = dataFim == null ? inicio.plusDays(30) : dataFim;
+        if (fim.isBefore(inicio)) {
+            LocalDate tmp = inicio;
+            inicio = fim;
+            fim = tmp;
+        }
+
+        List<AgendaEspecialidade> agendas = agendaRepository.listarPorFiltros(unidadeId, cargoColaboradorId, especialidadeId, inicio, fim);
+        if (agendas.isEmpty()) {
+            return List.of();
+        }
+        Map<Long, Long> agendadosPorAgendaId = calcularAgendadosAtivosPorAgenda(agendas);
+        return agendas.stream()
+                .map(agenda -> {
+                    long ocupadas = agendadosPorAgendaId.getOrDefault(agenda.getId(), 0L);
+                    long livres = Math.max(agenda.getVagasTotais() - ocupadas, 0);
+                    LocalDateTime inicioSessao = LocalDateTime.of(agenda.getDataAgenda(), agenda.getHoraInicio());
+                    LocalDateTime fimSessao = modoAgenda(agenda) == ModoAgendaEspecialidade.HORARIO_SESSAO
+                            ? LocalDateTime.of(agenda.getDataAgenda(), agenda.getHoraFim())
+                            : inicioSessao.plusMinutes(30);
+                    return new AgendaCalendarioSessaoDto(
+                            agenda.getId(),
+                            agenda.getCargoColaborador().getDescricao(),
+                            descricaoEspecialidade(agenda.getEspecialidade()),
+                            inicioSessao,
+                            fimSessao,
+                            modoAgenda(agenda).name(),
+                            agenda.getVagasTotais(),
+                            ocupadas,
+                            livres);
+                })
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
     public AgendaEspecialidadeForm toForm(AgendaEspecialidade item) {
         AgendaEspecialidadeForm form = new AgendaEspecialidadeForm();
         form.setCargoColaboradorId(item.getCargoColaborador().getId());
         form.setEspecialidadeId(item.getEspecialidade() == null ? null : item.getEspecialidade().getId());
         form.setDataAgenda(item.getDataAgenda());
-        form.setDataFim(item.getDataAgenda());
+        form.setCompetencia(item.getDataAgenda().format(DateTimeFormatter.ofPattern("yyyy-MM")));
+        form.setDiasSelecionados(Set.of(item.getDataAgenda().getDayOfMonth()));
+        form.setModoAgenda(modoAgenda(item));
         form.setHoraInicio(item.getHoraInicio());
         form.setHoraFim(item.getHoraFim());
-        form.setVagasTotais(item.getVagasTotais());
-        form.setVagasRetorno(item.getVagasRetorno());
         form.setIntervaloMinutos(item.getIntervaloMinutos());
+        form.setVagasTotais(item.getVagasTotais());
         form.setObservacao(item.getObservacao());
         form.setAtivo(item.isAtivo());
-        form.setDiasNaoAtende(new LinkedHashSet<>());
         return form;
     }
 
@@ -734,116 +821,147 @@ public class AgendaEspecialidadeService {
                                    Especialidade especialidade,
                                    Long idIgnorar,
                                    LocalDate dataAgenda) {
-        if (form.getHoraInicio() != null && form.getHoraFim() != null
-                && !form.getHoraFim().isAfter(form.getHoraInicio())) {
-            throw new IllegalArgumentException("Hora final deve ser maior que hora inicial");
+        if (dataAgenda == null) {
+            throw new IllegalArgumentException("Data da agenda e obrigatoria");
         }
-        if (form.getIntervaloMinutos() != null
-                && (form.getIntervaloMinutos() <= 0 || form.getIntervaloMinutos() > 240)) {
-            throw new IllegalArgumentException("Intervalo deve ser entre 1 e 240 minutos");
+        ModoAgendaEspecialidade modoAgenda = modoAgenda(form.getModoAgenda());
+        if (form.getHoraInicio() == null) {
+            throw new IllegalArgumentException("Hora inicial e obrigatoria");
         }
-        int totalHorariosDaAgenda = calcularTotalHorariosDaAgenda(form);
-        if (form.getHoraInicio() != null && form.getHoraFim() != null && form.getIntervaloMinutos() != null) {
-            long duracaoEmMinutos = ChronoUnit.MINUTES.between(form.getHoraInicio(), form.getHoraFim());
-            if (duracaoEmMinutos % form.getIntervaloMinutos() != 0) {
-                throw new IllegalArgumentException("Intervalo nao fecha com horario inicial/final da agenda");
+
+        LocalTime horaFimValidacao;
+        Integer vagasTotais;
+        Integer intervaloMinutos;
+        if (modoAgenda == ModoAgendaEspecialidade.HORARIO_SESSAO) {
+            if (form.getIntervaloMinutos() == null || form.getIntervaloMinutos() <= 0) {
+                throw new IllegalArgumentException("Duracao da sessao e obrigatoria para agenda por horario");
             }
-            if (totalHorariosDaAgenda <= 0) {
-                throw new IllegalArgumentException("Agenda sem horarios disponiveis para o intervalo informado");
+            if (form.getVagasTotais() == null || form.getVagasTotais() <= 0) {
+                throw new IllegalArgumentException("Quantidade de vagas deve ser maior que zero");
             }
+            intervaloMinutos = form.getIntervaloMinutos();
+            vagasTotais = form.getVagasTotais();
+            horaFimValidacao = calcularHoraFimPorDuracao(form.getHoraInicio(), intervaloMinutos, vagasTotais);
+            if (!horaFimValidacao.isAfter(form.getHoraInicio())) {
+                throw new IllegalArgumentException("Configuracao de vagas e duracao excede o mesmo dia");
+            }
+            long duracaoTotal = ChronoUnit.MINUTES.between(form.getHoraInicio(), horaFimValidacao);
+            if (duracaoTotal != (long) vagasTotais * intervaloMinutos) {
+                throw new IllegalArgumentException("Configuracao invalida para calcular horario final");
+            }
+        } else {
+            if (form.getVagasTotais() == null || form.getVagasTotais() <= 0) {
+                throw new IllegalArgumentException("Quantidade de vagas deve ser maior que zero");
+            }
+            vagasTotais = form.getVagasTotais();
+            intervaloMinutos = 1;
+            horaFimValidacao = calcularHoraFimTecnica(form.getHoraInicio(), vagasTotais);
         }
-        if (form.getVagasTotais() != null && totalHorariosDaAgenda > 0 && form.getVagasTotais() > totalHorariosDaAgenda) {
-            throw new IllegalArgumentException("Vagas totais nao pode ser maior que a quantidade de horarios da agenda");
-        }
-        if (form.getVagasTotais() != null && form.getVagasRetorno() != null
-                && form.getVagasRetorno() > form.getVagasTotais()) {
-            throw new IllegalArgumentException("Vagas de retorno nao pode ser maior que vagas totais");
-        }
-        if (dataAgenda != null
-                && form.getHoraInicio() != null
-                && form.getHoraFim() != null
-                && agendaRepository.existsConflitoHorario(
-                        unidadeId,
-                        cargoColaborador.getId(),
-                        especialidade == null ? null : especialidade.getId(),
-                        dataAgenda,
-                        idIgnorar,
-                        form.getHoraInicio(),
-                        form.getHoraFim())) {
-            throw new IllegalArgumentException("Ja existe agenda com conflito de horario para este cargo/especialidade");
+
+        form.setModoAgenda(modoAgenda);
+        form.setVagasTotais(vagasTotais);
+        form.setIntervaloMinutos(intervaloMinutos);
+        form.setHoraFim(horaFimValidacao);
+
+        if (agendaRepository.existsConflitoHorario(
+                unidadeId,
+                cargoColaborador.getId(),
+                especialidade == null ? null : especialidade.getId(),
+                dataAgenda,
+                idIgnorar,
+                form.getHoraInicio(),
+                horaFimValidacao)) {
+            throw new IllegalArgumentException("Ja existe agenda com conflito de horario para este cargo/especialidade/data");
         }
         if (idIgnorar != null) {
             long totalAgendado = agendaPacienteRepository.countByAgendaEspecialidadeId(idIgnorar);
-            if (form.getVagasTotais() != null && form.getVagasTotais() < totalAgendado) {
+            if (vagasTotais < totalAgendado) {
                 throw new IllegalArgumentException("Vagas totais nao pode ser menor que pacientes ja vinculados");
-            }
-            long totalRetorno = agendaPacienteRepository.countByAgendaEspecialidadeIdAndTipoVaga(idIgnorar, TipoVagaAgenda.RETORNO);
-            if (form.getVagasRetorno() != null && form.getVagasRetorno() < totalRetorno) {
-                throw new IllegalArgumentException("Vagas de retorno nao pode ser menor que retornos ja vinculados");
-            }
-            List<LocalTime> horariosAgendados = agendaPacienteRepository.listarHorariosOcupadosPorAgenda(idIgnorar);
-            if (!horariosAgendados.isEmpty()) {
-                List<LocalTime> horariosValidos = gerarHorariosDisponiveis(form.getHoraInicio(), form.getHoraFim(), form.getIntervaloMinutos());
-                if (horariosAgendados.stream().anyMatch(horario -> !horariosValidos.contains(horario))) {
-                    throw new IllegalArgumentException("Ha pacientes em horarios que ficariam fora da nova configuracao da agenda");
-                }
             }
         }
     }
 
     private void apply(AgendaEspecialidade item, AgendaEspecialidadeForm form, LocalDate dataAgenda) {
+        ModoAgendaEspecialidade modoAgenda = modoAgenda(form.getModoAgenda());
         item.setDataAgenda(dataAgenda);
+        item.setModoAgenda(modoAgenda);
         item.setHoraInicio(form.getHoraInicio());
-        item.setHoraFim(form.getHoraFim());
-        item.setVagasTotais(form.getVagasTotais());
-        item.setVagasRetorno(form.getVagasRetorno());
-        item.setIntervaloMinutos(form.getIntervaloMinutos());
+        if (modoAgenda == ModoAgendaEspecialidade.HORARIO_SESSAO) {
+            item.setHoraFim(calcularHoraFimPorDuracao(form.getHoraInicio(), form.getIntervaloMinutos(), form.getVagasTotais()));
+            item.setIntervaloMinutos(form.getIntervaloMinutos());
+            item.setVagasTotais(form.getVagasTotais());
+        } else {
+            item.setHoraFim(calcularHoraFimTecnica(form.getHoraInicio(), form.getVagasTotais()));
+            item.setIntervaloMinutos(1);
+            item.setVagasTotais(form.getVagasTotais());
+        }
+        item.setVagasRetorno(0);
         item.setObservacao(normalizeUpper(form.getObservacao()));
         item.setAtivo(form.isAtivo());
     }
 
-    private List<LocalDate> calcularDatasParaCriacao(AgendaEspecialidadeForm form) {
-        LocalDate dataInicio = form.getDataAgenda();
-        if (dataInicio == null) {
-            throw new IllegalArgumentException("Data inicial e obrigatoria");
+    private List<LocalDate> calcularDatasParaCriacaoMensal(AgendaEspecialidadeForm form) {
+        YearMonth competencia = parseCompetencia(form.getCompetencia());
+        if (form.getDiasSelecionados() == null || form.getDiasSelecionados().isEmpty()) {
+            throw new IllegalArgumentException("Selecione pelo menos um dia do mes para criar as agendas");
         }
-        LocalDate dataFim = form.getDataFim() == null ? dataInicio : form.getDataFim();
-        if (dataFim.isBefore(dataInicio)) {
-            throw new IllegalArgumentException("Data final deve ser maior ou igual a data inicial");
-        }
-        if (ChronoUnit.DAYS.between(dataInicio, dataFim) > 366) {
-            throw new IllegalArgumentException("Periodo maximo permitido para criacao e de 366 dias");
-        }
-
-        Set<DayOfWeek> diasNaoAtende = parseDiasNaoAtende(form.getDiasNaoAtende());
         List<LocalDate> datas = new ArrayList<>();
-        for (LocalDate data = dataInicio; !data.isAfter(dataFim); data = data.plusDays(1)) {
-            if (!diasNaoAtende.contains(data.getDayOfWeek())) {
-                datas.add(data);
+        for (Integer dia : form.getDiasSelecionados()) {
+            if (dia == null) {
+                continue;
             }
+            if (dia < 1 || dia > competencia.lengthOfMonth()) {
+                throw new IllegalArgumentException("Dia invalido para a competencia selecionada: " + dia);
+            }
+            datas.add(competencia.atDay(dia));
         }
         if (datas.isEmpty()) {
             throw new IllegalArgumentException("Nenhum dia valido para criar agenda no periodo informado");
         }
+        datas.sort(LocalDate::compareTo);
         return datas;
     }
 
-    private static Set<DayOfWeek> parseDiasNaoAtende(Set<String> diasNaoAtende) {
-        Set<DayOfWeek> dias = new LinkedHashSet<>();
-        if (diasNaoAtende == null || diasNaoAtende.isEmpty()) {
-            return dias;
+    private static LocalTime calcularHoraFimTecnica(LocalTime horaInicio, Integer vagasTotais) {
+        if (horaInicio == null || vagasTotais == null || vagasTotais <= 0) {
+            return horaInicio;
         }
-        for (String dia : diasNaoAtende) {
-            if (dia == null || dia.isBlank()) {
-                continue;
-            }
-            try {
-                dias.add(DayOfWeek.valueOf(dia.trim().toUpperCase()));
-            } catch (IllegalArgumentException ex) {
-                throw new IllegalArgumentException("Dia da semana invalido: " + dia);
-            }
+        return horaInicio.plusMinutes(vagasTotais);
+    }
+
+    private static LocalTime calcularHoraFimPorDuracao(LocalTime horaInicio,
+                                                       Integer intervaloMinutos,
+                                                       Integer vagasTotais) {
+        if (horaInicio == null
+                || intervaloMinutos == null || intervaloMinutos <= 0
+                || vagasTotais == null || vagasTotais <= 0) {
+            return horaInicio;
         }
-        return dias;
+        long totalMinutos = (long) intervaloMinutos * vagasTotais;
+        return horaInicio.plusMinutes(totalMinutos);
+    }
+
+    private static ModoAgendaEspecialidade modoAgenda(ModoAgendaEspecialidade modo) {
+        return modo == null ? ModoAgendaEspecialidade.CAPACIDADE_TURNO : modo;
+    }
+
+    private static ModoAgendaEspecialidade modoAgenda(AgendaEspecialidade agenda) {
+        if (agenda == null || agenda.getModoAgenda() == null) {
+            return ModoAgendaEspecialidade.CAPACIDADE_TURNO;
+        }
+        return agenda.getModoAgenda();
+    }
+
+    private YearMonth parseCompetencia(String competencia) {
+        String valor = normalize(competencia);
+        if (valor == null) {
+            throw new IllegalArgumentException("Competencia (mes/ano) e obrigatoria");
+        }
+        try {
+            return YearMonth.parse(valor, DateTimeFormatter.ofPattern("yyyy-MM"));
+        } catch (DateTimeException ex) {
+            throw new IllegalArgumentException("Competencia invalida. Use o formato AAAA-MM.");
+        }
     }
 
     private void sincronizarSlots(AgendaEspecialidade agenda) {
@@ -929,6 +1047,15 @@ public class AgendaEspecialidadeService {
             throw new IllegalArgumentException("Horario ja ocupado nesta agenda");
         }
         return slot;
+    }
+
+    private AgendaEspecialidadeSlot obterPrimeiroSlotLivre(AgendaEspecialidade agenda) {
+        return agendaSlotRepository.findByAgendaEspecialidadeIdOrderByDataHoraInicioAsc(agenda.getId())
+                .stream()
+                .filter(slot -> slot.getStatus() != StatusAgendaSlot.BLOQUEADO)
+                .filter(slot -> !agendaPacienteRepository.existsByAgendaSlotIdAndStatusNot(slot.getId(), StatusAgendamentoPaciente.CANCELADO))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Nao ha mais vagas disponiveis nesta agenda"));
     }
 
     private void alterarStatus(Long unidadeId,
@@ -1028,21 +1155,6 @@ public class AgendaEspecialidadeService {
         hist.setCriadoPor(usuarioAuditoriaService.usernameAtualOuSistema());
         hist.setCriadoPorUsuario(usuarioAuditoriaService.usuarioAtual().orElse(null));
         agendaPacienteHistoricoRepository.save(hist);
-    }
-
-    private static int calcularTotalHorariosDaAgenda(AgendaEspecialidadeForm form) {
-        if (form.getHoraInicio() == null || form.getHoraFim() == null || form.getIntervaloMinutos() == null) {
-            return 0;
-        }
-        if (!form.getHoraFim().isAfter(form.getHoraInicio()) || form.getIntervaloMinutos() <= 0) {
-            return 0;
-        }
-        long duracaoEmMinutos = ChronoUnit.MINUTES.between(form.getHoraInicio(), form.getHoraFim());
-        return (int) (duracaoEmMinutos / form.getIntervaloMinutos());
-    }
-
-    private static void recalcularVagasTotais(AgendaEspecialidadeForm form) {
-        form.setVagasTotais(calcularTotalHorariosDaAgenda(form));
     }
 
     private static List<LocalTime> gerarHorariosDisponiveis(LocalTime horaInicio, LocalTime horaFim, Integer intervaloMinutos) {

@@ -1,9 +1,6 @@
 package br.com.his.care.scheduling.service;
 
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Objects;
-import java.util.Set;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -57,21 +54,25 @@ public class EspecialidadeAdminService {
 
     @Transactional
     public Especialidade criar(EspecialidadeForm form) {
+        CargoColaborador cargo = resolveCargoAssistencialAtivo(form.getCargoColaboradorId());
         validarCodigoDuplicado(form.getCodigo(), null);
+        validarDescricaoDuplicadaNoCargo(cargo.getId(), form.getDescricao(), null);
         Especialidade item = new Especialidade();
         apply(item, form);
         Especialidade salvo = repository.save(item);
-        sincronizarCargosAssistenciais(salvo, form.getCargoColaboradorIds());
+        sincronizarCargoAssistencial(salvo, cargo);
         return salvo;
     }
 
     @Transactional
     public Especialidade atualizar(Long id, EspecialidadeForm form) {
+        CargoColaborador cargo = resolveCargoAssistencialAtivo(form.getCargoColaboradorId());
         validarCodigoDuplicado(form.getCodigo(), id);
+        validarDescricaoDuplicadaNoCargo(cargo.getId(), form.getDescricao(), id);
         Especialidade item = buscar(id);
         apply(item, form);
         Especialidade salvo = repository.save(item);
-        sincronizarCargosAssistenciais(salvo, form.getCargoColaboradorIds());
+        sincronizarCargoAssistencial(salvo, cargo);
         return salvo;
     }
 
@@ -86,7 +87,11 @@ public class EspecialidadeAdminService {
         EspecialidadeForm form = new EspecialidadeForm();
         form.setCodigo(item.getCodigo());
         form.setDescricao(item.getDescricao());
-        form.setCargoColaboradorIds(cargoColaboradorEspecialidadeRepository.listarCargoIdsAtivosPorEspecialidade(item.getId()));
+        form.setCargoColaboradorId(cargoColaboradorEspecialidadeRepository
+                .listarCargoIdsAtivosPorEspecialidade(item.getId())
+                .stream()
+                .findFirst()
+                .orElse(null));
         form.setAtivo(item.isAtivo());
         return form;
     }
@@ -100,31 +105,38 @@ public class EspecialidadeAdminService {
                 });
     }
 
+    private void validarDescricaoDuplicadaNoCargo(Long cargoId, String descricao, Long especialidadeIdIgnorar) {
+        String normalized = normalizeUpper(descricao);
+        if (cargoColaboradorEspecialidadeRepository.existsByCargoAndDescricaoIgnoreCase(cargoId, normalized, especialidadeIdIgnorar)) {
+            throw new IllegalArgumentException("Ja existe especialidade com esta descricao para o cargo selecionado");
+        }
+    }
+
     private void apply(Especialidade item, EspecialidadeForm form) {
         item.setCodigo(normalizeUpper(form.getCodigo()));
         item.setDescricao(normalizeUpper(form.getDescricao()));
         item.setAtivo(form.isAtivo());
     }
 
-    private void sincronizarCargosAssistenciais(Especialidade especialidade, List<Long> cargoIds) {
-        Set<Long> idsSelecionados = normalizarIds(cargoIds);
+    private void sincronizarCargoAssistencial(Especialidade especialidade, CargoColaborador cargoSelecionado) {
         List<CargoColaboradorEspecialidade> vinculos = cargoColaboradorEspecialidadeRepository
                 .findByEspecialidadeIdWithCargo(especialidade.getId());
 
-        Set<Long> idsRemanescentes = new LinkedHashSet<>(idsSelecionados);
+        boolean encontrouVinculoSelecionado = false;
         for (CargoColaboradorEspecialidade vinculo : vinculos) {
-            Long cargoId = vinculo.getCargoColaborador().getId();
-            boolean deveFicarAtivo = idsRemanescentes.remove(cargoId);
+            boolean deveFicarAtivo = vinculo.getCargoColaborador().getId().equals(cargoSelecionado.getId());
+            if (deveFicarAtivo) {
+                encontrouVinculoSelecionado = true;
+            }
             if (vinculo.isAtivo() != deveFicarAtivo) {
                 vinculo.setAtivo(deveFicarAtivo);
                 cargoColaboradorEspecialidadeRepository.save(vinculo);
             }
         }
 
-        for (Long cargoId : idsRemanescentes) {
-            CargoColaborador cargo = resolveCargoAssistencialAtivo(cargoId);
+        if (!encontrouVinculoSelecionado) {
             CargoColaboradorEspecialidade novo = new CargoColaboradorEspecialidade();
-            novo.setCargoColaborador(cargo);
+            novo.setCargoColaborador(cargoSelecionado);
             novo.setEspecialidade(especialidade);
             novo.setAtivo(true);
             cargoColaboradorEspecialidadeRepository.save(novo);
@@ -140,19 +152,6 @@ public class EspecialidadeAdminService {
             throw new IllegalArgumentException("Somente cargos assistenciais ativos podem ser vinculados a especialidade");
         }
         return cargo;
-    }
-
-    private static Set<Long> normalizarIds(List<Long> ids) {
-        if (ids == null || ids.isEmpty()) {
-            return Set.of();
-        }
-        LinkedHashSet<Long> normalized = new LinkedHashSet<>();
-        for (Long id : ids) {
-            if (Objects.nonNull(id)) {
-                normalized.add(id);
-            }
-        }
-        return normalized;
     }
 
     private static String normalize(String value) {

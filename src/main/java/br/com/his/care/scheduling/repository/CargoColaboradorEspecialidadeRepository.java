@@ -20,6 +20,16 @@ public interface CargoColaboradorEspecialidadeRepository extends JpaRepository<C
     boolean existsAtivaByCargoEEspecialidade(Long cargoColaboradorId, Long especialidadeId);
 
     @Query("""
+            select count(cce) > 0
+            from CargoColaboradorEspecialidade cce
+            join cce.especialidade e
+            where cce.cargoColaborador.id = ?1
+              and upper(e.descricao) = upper(?2)
+              and (?3 is null or e.id <> ?3)
+            """)
+    boolean existsByCargoAndDescricaoIgnoreCase(Long cargoColaboradorId, String descricao, Long especialidadeIdIgnorar);
+
+    @Query("""
             select e
             from CargoColaboradorEspecialidade cce
             join cce.especialidade e

@@ -30,6 +30,27 @@ public interface AgendaEspecialidadeRepository extends JpaRepository<AgendaEspec
                                                LocalDate dataInicio,
                                                LocalDate dataFim);
 
+    @Query("""
+            select a
+            from AgendaEspecialidade a
+            join fetch a.cargoColaborador c
+            left join fetch a.especialidade e
+            where a.unidade.id = ?1
+              and a.cargoColaborador.id = ?2
+              and (
+                    (?3 is null and a.especialidade is null)
+                    or (?3 is not null and a.especialidade.id = ?3)
+              )
+              and a.dataAgenda >= ?4
+              and a.dataAgenda <= ?5
+            order by a.dataAgenda, a.horaInicio, c.descricao, coalesce(e.descricao, 'SEM ESPECIALIDADE')
+            """)
+    List<AgendaEspecialidade> listarPorContextoNoPeriodo(Long unidadeId,
+                                                         Long cargoColaboradorId,
+                                                         Long especialidadeId,
+                                                         LocalDate dataInicio,
+                                                         LocalDate dataFim);
+
     Optional<AgendaEspecialidade> findByIdAndUnidadeId(Long id, Long unidadeId);
 
     @Query("""

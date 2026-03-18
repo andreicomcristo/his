@@ -8,7 +8,7 @@
             <p class="text-muted mb-3">
                 <strong th:text="${agenda.cargoColaborador.descricao}">CARGO</strong>
                 <span th:text="${' | ' + (agenda.especialidade != null ? agenda.especialidade.descricao : 'NAO SE APLICA')}"></span>
-                <span th:text="${' | ' + #temporals.format(agenda.dataAgenda, 'dd/MM/yyyy') + ' ' + #temporals.format(agenda.horaInicio, 'HH:mm') + ' - ' + #temporals.format(agenda.horaFim, 'HH:mm')}"></span>
+                <span th:text="${' | ' + #temporals.format(agenda.dataAgenda, 'dd/MM/yyyy') + ' ' + #temporals.format(agenda.horaInicio, 'HH:mm')}"></span>
             </p>
 
             <div class="alert alert-success" th:if="${successMessage}" th:text="${successMessage}"></div>
@@ -20,25 +20,21 @@
                           th:text="${'Vagas totais: ' + agenda.vagasTotais}"></span>
                 </div>
                 <div class="col-12 col-sm-6 col-lg mb-2">
-                    <span class="badge badge-info d-block py-2"
-                          th:text="${'Vagas retorno: ' + agenda.vagasRetorno}"></span>
+                    <span class="badge badge-danger d-block py-2"
+                          th:text="${'Ocupadas: ' + vagasOcupadas}"></span>
                 </div>
                 <div class="col-12 col-sm-6 col-lg mb-2">
                     <span class="badge badge-success d-block py-2"
                           th:text="${'Disponiveis: ' + vagasDisponiveis}"></span>
                 </div>
-                <div class="col-12 col-sm-6 col-lg mb-2">
-                    <span class="badge badge-warning d-block py-2"
-                          th:text="${'Retorno disponiveis: ' + vagasRetornoDisponiveis}"></span>
-                </div>
-                <div class="col-12 col-sm-6 col-lg mb-2">
-                    <span class="badge badge-danger d-block py-2"
-                          th:text="${'Ocupados: ' + vagasOcupadas}"></span>
-                </div>
             </div>
 
-            <div class="alert alert-warning" th:if="${#lists.isEmpty(horariosDisponiveis)}">
-                Nao existem horarios disponiveis para esta agenda.
+            <div class="alert alert-warning py-2" th:if="${vagasDisponiveis <= 0}">
+                Esta sessao nao possui mais vagas disponiveis para novos agendamentos.
+            </div>
+            <div class="alert alert-warning py-2"
+                 th:if="${agenda.modoAgenda.name() == 'HORARIO_SESSAO' and #lists.isEmpty(horariosDisponiveis)}">
+                Esta agenda por horario nao possui horarios livres para novos agendamentos.
             </div>
 
             <form method="post"
@@ -46,7 +42,7 @@
                   th:action="@{'/ui/agendamentos/' + ${agenda.id} + '/pacientes'}"
                   class="mb-4 agenda-paciente-form">
                 <div class="form-row">
-                    <div class="form-group col-12 col-lg-5">
+                    <div class="form-group col-12 col-lg-4">
                         <label>Paciente<span class="required-mark">*</span></label>
                         <select class="multiselect-dropdown form-control" th:field="*{pacienteId}">
                             <option value="">Selecione</option>
@@ -56,19 +52,20 @@
                         </select>
                         <small class="text-danger" th:errors="*{pacienteId}"></small>
                     </div>
-                    <div class="form-group col-12 col-md-6 col-lg-3">
+                    <div class="form-group col-12 col-md-6 col-lg-2">
                         <label>Tipo da vaga<span class="required-mark">*</span></label>
                         <select class="multiselect-dropdown form-control" th:field="*{tipoVaga}">
                             <option th:each="t : ${tiposVaga}" th:value="${t}" th:text="${t}"></option>
                         </select>
                         <small class="text-danger" th:errors="*{tipoVaga}"></small>
                     </div>
-                    <div class="form-group col-12 col-md-6 col-lg-2">
+                    <div class="form-group col-12 col-md-6 col-lg-2"
+                         th:if="${agenda.modoAgenda.name() == 'HORARIO_SESSAO'}">
                         <label>Horario<span class="required-mark">*</span></label>
-                        <select class="multiselect-dropdown form-control" th:field="*{horaAtendimento}" th:disabled="${#lists.isEmpty(horariosDisponiveis)}">
+                        <select class="multiselect-dropdown form-control" th:field="*{horaAtendimento}">
                             <option value="">Selecione</option>
                             <option th:each="h : ${horariosDisponiveis}"
-                                    th:value="${h}"
+                                    th:value="${#temporals.format(h, 'HH:mm')}"
                                     th:text="${#temporals.format(h, 'HH:mm')}"></option>
                         </select>
                         <small class="text-danger" th:errors="*{horaAtendimento}"></small>
@@ -82,22 +79,23 @@
                         </select>
                         <small class="text-danger" th:errors="*{periodicidadeRecorrencia}"></small>
                     </div>
-                </div>
-                <div class="form-row">
                     <div class="form-group col-12 col-md-4 col-lg-2" id="quantidadeSessoesGroup">
                         <label>Qtd. sessoes</label>
                         <input type="number" class="form-control" min="1" max="52" th:field="*{quantidadeSessoes}" id="quantidadeSessoes">
                         <small class="text-danger" th:errors="*{quantidadeSessoes}"></small>
                     </div>
-                    <div class="form-group col-12 col-md-8 col-lg-10">
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-12">
                         <label>Observacao</label>
                         <input type="text" class="form-control" th:field="*{observacao}">
                         <small class="text-danger" th:errors="*{observacao}"></small>
                     </div>
                 </div>
                 <div class="d-flex flex-wrap">
-                    <button type="submit" class="btn btn-primary mr-2 mb-2"
-                            th:disabled="${#lists.isEmpty(horariosDisponiveis)}">
+                    <button type="submit"
+                            class="btn btn-primary mr-2 mb-2"
+                            th:disabled="${vagasDisponiveis <= 0 or (agenda.modoAgenda.name() == 'HORARIO_SESSAO' and #lists.isEmpty(horariosDisponiveis))}">
                         <i class="nav-link-icon lnr-link mr-2"></i>Vincular paciente
                     </button>
                     <a th:href="@{/ui/agendamentos}" class="btn btn-secondary mb-2">
@@ -107,104 +105,99 @@
             </form>
 
             <div class="mt-4">
-                <h6 class="mb-2">Agenda por horario</h6>
+                <h6 class="mb-2">Agendamentos da sessao</h6>
                 <div class="table-responsive">
-                <table class="table table-sm table-bordered agenda-horario-table">
-                    <thead>
-                    <tr>
-                        <th style="width: 120px;" class="text-center">Horário</th>
-                        <th style="width: 130px;" class="text-center">Situação</th>
-                        <th>Paciente</th>
-                        <th style="width: 130px;" class="text-center">CPF</th>
-                        <th style="width: 120px;" class="text-center">Vaga</th>
-                        <th style="width: 140px;" class="text-center">Status</th>
-                        <th>Observacao</th>
-                        <th style="width: 160px;" class="text-center">Criado em</th>
-                        <th style="width: 130px;" class="text-center">Ações</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr th:if="${#maps.isEmpty(ocupacaoPorHorario)}">
-                        <td colspan="9" class="text-center">Nenhum horário configurado na agenda</td>
-                    </tr>
-                    <tr th:each="entry : ${ocupacaoPorHorario.entrySet()}" th:with="ocupacao=${entry.value}">
-                        <td th:text="${#temporals.format(entry.key, 'HH:mm')}" class="text-center"></td>
-                        <td class="text-center">
-                            <span th:if="${ocupacao != null}" class="badge badge-danger">OCUPADO</span>
-                            <span th:if="${ocupacao == null}" class="badge badge-success">LIVRE</span>
-                        </td>
-                        <td th:text="${ocupacao != null ? ocupacao.paciente.nomeExibicao : '-'}"></td>
-                        <td class="text-center" th:text="${ocupacao != null && ocupacao.paciente.cpf != null ? ocupacao.paciente.cpf : '-'}"></td>
-                        <td class="text-center" th:text="${ocupacao != null ? ocupacao.tipoVaga : '-'}"></td>
-                        <td class="text-center">
-                            <span th:if="${ocupacao != null}" class="badge"
-                                  th:text="${ocupacao.status}"
-                                  th:classappend="${
-                                  ocupacao.status.name() == 'PENDENTE' ? 'badge-secondary' :
-                                  ocupacao.status.name() == 'CONFIRMADO' ? 'badge-primary' :
-                                  ocupacao.status.name() == 'ATENDIDO' ? 'badge-success' :
-                                  ocupacao.status.name() == 'FALTOU' ? 'badge-warning' :
-                                  'badge-danger'
-                              }"></span>
-                            <span th:if="${ocupacao == null}" class="text-muted">-</span>
-                        </td>
-                        <td class="text-center"th:text="${ocupacao != null && ocupacao.observacao != null ? ocupacao.observacao : '-'}"></td>
-                        <td class="text-center" th:text="${ocupacao != null ? #temporals.format(ocupacao.criadoEm, 'dd/MM/yyyy HH:mm') : '-'}"></td>
-                        <td class="text-center">
-                            <div class="dropdown d-inline-block" th:if="${ocupacao != null}">
-                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle"
-                                        type="button"
-                                        data-toggle="dropdown"
-                                        aria-haspopup="true"
-                                        aria-expanded="false">
-                                    <i class="nav-link-icon lnr-menu"></i>
-                                </button>
-                                <div class="dropdown-menu dropdown-menu-right">
-                                    <form method="post"
-                                          class="m-0"
-                                          th:if="${ocupacao.status.name() != 'CONFIRMADO'}"
-                                          th:action="@{'/ui/agendamentos/' + ${agenda.id} + '/pacientes/' + ${ocupacao.id} + '/confirmar'}">
-                                        <button type="submit" class="dropdown-item">
-                                            <i class="nav-link-icon lnr-checkmark-circle mr-2"></i><span>Confirmar</span>
-                                        </button>
-                                    </form>
-                                    <form method="post"
-                                          class="m-0"
-                                          th:if="${ocupacao.status.name() != 'FALTOU'}"
-                                          th:action="@{'/ui/agendamentos/' + ${agenda.id} + '/pacientes/' + ${ocupacao.id} + '/falta'}">
-                                        <button type="submit" class="dropdown-item">
-                                            <i class="nav-link-icon lnr-sad mr-2"></i><span>Faltou</span>
-                                        </button>
-                                    </form>
-                                    <form method="post"
-                                          class="m-0"
-                                          th:if="${ocupacao.status.name() != 'ATENDIDO'}"
-                                          th:action="@{'/ui/agendamentos/' + ${agenda.id} + '/pacientes/' + ${ocupacao.id} + '/atendido'}">
-                                        <button type="submit" class="dropdown-item">
-                                            <i class="nav-link-icon lnr-smile mr-2"></i><span>Atendido</span>
-                                        </button>
-                                    </form>
-                                    <a class="dropdown-item"
-                                       th:href="@{'/ui/agendamentos/' + ${agenda.id} + '/pacientes/' + ${ocupacao.id} + '/reagendar'}">
-                                        <i class="nav-link-icon lnr-link mr-2"></i><span>Reagendar</span>
-                                    </a>
-                                    <div class="dropdown-divider"></div>
-                                    <form method="post"
-                                          class="m-0"
-                                          th:action="@{'/ui/agendamentos/' + ${agenda.id} + '/pacientes/' + ${ocupacao.id} + '/excluir'}">
-                                        <button type="submit"
-                                                class="dropdown-item text-danger"
-                                                onclick="return confirm('Cancelar agendamento?');">
-                                            <i class="nav-link-icon lnr-trash mr-2"></i><span>Cancelar</span>
-                                        </button>
-                                    </form>
+                    <table class="table table-sm table-striped">
+                        <thead>
+                        <tr>
+                            <th>Paciente</th>
+                            <th>CPF</th>
+                            <th>Tipo vaga</th>
+                            <th>Horario</th>
+                            <th>Status</th>
+                            <th>Observacao</th>
+                            <th>Criado em</th>
+                            <th></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:if="${#lists.isEmpty(pacientesAgendados)}">
+                            <td colspan="8" class="text-center">Nenhum paciente vinculado</td>
+                        </tr>
+                        <tr th:each="item : ${pacientesAgendados}">
+                            <td th:text="${item.paciente.nomeExibicao}"></td>
+                            <td th:text="${item.paciente.cpf != null ? item.paciente.cpf : '-'}"></td>
+                            <td th:text="${item.tipoVaga}"></td>
+                            <td th:text="${item.horaAtendimento != null ? #temporals.format(item.horaAtendimento, 'HH:mm') : '-'}"></td>
+                            <td>
+                                <span class="badge"
+                                      th:classappend="${
+                                        item.status.name() == 'PENDENTE' ? 'badge-secondary' :
+                                        item.status.name() == 'CONFIRMADO' ? 'badge-primary' :
+                                        item.status.name() == 'ATENDIDO' ? 'badge-success' :
+                                        item.status.name() == 'FALTOU' ? 'badge-warning' :
+                                        'badge-danger'
+                                      }"
+                                      th:text="${item.status}"></span>
+                            </td>
+                            <td th:text="${item.observacao != null ? item.observacao : '-'}"></td>
+                            <td th:text="${#temporals.format(item.criadoEm, 'dd/MM/yyyy HH:mm')}"></td>
+                            <td class="text-right">
+                                <div class="dropdown d-inline-block">
+                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle"
+                                            type="button"
+                                            data-toggle="dropdown"
+                                            aria-haspopup="true"
+                                            aria-expanded="false">
+                                        <i class="nav-link-icon lnr-menu"></i>
+                                    </button>
+                                    <div class="dropdown-menu dropdown-menu-right">
+                                        <form method="post"
+                                              class="m-0"
+                                              th:if="${item.status.name() != 'CONFIRMADO' and item.status.name() != 'CANCELADO'}"
+                                              th:action="@{'/ui/agendamentos/' + ${agenda.id} + '/pacientes/' + ${item.id} + '/confirmar'}">
+                                            <button type="submit" class="dropdown-item">
+                                                <i class="nav-link-icon lnr-checkmark-circle mr-2"></i><span>Confirmar</span>
+                                            </button>
+                                        </form>
+                                        <form method="post"
+                                              class="m-0"
+                                              th:if="${item.status.name() != 'FALTOU' and item.status.name() != 'CANCELADO'}"
+                                              th:action="@{'/ui/agendamentos/' + ${agenda.id} + '/pacientes/' + ${item.id} + '/falta'}">
+                                            <button type="submit" class="dropdown-item">
+                                                <i class="nav-link-icon lnr-sad mr-2"></i><span>Faltou</span>
+                                            </button>
+                                        </form>
+                                        <form method="post"
+                                              class="m-0"
+                                              th:if="${item.status.name() != 'ATENDIDO' and item.status.name() != 'CANCELADO'}"
+                                              th:action="@{'/ui/agendamentos/' + ${agenda.id} + '/pacientes/' + ${item.id} + '/atendido'}">
+                                            <button type="submit" class="dropdown-item">
+                                                <i class="nav-link-icon lnr-smile mr-2"></i><span>Atendido</span>
+                                            </button>
+                                        </form>
+                                        <a class="dropdown-item"
+                                           th:if="${item.status.name() != 'CANCELADO'}"
+                                           th:href="@{'/ui/agendamentos/' + ${agenda.id} + '/pacientes/' + ${item.id} + '/reagendar'}">
+                                            <i class="nav-link-icon lnr-link mr-2"></i><span>Reagendar</span>
+                                        </a>
+                                        <div class="dropdown-divider" th:if="${item.status.name() != 'CANCELADO'}"></div>
+                                        <form method="post"
+                                              class="m-0"
+                                              th:if="${item.status.name() != 'CANCELADO'}"
+                                              th:action="@{'/ui/agendamentos/' + ${agenda.id} + '/pacientes/' + ${item.id} + '/excluir'}">
+                                            <button type="submit"
+                                                    class="dropdown-item text-danger"
+                                                    onclick="return confirm('Cancelar agendamento?');">
+                                                <i class="nav-link-icon lnr-trash mr-2"></i><span>Cancelar</span>
+                                            </button>
+                                        </form>
+                                    </div>
                                 </div>
-                            </div>
-                            <span th:if="${ocupacao == null}" class="text-muted">-</span>
-                        </td>
-                    </tr>
-                    </tbody>
-                </table>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -227,10 +220,6 @@
         .agenda-paciente-form .multiselect-native-select,
         .agenda-paciente-form .multiselect-native-select .btn-group {
             width: 100% !important;
-        }
-
-        .agenda-horario-table .dropdown-item {
-            font-size: 0.85rem;
         }
     </style>
 

@@ -1,7 +1,9 @@
 package br.com.his.care.scheduling.ui;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
+import java.time.LocalTime;
+import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import org.springframework.format.annotation.DateTimeFormat;
@@ -27,11 +29,13 @@ import br.com.his.access.repository.CargoColaboradorRepository;
 import br.com.his.access.service.OperationalPermissionService;
 import br.com.his.care.scheduling.dto.AgendaEspecialidadeForm;
 import br.com.his.care.scheduling.dto.AgendaCalendarioEventoDto;
+import br.com.his.care.scheduling.dto.AgendaMapaMensalItemDto;
 import br.com.his.care.scheduling.dto.AgendaPacienteForm;
 import br.com.his.care.scheduling.dto.AgendaReagendamentoForm;
 import br.com.his.care.scheduling.dto.PeriodicidadeRecorrenciaAgendamento;
 import br.com.his.care.scheduling.model.AgendaEspecialidade;
 import br.com.his.care.scheduling.model.Especialidade;
+import br.com.his.care.scheduling.model.ModoAgendaEspecialidade;
 import br.com.his.care.scheduling.model.StatusAgendamentoPaciente;
 import br.com.his.care.scheduling.model.TipoVagaAgenda;
 import br.com.his.care.scheduling.service.AgendaEspecialidadeService;
@@ -44,7 +48,8 @@ import jakarta.validation.Valid;
 @RequestMapping("/ui/agendamentos")
 public class AgendaEspecialidadeController {
 
-    private static final List<Integer> INTERVALOS_PADRAO_MINUTOS = List.of(15, 30, 45, 60, 90, 120);
+    private static final DateTimeFormatter COMPETENCIA_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM");
+    private static final DateTimeFormatter HORARIO_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
 
     private final AgendaEspecialidadeService agendaService;
     private final EspecialidadeAdminService especialidadeAdminService;
@@ -136,31 +141,27 @@ public class AgendaEspecialidadeController {
         model.addAttribute("tiposVaga", TipoVagaAgenda.values());
         model.addAttribute("periodicidadesRecorrencia", PeriodicidadeRecorrenciaAgendamento.values());
         var eventosCalendario = agendaService.listarEventosCalendario(unidadeId, cargoColaboradorId, especialidadeId, inicio, fim);
+        var sessoesCalendario = agendaService.listarSessoesCalendario(unidadeId, cargoColaboradorId, especialidadeId, inicio, fim);
         model.addAttribute("eventosCalendario", eventosCalendario);
+        model.addAttribute("sessoesCalendario", sessoesCalendario);
         model.addAttribute("qtdPendente", contarStatus(eventosCalendario, StatusAgendamentoPaciente.PENDENTE));
         model.addAttribute("qtdConfirmado", contarStatus(eventosCalendario, StatusAgendamentoPaciente.CONFIRMADO));
         model.addAttribute("qtdAtendido", contarStatus(eventosCalendario, StatusAgendamentoPaciente.ATENDIDO));
         model.addAttribute("qtdFaltou", contarStatus(eventosCalendario, StatusAgendamentoPaciente.FALTOU));
         model.addAttribute("qtdCancelado", contarStatus(eventosCalendario, StatusAgendamentoPaciente.CANCELADO));
-
-        boolean horariosLivresDisponiveis = mostrarLivres && cargoColaboradorId != null;
-        if (mostrarLivres && cargoColaboradorId != null) {
-            var horariosLivres = agendaService.listarHorariosLivresParaCalendario(unidadeId, cargoColaboradorId, especialidadeId, inicio, fim);
-            model.addAttribute("horariosLivresCalendario", horariosLivres);
-            model.addAttribute("qtdHorariosLivres", horariosLivres.size());
-        } else {
-            model.addAttribute("horariosLivresCalendario", java.util.List.of());
-            model.addAttribute("qtdHorariosLivres", null);
-            if (mostrarLivres) {
-                model.addAttribute("infoMessage", "Selecione um cargo para visualizar os horarios livres.");
-            }
-        }
-        model.addAttribute("horariosLivresDisponiveis", horariosLivresDisponiveis);
+        long totalVagas = sessoesCalendario.stream().mapToLong(item -> item.getVagasTotais()).sum();
+        long vagasOcupadas = sessoesCalendario.stream().mapToLong(item -> item.getVagasOcupadas()).sum();
+        long vagasLivres = sessoesCalendario.stream().mapToLong(item -> item.getVagasLivres()).sum();
+        model.addAttribute("totalVagasSessoes", totalVagas);
+        model.addAttribute("vagasOcupadasSessoes", vagasOcupadas);
+        model.addAttribute("vagasLivresSessoes", vagasLivres);
         return "pages/care/scheduling/agendas/calendario";
     }
 
     @GetMapping("/novo")
-    public String novo(Model model, RedirectAttributes redirectAttributes) {
+    public String novo(@RequestParam(required = false) String competencia,
+                       Model model,
+                       RedirectAttributes redirectAttributes) {
         requirePermission();
         Long unidadeId = unidadeAtual();
         if (!agendaService.unidadePermiteAgendamento(unidadeId)) {
@@ -170,14 +171,18 @@ public class AgendaEspecialidadeController {
         if (!model.containsAttribute("form")) {
             AgendaEspecialidadeForm form = new AgendaEspecialidadeForm();
             form.setDataAgenda(LocalDate.now());
-            form.setDataFim(LocalDate.now());
-            form.setVagasTotais(0);
-            form.setVagasRetorno(0);
+            form.setCompetencia(normalizarCompetencia(competencia));
+            form.setModoAgenda(ModoAgendaEspecialidade.CAPACIDADE_TURNO);
+            form.setIntervaloMinutos(60);
+            form.setVagasTotais(10);
             model.addAttribute("form", form);
         }
         model.addAttribute("modoEdicao", false);
         model.addAttribute("agendamentoHabilitado", true);
         AgendaEspecialidadeForm form = (AgendaEspecialidadeForm) model.getAttribute("form");
+        if (form.getCompetencia() == null || form.getCompetencia().isBlank()) {
+            form.setCompetencia(normalizarCompetencia(competencia));
+        }
         popularCombosFormulario(model, form);
         return "pages/care/scheduling/agendas/form";
     }
@@ -264,6 +269,29 @@ public class AgendaEspecialidadeController {
         return agendaService.listarEspecialidadesAtivasPorCargo(cargoColaboradorId)
                 .stream()
                 .map(this::toOption)
+                .toList();
+    }
+
+    @GetMapping("/mapa-mensal")
+    @ResponseBody
+    public List<AgendaMapaMensalItemDto> listarMapaMensal(@RequestParam(required = false) Long cargoColaboradorId,
+                                                           @RequestParam(required = false) Long especialidadeId,
+                                                           @RequestParam(required = false) String competencia) {
+        requirePermission();
+        if (cargoColaboradorId == null || competencia == null || competencia.isBlank()) {
+            return List.of();
+        }
+        YearMonth competenciaSelecionada = parseCompetencia(competencia);
+        return agendaService.listarMapaMensal(unidadeAtual(), cargoColaboradorId, especialidadeId, competenciaSelecionada);
+    }
+
+    @GetMapping("/{id}/horarios-disponiveis")
+    @ResponseBody
+    public List<String> listarHorariosDisponiveis(@PathVariable Long id) {
+        requirePermission();
+        return agendaService.listarHorariosDisponiveis(unidadeAtual(), id)
+                .stream()
+                .map(this::formatarHorario)
                 .toList();
     }
 
@@ -517,41 +545,25 @@ public class AgendaEspecialidadeController {
     private void popularTelaPacientes(Model model, Long unidadeId, Long agendaId) {
         var agenda = agendaService.buscar(unidadeId, agendaId);
         var pacientesAgendados = agendaService.listarPacientesAgendados(unidadeId, agendaId);
-        var horariosDisponiveis = agendaService.listarHorariosDisponiveis(unidadeId, agendaId);
-        var horariosGrade = agendaService.listarHorariosGrade(unidadeId, agendaId);
-        var ocupacaoPorHorario = new java.util.LinkedHashMap<java.time.LocalTime, br.com.his.care.scheduling.model.AgendaEspecialidadePaciente>();
-        for (var horario : horariosGrade) {
-            ocupacaoPorHorario.put(horario, null);
-        }
-        for (var item : pacientesAgendados) {
-            if (item.getStatus() != StatusAgendamentoPaciente.CANCELADO) {
-                ocupacaoPorHorario.put(item.getHoraAtendimento(), item);
-            }
-        }
-        long vagasOcupadas = ocupacaoPorHorario.values().stream()
-                .filter(java.util.Objects::nonNull)
+        var pacientesOrdenados = pacientesAgendados.stream()
+                .sorted(java.util.Comparator
+                        .comparing((br.com.his.care.scheduling.model.AgendaEspecialidadePaciente item) -> item.getCriadoEm())
+                        .thenComparing(item -> item.getPaciente().getNomeExibicao()))
+                .toList();
+        long vagasOcupadas = pacientesAgendados.stream()
+                .filter(item -> item.getStatus() != StatusAgendamentoPaciente.CANCELADO)
                 .count();
-        long retornoAgendado = ocupacaoPorHorario.values().stream()
-                .filter(java.util.Objects::nonNull)
-                .filter(item -> item.getTipoVaga() == TipoVagaAgenda.RETORNO)
-                .count();
-        AgendaPacienteForm pacienteForm = (AgendaPacienteForm) model.getAttribute("pacienteForm");
-        if (pacienteForm != null && pacienteForm.getHoraAtendimento() == null && !horariosDisponiveis.isEmpty()) {
-            pacienteForm.setHoraAtendimento(horariosDisponiveis.get(0));
-        }
+        long vagasDisponiveis = Math.max(agenda.getVagasTotais() - vagasOcupadas, 0);
 
         model.addAttribute("agenda", agenda);
-        model.addAttribute("pacientesAgendados", pacientesAgendados);
+        model.addAttribute("pacientesAgendados", pacientesOrdenados);
         model.addAttribute("pacientesDisponiveis", pacienteService.listarAtivosNaoMergeadosParaSelecao());
-        model.addAttribute("horariosDisponiveis", horariosDisponiveis);
-        model.addAttribute("horariosGrade", horariosGrade);
-        model.addAttribute("ocupacaoPorHorario", ocupacaoPorHorario);
         model.addAttribute("tiposVaga", TipoVagaAgenda.values());
         model.addAttribute("statusAgendamentoValores", StatusAgendamentoPaciente.values());
         model.addAttribute("periodicidadesRecorrencia", PeriodicidadeRecorrenciaAgendamento.values());
         model.addAttribute("vagasOcupadas", vagasOcupadas);
-        model.addAttribute("vagasDisponiveis", Math.max(agenda.getVagasTotais() - vagasOcupadas, 0));
-        model.addAttribute("vagasRetornoDisponiveis", Math.max(agenda.getVagasRetorno() - retornoAgendado, 0));
+        model.addAttribute("vagasDisponiveis", vagasDisponiveis);
+        model.addAttribute("horariosDisponiveis", agendaService.listarHorariosDisponiveis(unidadeId, agendaId));
     }
 
     private Long unidadeAtual() {
@@ -607,17 +619,47 @@ public class AgendaEspecialidadeController {
         model.addAttribute("cargos", cargoColaboradorRepository.findAssistenciaisAtivosOrderByDescricaoAsc());
         model.addAttribute("especialidades", listarEspecialidadesParaFormulario(
                 form == null ? null : form.getCargoColaboradorId()));
-        model.addAttribute("intervalosDisponiveis", intervalosDisponiveis(
-                form == null ? null : form.getIntervaloMinutos()));
+        model.addAttribute("modosAgenda", ModoAgendaEspecialidade.values());
+        model.addAttribute("intervalosSessao", List.of(15, 20, 30, 45, 60, 90, 120));
+        if (form != null && !Boolean.TRUE.equals(model.getAttribute("modoEdicao"))) {
+            YearMonth competencia = parseCompetencia(form.getCompetencia());
+            model.addAttribute("competenciaAtual", competencia.format(COMPETENCIA_FORMATTER));
+            model.addAttribute("diasCompetencia", diasDaCompetencia(competencia));
+        }
     }
 
-    private List<Integer> intervalosDisponiveis(Integer intervaloSelecionado) {
-        List<Integer> intervalos = new ArrayList<>(INTERVALOS_PADRAO_MINUTOS);
-        if (intervaloSelecionado != null && intervaloSelecionado > 0 && !intervalos.contains(intervaloSelecionado)) {
-            intervalos.add(intervaloSelecionado);
-            intervalos.sort(Integer::compareTo);
+    private String normalizarCompetencia(String competencia) {
+        if (competencia != null && !competencia.isBlank()) {
+            return parseCompetencia(competencia).format(COMPETENCIA_FORMATTER);
         }
-        return intervalos;
+        return YearMonth.now().format(COMPETENCIA_FORMATTER);
+    }
+
+    private YearMonth parseCompetencia(String competencia) {
+        try {
+            return YearMonth.parse(normalizarCompetenciaInput(competencia), COMPETENCIA_FORMATTER);
+        } catch (RuntimeException ex) {
+            return YearMonth.now();
+        }
+    }
+
+    private String normalizarCompetenciaInput(String competencia) {
+        if (competencia == null || competencia.isBlank()) {
+            return YearMonth.now().format(COMPETENCIA_FORMATTER);
+        }
+        return competencia.trim();
+    }
+
+    private List<DiaCompetenciaOption> diasDaCompetencia(YearMonth competencia) {
+        List<DiaCompetenciaOption> dias = new java.util.ArrayList<>();
+        for (int dia = 1; dia <= competencia.lengthOfMonth(); dia++) {
+            LocalDate data = competencia.atDay(dia);
+            dias.add(new DiaCompetenciaOption(
+                    dia,
+                    data.getDayOfWeek().name(),
+                    data.getDayOfWeek().getValue()));
+        }
+        return dias;
     }
 
     private PacienteLookupOption toOption(Especialidade especialidade) {
@@ -636,5 +678,12 @@ public class AgendaEspecialidadeController {
         return eventos.stream()
                 .filter(evento -> evento.getStatus() == status)
                 .count();
+    }
+
+    private String formatarHorario(LocalTime horario) {
+        return horario == null ? "" : horario.format(HORARIO_FORMATTER);
+    }
+
+    public record DiaCompetenciaOption(int dia, String diaSemanaNome, int diaSemanaValor) {
     }
 }

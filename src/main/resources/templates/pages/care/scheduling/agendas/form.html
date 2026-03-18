@@ -13,6 +13,7 @@
 
             <form method="post"
                   th:object="${form}"
+                  th:attr="data-mapa-mensal-url=@{/ui/agendamentos/mapa-mensal}"
                   th:action="${modoEdicao} ? @{'/ui/agendamentos/' + ${itemId}} : @{/ui/agendamentos}">
                 <div class="form-row">
                     <div class="form-group col-md-6">
@@ -40,103 +41,95 @@
                         <small id="especialidadeHint" class="text-muted d-block">Selecione uma especialidade somente quando aplicavel ao cargo.</small>
                         <small class="text-danger" th:errors="*{especialidadeId}"></small>
                     </div>
-                    <div class="form-group col-md-3" th:if="${!modoEdicao}">
-                        <label>Data inicio<span class="required-mark">*</span></label>
-                        <input type="date" class="form-control" th:field="*{dataAgenda}">
-                        <small class="text-danger" th:errors="*{dataAgenda}"></small>
-                    </div>
-                    <div class="form-group col-md-3" th:if="${!modoEdicao}">
-                        <label>Data fim</label>
-                        <input type="date" class="form-control" th:field="*{dataFim}">
-                        <small class="text-danger" th:errors="*{dataFim}"></small>
-                    </div>
-                    <div class="form-group col-md-3" th:if="${modoEdicao}">
-                        <label>Data<span class="required-mark">*</span></label>
-                        <input type="date" class="form-control" th:field="*{dataAgenda}">
-                        <small class="text-danger" th:errors="*{dataAgenda}"></small>
-                    </div>
-                    <div class="form-group col-md-3">
-                        <label>Hora inicio<span class="required-mark">*</span></label>
-                        <input type="time" class="form-control" th:field="*{horaInicio}">
-                        <small class="text-danger" th:errors="*{horaInicio}"></small>
-                    </div>
-                    <div class="form-group col-md-3">
-                        <label>Hora fim<span class="required-mark">*</span></label>
-                        <input type="time" class="form-control" th:field="*{horaFim}">
-                        <small class="text-danger" th:errors="*{horaFim}"></small>
-                    </div>
-                </div>
-
-                <div class="form-row" th:if="${!modoEdicao}">
-                    <div class="form-group col-md-12">
-                        <label>Dias da semana sem atendimento</label>
-                        <div class="d-flex flex-wrap">
-                            <div class="form-check mr-4 mb-2">
-                                <input class="form-check-input" type="checkbox" th:field="*{diasNaoAtende}" value="MONDAY">
-                                <label class="form-check-label">Segunda</label>
-                            </div>
-                            <div class="form-check mr-4 mb-2">
-                                <input class="form-check-input" type="checkbox" th:field="*{diasNaoAtende}" value="TUESDAY">
-                                <label class="form-check-label">Terca</label>
-                            </div>
-                            <div class="form-check mr-4 mb-2">
-                                <input class="form-check-input" type="checkbox" th:field="*{diasNaoAtende}" value="WEDNESDAY">
-                                <label class="form-check-label">Quarta</label>
-                            </div>
-                            <div class="form-check mr-4 mb-2">
-                                <input class="form-check-input" type="checkbox" th:field="*{diasNaoAtende}" value="THURSDAY">
-                                <label class="form-check-label">Quinta</label>
-                            </div>
-                            <div class="form-check mr-4 mb-2">
-                                <input class="form-check-input" type="checkbox" th:field="*{diasNaoAtende}" value="FRIDAY">
-                                <label class="form-check-label">Sexta</label>
-                            </div>
-                            <div class="form-check mr-4 mb-2">
-                                <input class="form-check-input" type="checkbox" th:field="*{diasNaoAtende}" value="SATURDAY">
-                                <label class="form-check-label">Sabado</label>
-                            </div>
-                            <div class="form-check mr-4 mb-2">
-                                <input class="form-check-input" type="checkbox" th:field="*{diasNaoAtende}" value="SUNDAY">
-                                <label class="form-check-label">Domingo</label>
-                            </div>
-                        </div>
-                        <small class="text-muted d-block">Marque apenas os dias que nao devem gerar agenda dentro do periodo.</small>
-                    </div>
                 </div>
 
                 <div class="form-row">
                     <div class="form-group col-md-4">
-                        <label>Vagas totais (automatico)</label>
-                        <input type="number" class="form-control" th:field="*{vagasTotais}" readonly>
-                        <small class="text-danger" th:errors="*{vagasTotais}"></small>
-                        <small class="text-muted d-block" id="vagasTotaisHint">
-                            Calculado automaticamente a partir do horario e intervalo.
-                        </small>
+                        <label>Tipo de agenda<span class="required-mark">*</span></label>
+                        <select class="form-control" id="modoAgenda" th:field="*{modoAgenda}">
+                            <option th:each="modo : ${modosAgenda}"
+                                    th:value="${modo}"
+                                    th:text="${modo.name() == 'CAPACIDADE_TURNO' ? 'Por capacidade (turno)' : 'Por horario (sessao)'}"></option>
+                        </select>
+                        <small class="text-danger" th:errors="*{modoAgenda}"></small>
+                        <small id="modoAgendaHint" class="text-muted d-block">Defina se a agenda sera por capacidade (turno) ou por horarios fixos.</small>
                     </div>
+                </div>
+
+                <div class="form-row" th:if="${!modoEdicao}">
                     <div class="form-group col-md-4">
-                        <label>Vagas retorno<span class="required-mark">*</span></label>
-                        <input type="number" class="form-control" min="0" th:field="*{vagasRetorno}">
-                        <small class="text-danger" th:errors="*{vagasRetorno}"></small>
+                        <label>Competencia (mes/ano)<span class="required-mark">*</span></label>
+                        <input type="month" class="form-control" th:field="*{competencia}" id="competencia">
+                        <small class="text-danger" th:errors="*{competencia}"></small>
                     </div>
+                    <div class="form-group col-md-8">
+                        <label>Dias para criar agendas<span class="required-mark">*</span></label>
+                        <div class="mb-2">
+                            <button type="button" class="btn btn-sm btn-outline-secondary mr-2" id="btnDiasUteis">Dias uteis</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary mr-2" id="btnDiasTodos">Todos</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="btnDiasLimpar">Limpar</button>
+                        </div>
+                        <div id="diasCompetenciaContainer" class="dias-competencia-grid">
+                            <label class="dia-item" th:each="dia : ${diasCompetencia}">
+                                <input type="checkbox" th:field="*{diasSelecionados}" th:value="${dia.dia}">
+                                <span th:text="${dia.dia + ' (' + (dia.diaSemanaValor == 1 ? 'SEG' : dia.diaSemanaValor == 2 ? 'TER' : dia.diaSemanaValor == 3 ? 'QUA' : dia.diaSemanaValor == 4 ? 'QUI' : dia.diaSemanaValor == 5 ? 'SEX' : dia.diaSemanaValor == 6 ? 'SAB' : 'DOM') + ')'}"></span>
+                            </label>
+                        </div>
+                        <small class="text-muted d-block mt-2">Cada dia selecionado cria uma sessao com o horario e capacidade definidos abaixo.</small>
+                    </div>
+                </div>
+
+                <div class="form-row" th:if="${modoEdicao}">
                     <div class="form-group col-md-4">
-                        <label>Intervalo (min)<span class="required-mark">*</span></label>
-                        <select class="form-control" th:field="*{intervaloMinutos}">
-                            <option th:each="intervalo : ${intervalosDisponiveis}"
+                        <label>Data<span class="required-mark">*</span></label>
+                        <input type="date" class="form-control" th:field="*{dataAgenda}">
+                        <small class="text-danger" th:errors="*{dataAgenda}"></small>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group col-md-3">
+                        <label>Horario inicial<span class="required-mark">*</span></label>
+                        <input type="time" class="form-control" th:field="*{horaInicio}" id="horaInicio">
+                        <small class="text-danger" th:errors="*{horaInicio}"></small>
+                    </div>
+                    <div class="form-group col-md-3 agenda-horario-only">
+                        <label>Duracao da sessao (min)<span class="required-mark">*</span></label>
+                        <select class="form-control" th:field="*{intervaloMinutos}" id="intervaloMinutos">
+                            <option th:each="intervalo : ${intervalosSessao}"
                                     th:value="${intervalo}"
-                                    th:text="${intervalo % 60 == 0 ? (intervalo / 60) + ' hora(s) (' + intervalo + ' min)' : intervalo + ' minutos'}"></option>
+                                    th:text="${intervalo + ' min'}"></option>
                         </select>
                         <small class="text-danger" th:errors="*{intervaloMinutos}"></small>
                     </div>
-                    <div class="form-group col-md-10">
-                        <label>Observacao</label>
-                        <input type="text" class="form-control" th:field="*{observacao}">
-                        <small class="text-danger" th:errors="*{observacao}"></small>
+                    <div class="form-group col-md-3">
+                        <label>Quantidade de vagas<span class="required-mark">*</span></label>
+                        <input type="number" class="form-control" min="1" max="300" th:field="*{vagasTotais}" id="vagasTotais">
+                        <small class="text-danger" th:errors="*{vagasTotais}"></small>
+                        <small class="text-muted d-block" id="vagasTotaisHint">A sessao funciona por capacidade (sem horario final fixo).</small>
                     </div>
-                    <div class="form-group col-md-2 d-flex align-items-center">
+                    <div class="form-group col-md-3 agenda-horario-only">
+                        <label>Horario final calculado</label>
+                        <input type="text" class="form-control" id="horaFimCalculado" readonly>
+                        <small class="text-muted d-block" id="horaFimCalculadoHint">Calculado automaticamente por inicio + duracao + vagas.</small>
+                    </div>
+                </div>
+                <input type="hidden" th:field="*{horaFim}" id="horaFim">
+
+                <div class="form-row">
+                    <div class="form-group col-md-3 d-flex align-items-center">
                         <div class="form-check mt-4">
                             <input type="checkbox" class="form-check-input" th:field="*{ativo}">
                             <label class="form-check-label" for="ativo">Ativo</label>
                         </div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group col-md-12">
+                        <label>Observacao</label>
+                        <input type="text" class="form-control" th:field="*{observacao}">
+                        <small class="text-danger" th:errors="*{observacao}"></small>
                     </div>
                 </div>
 
@@ -146,17 +139,335 @@
         </div>
     </div>
 
+    <style>
+        .agenda-horario-only {
+            display: none;
+        }
+
+        .dias-competencia-grid {
+            border: 1px solid #d8dce3;
+            border-radius: .3rem;
+            max-height: 220px;
+            overflow-y: auto;
+            padding: .5rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+            gap: .35rem;
+            background: #fff;
+        }
+
+        .dias-competencia-grid .dia-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: .35rem;
+            margin: 0;
+            font-size: .85rem;
+            color: #495057;
+            border: 1px solid #ebedf2;
+            border-radius: .25rem;
+            padding: .25rem .35rem;
+            background: #f8f9fa;
+        }
+
+        .dias-competencia-grid .dia-item input {
+            margin-right: .35rem;
+            flex: 0 0 auto;
+        }
+
+        .dias-competencia-grid .dia-item__label {
+            flex: 1 1 auto;
+            white-space: nowrap;
+        }
+
+        .dias-competencia-grid .dia-item__actions {
+            display: inline-flex;
+            align-items: center;
+            gap: .25rem;
+            margin-left: auto;
+        }
+
+        .dias-competencia-grid .dia-item__badge {
+            font-size: .7rem;
+            line-height: 1;
+            padding: .15rem .25rem;
+            border-radius: 12px;
+            background: #17a2b8;
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .dias-competencia-grid .dia-item__link {
+            font-size: .72rem;
+            font-weight: 600;
+            line-height: 1;
+            padding: .15rem .3rem;
+            border-radius: 10px;
+            border: 1px solid #17a2b8;
+            color: #17a2b8;
+            text-decoration: none;
+            background: #fff;
+        }
+
+        .dias-competencia-grid .dia-item__link:hover {
+            background: #17a2b8;
+            color: #fff;
+            text-decoration: none;
+        }
+
+        .dias-competencia-grid .dia-item__menu {
+            position: relative;
+            display: inline-flex;
+        }
+
+        .dias-competencia-grid .dia-item__menu-summary {
+            list-style: none;
+            cursor: pointer;
+            font-size: .72rem;
+            font-weight: 600;
+            line-height: 1;
+            padding: .15rem .3rem;
+            border-radius: 10px;
+            border: 1px solid #17a2b8;
+            color: #17a2b8;
+            background: #fff;
+            user-select: none;
+        }
+
+        .dias-competencia-grid .dia-item__menu-summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .dias-competencia-grid .dia-item__menu[open] .dia-item__menu-summary,
+        .dias-competencia-grid .dia-item__menu-summary:hover {
+            background: #17a2b8;
+            color: #fff;
+        }
+
+        .dias-competencia-grid .dia-item__menu-list {
+            position: absolute;
+            right: 0;
+            top: calc(100% + 4px);
+            min-width: 140px;
+            margin: 0;
+            padding: .2rem 0;
+            list-style: none;
+            border: 1px solid #17a2b8;
+            border-radius: .35rem;
+            background: #fff;
+            box-shadow: 0 .35rem .65rem rgba(0, 0, 0, .12);
+            z-index: 50;
+        }
+
+        .dias-competencia-grid .dia-item__menu-link {
+            display: block;
+            padding: .25rem .45rem;
+            font-size: .73rem;
+            color: #2b2f33;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        .dias-competencia-grid .dia-item__menu-link:hover {
+            background: #e7f7fa;
+            color: #17a2b8;
+            text-decoration: none;
+        }
+
+        .dias-competencia-grid .dia-item--agenda {
+            border-color: #17a2b8;
+            background: #e7f7fa;
+        }
+
+        .dias-competencia-grid .dia-item--conflito {
+            border-color: #dc3545;
+            background: #fdecef;
+            color: #721c24;
+        }
+
+        .dias-competencia-grid .dia-item--conflito .dia-item__badge {
+            background: #dc3545;
+        }
+
+        .dias-competencia-grid .dia-item input[disabled] {
+            cursor: not-allowed;
+            opacity: .7;
+        }
+    </style>
+
     <script>
         (function () {
+            var form = document.querySelector('form[data-mapa-mensal-url]');
             var cargoSelect = document.getElementById('cargoColaboradorId');
             var especialidadeSelect = document.getElementById('especialidadeId');
             var hint = document.getElementById('especialidadeHint');
-            if (!cargoSelect || !hint || !especialidadeSelect) {
+            var modoAgendaSelect = document.getElementById('modoAgenda');
+            var modoAgendaHint = document.getElementById('modoAgendaHint');
+            var competenciaInput = document.getElementById('competencia');
+            var diasContainer = document.getElementById('diasCompetenciaContainer');
+            var horaInicioInput = document.getElementById('horaInicio');
+            var horaFimInput = document.getElementById('horaFim');
+            var horaFimCalculadoInput = document.getElementById('horaFimCalculado');
+            var horaFimCalculadoHint = document.getElementById('horaFimCalculadoHint');
+            var intervaloMinutosInput = document.getElementById('intervaloMinutos');
+            var vagasTotaisInput = document.getElementById('vagasTotais');
+            var vagasTotaisHint = document.getElementById('vagasTotaisHint');
+            var agendaHorarioOnlyEls = Array.prototype.slice.call(document.querySelectorAll('.agenda-horario-only'));
+            var btnUteis = document.getElementById('btnDiasUteis');
+            var btnTodos = document.getElementById('btnDiasTodos');
+            var btnLimpar = document.getElementById('btnDiasLimpar');
+            if (!cargoSelect || !hint || !especialidadeSelect || !modoAgendaSelect || !vagasTotaisInput) {
                 return;
             }
 
-            var urlBase = cargoSelect.getAttribute('data-especialidades-url-base') || '/ui/agendamentos/especialidades-por-cargo/';
+            var urlEspecialidades = cargoSelect.getAttribute('data-especialidades-url-base') || '/ui/agendamentos/especialidades-por-cargo/';
+            var urlMapaMensal = (form && form.getAttribute('data-mapa-mensal-url')) || '/ui/agendamentos/mapa-mensal';
             var especialidadeInicial = especialidadeSelect.value;
+            var diasSemana = ['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SAB'];
+            var mapaMensal = [];
+            var mapaPorDia = new Map();
+
+            function isModoHorario() {
+                return modoAgendaSelect.value === 'HORARIO_SESSAO';
+            }
+
+            function parseHoraParaMinutos(valor) {
+                if (!valor || String(valor).indexOf(':') < 0) {
+                    return null;
+                }
+                var parts = String(valor).split(':');
+                var hora = parseInt(parts[0], 10);
+                var minuto = parseInt(parts[1], 10);
+                if (isNaN(hora) || isNaN(minuto)) {
+                    return null;
+                }
+                return (hora * 60) + minuto;
+            }
+
+            function formatarHora(totalMinutos) {
+                if (totalMinutos == null || totalMinutos < 0) {
+                    return '';
+                }
+                var minutosNormalizados = totalMinutos % (24 * 60);
+                var hora = Math.floor(minutosNormalizados / 60);
+                var minuto = minutosNormalizados % 60;
+                return String(hora).padStart(2, '0') + ':' + String(minuto).padStart(2, '0');
+            }
+
+            function calcularFaixaSelecionada() {
+                var inicio = parseHoraParaMinutos(horaInicioInput && horaInicioInput.value);
+                if (inicio === null) {
+                    return null;
+                }
+
+                if (isModoHorario()) {
+                    var intervalo = parseInt((intervaloMinutosInput && intervaloMinutosInput.value) || '0', 10);
+                    var vagas = parseInt(vagasTotaisInput.value || '0', 10);
+                    if (isNaN(intervalo) || intervalo <= 0 || isNaN(vagas) || vagas <= 0) {
+                        return null;
+                    }
+                    var fimHorario = inicio + (intervalo * vagas);
+                    if (fimHorario > (24 * 60)) {
+                        return null;
+                    }
+                    return { inicio: inicio, fim: fimHorario };
+                }
+
+                var vagas = parseInt(vagasTotaisInput.value || '0', 10);
+                if (isNaN(vagas) || vagas <= 0) {
+                    return null;
+                }
+                return { inicio: inicio, fim: inicio + vagas };
+            }
+
+            function faixasConflitam(inicioA, fimA, inicioB, fimB) {
+                if (inicioA == null || fimA == null || inicioB == null || fimB == null) {
+                    return false;
+                }
+                if (fimA <= inicioA || fimB <= inicioB) {
+                    return false;
+                }
+                return inicioA < fimB && fimA > inicioB;
+            }
+
+            function recalcularVagasModoHorario() {
+                if (!isModoHorario()) {
+                    if (horaFimCalculadoInput) {
+                        horaFimCalculadoInput.value = '';
+                    }
+                    if (horaFimInput) {
+                        horaFimInput.value = '';
+                    }
+                    return;
+                }
+                var inicio = parseHoraParaMinutos(horaInicioInput && horaInicioInput.value);
+                var intervalo = parseInt((intervaloMinutosInput && intervaloMinutosInput.value) || '0', 10);
+                var vagas = parseInt(vagasTotaisInput.value || '0', 10);
+                if (inicio == null || isNaN(intervalo) || intervalo <= 0 || isNaN(vagas) || vagas <= 0) {
+                    if (horaFimCalculadoInput) {
+                        horaFimCalculadoInput.value = '';
+                    }
+                    if (horaFimInput) {
+                        horaFimInput.value = '';
+                    }
+                    vagasTotaisHint.textContent = 'Informe inicio, duracao e vagas para calcular o horario final.';
+                    if (horaFimCalculadoHint) {
+                        horaFimCalculadoHint.textContent = 'Calculado automaticamente por inicio + duracao + vagas.';
+                    }
+                    return;
+                }
+                var fim = inicio + (intervalo * vagas);
+                if (fim > (24 * 60)) {
+                    if (horaFimCalculadoInput) {
+                        horaFimCalculadoInput.value = '';
+                    }
+                    if (horaFimInput) {
+                        horaFimInput.value = '';
+                    }
+                    vagasTotaisHint.textContent = 'Configuracao invalida: o horario final nao pode ultrapassar 23:59.';
+                    if (horaFimCalculadoHint) {
+                        horaFimCalculadoHint.textContent = 'Ajuste duracao ou quantidade de vagas.';
+                    }
+                    return;
+                }
+                var fimFormatado = formatarHora(fim);
+                if (horaFimCalculadoInput) {
+                    horaFimCalculadoInput.value = fimFormatado;
+                }
+                if (horaFimInput) {
+                    horaFimInput.value = fimFormatado;
+                }
+                vagasTotaisHint.textContent = 'Vagas definidas manualmente para agenda por horario.';
+                if (horaFimCalculadoHint) {
+                    horaFimCalculadoHint.textContent = 'Fim calculado automaticamente: ' + fimFormatado + '.';
+                }
+            }
+
+            function refreshModoAgenda() {
+                var modoHorario = isModoHorario();
+                agendaHorarioOnlyEls.forEach(function (el) {
+                    el.style.display = modoHorario ? 'block' : 'none';
+                });
+                if (intervaloMinutosInput) {
+                    intervaloMinutosInput.required = modoHorario;
+                }
+                vagasTotaisInput.readOnly = false;
+                modoAgendaHint.textContent = modoHorario
+                    ? 'Agenda por horario: informe inicio, duracao e vagas; o sistema calcula o horario final.'
+                    : 'Agenda por capacidade: informe apenas o horario inicial e a quantidade de vagas do turno.';
+                if (modoHorario) {
+                    recalcularVagasModoHorario();
+                } else {
+                    if (horaFimInput) {
+                        horaFimInput.value = '';
+                    }
+                    if (horaFimCalculadoInput) {
+                        horaFimCalculadoInput.value = '';
+                    }
+                    vagasTotaisHint.textContent = 'A sessao funciona por capacidade (sem horario final fixo).';
+                }
+                aplicarMarcacoesMapa();
+            }
 
             function preencherEspecialidades(items, selectedId) {
                 especialidadeSelect.innerHTML = '';
@@ -195,9 +506,10 @@
                 preencherEspecialidades([], null);
                 if (!cargoId) {
                     refreshHint(0);
+                    carregarMapaMensal();
                     return;
                 }
-                fetch(urlBase + cargoId)
+                fetch(urlEspecialidades + cargoId)
                     .then(function (response) { return response.json(); })
                     .then(function (items) {
                         preencherEspecialidades(items, selectedId);
@@ -205,103 +517,320 @@
                             especialidadeSelect.selectedIndex = 0;
                         }
                         refreshHint(items.length);
+                        carregarMapaMensal();
                     })
                     .catch(function () {
                         preencherEspecialidades([], null);
                         refreshHint(0);
+                        carregarMapaMensal();
                     });
+            }
+
+            function selectedSet() {
+                if (!diasContainer) {
+                    return new Set();
+                }
+                var selected = new Set();
+                diasContainer.querySelectorAll('input[name="diasSelecionados"]:checked').forEach(function (input) {
+                    selected.add(input.value);
+                });
+                return selected;
+            }
+
+            function renderDiasCompetencia() {
+                if (!competenciaInput || !diasContainer) {
+                    return;
+                }
+                var valor = competenciaInput.value;
+                if (!valor || valor.indexOf('-') < 0) {
+                    return;
+                }
+                var parts = valor.split('-');
+                var ano = parseInt(parts[0], 10);
+                var mes = parseInt(parts[1], 10);
+                if (isNaN(ano) || isNaN(mes) || mes < 1 || mes > 12) {
+                    return;
+                }
+                var selecionados = selectedSet();
+                var totalDias = new Date(ano, mes, 0).getDate();
+                var html = '';
+                for (var dia = 1; dia <= totalDias; dia++) {
+                    var data = new Date(ano, mes - 1, dia);
+                    var diaSemana = diasSemana[data.getDay()];
+                    var checked = selecionados.has(String(dia)) ? ' checked' : '';
+                    html += '<label class="dia-item">';
+                    html += '<input type="checkbox" name="diasSelecionados" value="' + dia + '"' + checked + '>';
+                    html += '<span class="dia-item__label">' + dia + ' (' + diaSemana + ')</span>';
+                    html += '<span class="dia-item__actions"></span>';
+                    html += '</label>';
+                }
+                diasContainer.innerHTML = html;
+                aplicarMarcacoesMapa();
+            }
+
+            function marcarDias(predicate) {
+                if (!diasContainer) {
+                    return;
+                }
+                diasContainer.querySelectorAll('input[name="diasSelecionados"]').forEach(function (input) {
+                    var valor = parseInt(input.value, 10);
+                    var marcar = predicate(valor);
+                    if (!marcar) {
+                        input.checked = false;
+                        return;
+                    }
+                    if (!input.disabled) {
+                        input.checked = true;
+                    }
+                });
+            }
+
+            function diaSemanaDoMes(dia) {
+                var parts = competenciaInput.value.split('-');
+                var ano = parseInt(parts[0], 10);
+                var mes = parseInt(parts[1], 10);
+                return new Date(ano, mes - 1, dia).getDay();
+            }
+
+            function agruparMapaPorDia(items) {
+                mapaPorDia = new Map();
+                (items || []).forEach(function (item) {
+                    var dia = Number(item.dia);
+                    if (!mapaPorDia.has(dia)) {
+                        mapaPorDia.set(dia, []);
+                    }
+                    mapaPorDia.get(dia).push(item);
+                });
+                mapaPorDia.forEach(function (lista) {
+                    lista.sort(function (a, b) {
+                        return String(a.horaInicio).localeCompare(String(b.horaInicio));
+                    });
+                });
+            }
+
+            function criarLinkAgenda(agendaId) {
+                var link = document.createElement('a');
+                link.className = 'dia-item__link';
+                link.href = '/ui/agendamentos/' + agendaId + '/pacientes';
+                link.textContent = 'Ver';
+                link.title = 'Abrir agenda existente';
+                link.addEventListener('click', function (event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    window.location.href = link.href;
+                });
+                return link;
+            }
+
+            function criarMenuAgendas(registrosDia) {
+                var menu = document.createElement('details');
+                menu.className = 'dia-item__menu';
+                menu.addEventListener('click', function (event) {
+                    event.stopPropagation();
+                });
+
+                var summary = document.createElement('summary');
+                summary.className = 'dia-item__menu-summary';
+                summary.textContent = 'Ver';
+                summary.title = 'Escolher agenda do dia';
+                summary.addEventListener('click', function (event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    menu.open = !menu.open;
+                });
+                menu.appendChild(summary);
+
+                var lista = document.createElement('ul');
+                lista.className = 'dia-item__menu-list';
+                registrosDia.forEach(function (registro) {
+                    var li = document.createElement('li');
+                    var link = document.createElement('a');
+                    link.className = 'dia-item__menu-link';
+                    link.href = '/ui/agendamentos/' + registro.agendaId + '/pacientes';
+                    var modo = registro.modoAgenda === 'HORARIO_SESSAO' ? 'HORARIO' : 'CAPACIDADE';
+                    link.textContent = registro.horaInicio + ' - ' + registro.horaFim + ' | ' + modo + ' | ' + (registro.ativo ? 'ATIVA' : 'INATIVA');
+                    link.title = 'Abrir agenda ' + registro.horaInicio;
+                    link.addEventListener('click', function (event) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        window.location.href = link.href;
+                    });
+                    li.appendChild(link);
+                    lista.appendChild(li);
+                });
+                menu.appendChild(lista);
+                return menu;
+            }
+
+            document.addEventListener('click', function () {
+                if (!diasContainer) {
+                    return;
+                }
+                diasContainer.querySelectorAll('.dia-item__menu[open]').forEach(function (menuAberto) {
+                    menuAberto.open = false;
+                });
+            });
+
+            function aplicarMarcacoesMapa() {
+                if (!diasContainer) {
+                    return;
+                }
+                var faixaSelecionada = calcularFaixaSelecionada();
+                diasContainer.querySelectorAll('.dia-item').forEach(function (itemEl) {
+                    var input = itemEl.querySelector('input[name="diasSelecionados"]');
+                    var actions = itemEl.querySelector('.dia-item__actions');
+                    if (!input) {
+                        return;
+                    }
+                    var dia = Number(input.value);
+                    var registrosDia = mapaPorDia.get(dia) || [];
+                    var temAgenda = registrosDia.length > 0;
+                    var temConflitoHorario = !!faixaSelecionada && registrosDia.some(function (registro) {
+                        var inicioRegistro = parseHoraParaMinutos(registro.horaInicio);
+                        var fimRegistro = parseHoraParaMinutos(registro.horaFim);
+                        return faixasConflitam(
+                            faixaSelecionada.inicio,
+                            faixaSelecionada.fim,
+                            inicioRegistro,
+                            fimRegistro
+                        );
+                    });
+
+                    itemEl.classList.remove('dia-item--agenda');
+                    itemEl.classList.remove('dia-item--conflito');
+                    input.disabled = false;
+
+                    if (actions) {
+                        actions.innerHTML = '';
+                    }
+
+                    if (!temAgenda) {
+                        itemEl.removeAttribute('title');
+                        return;
+                    }
+
+                    itemEl.classList.add('dia-item--agenda');
+                    var tooltip = registrosDia.map(function (registro) {
+                        var status = registro.ativo ? 'ativo' : 'inativo';
+                        var modo = registro.modoAgenda === 'HORARIO_SESSAO' ? 'horario' : 'capacidade';
+                        return registro.horaInicio + ' - ' + registro.horaFim + ' | ' + modo + ' (' + status + ')';
+                    }).join(' | ');
+                    itemEl.setAttribute('title', 'Agendas: ' + tooltip);
+
+                    if (actions) {
+                        var badge = document.createElement('span');
+                        badge.className = 'dia-item__badge';
+                        badge.textContent = String(registrosDia.length);
+                        badge.title = registrosDia.length + ' agenda(s) neste dia';
+                        actions.appendChild(badge);
+                        if (registrosDia.length === 1) {
+                            actions.appendChild(criarLinkAgenda(registrosDia[0].agendaId));
+                        } else {
+                            actions.appendChild(criarMenuAgendas(registrosDia));
+                        }
+                    }
+
+                    if (temConflitoHorario) {
+                        itemEl.classList.add('dia-item--conflito');
+                        input.checked = false;
+                        input.disabled = true;
+                    }
+                });
+            }
+
+            function carregarMapaMensal() {
+                if (!competenciaInput || !diasContainer) {
+                    return;
+                }
+                var competencia = competenciaInput.value;
+                var cargoId = cargoSelect.value;
+                if (!competencia || !cargoId) {
+                    mapaMensal = [];
+                    agruparMapaPorDia(mapaMensal);
+                    aplicarMarcacoesMapa();
+                    return;
+                }
+                var params = new URLSearchParams();
+                params.set('cargoColaboradorId', cargoId);
+                params.set('competencia', competencia);
+                if (especialidadeSelect.value) {
+                    params.set('especialidadeId', especialidadeSelect.value);
+                }
+                fetch(urlMapaMensal + '?' + params.toString())
+                    .then(function (response) { return response.json(); })
+                    .then(function (items) {
+                        mapaMensal = Array.isArray(items) ? items : [];
+                        agruparMapaPorDia(mapaMensal);
+                        aplicarMarcacoesMapa();
+                    })
+                    .catch(function () {
+                        mapaMensal = [];
+                        agruparMapaPorDia(mapaMensal);
+                        aplicarMarcacoesMapa();
+                    });
+            }
+
+            if (competenciaInput && diasContainer) {
+                competenciaInput.addEventListener('change', function () {
+                    renderDiasCompetencia();
+                    carregarMapaMensal();
+                });
+                renderDiasCompetencia();
+            }
+
+            if (btnUteis) {
+                btnUteis.addEventListener('click', function () {
+                    marcarDias(function (dia) {
+                        var semana = diaSemanaDoMes(dia);
+                        return semana >= 1 && semana <= 5;
+                    });
+                });
+            }
+            if (btnTodos) {
+                btnTodos.addEventListener('click', function () {
+                    marcarDias(function () { return true; });
+                });
+            }
+            if (btnLimpar) {
+                btnLimpar.addEventListener('click', function () {
+                    marcarDias(function () { return false; });
+                });
+            }
+
+            if (horaInicioInput) {
+                horaInicioInput.addEventListener('change', function () {
+                    recalcularVagasModoHorario();
+                    aplicarMarcacoesMapa();
+                });
+                horaInicioInput.addEventListener('input', function () {
+                    recalcularVagasModoHorario();
+                    aplicarMarcacoesMapa();
+                });
+            }
+            if (intervaloMinutosInput) {
+                intervaloMinutosInput.addEventListener('change', function () {
+                    recalcularVagasModoHorario();
+                    aplicarMarcacoesMapa();
+                });
+            }
+            if (vagasTotaisInput) {
+                vagasTotaisInput.addEventListener('change', function () {
+                    recalcularVagasModoHorario();
+                    aplicarMarcacoesMapa();
+                });
+                vagasTotaisInput.addEventListener('input', function () {
+                    recalcularVagasModoHorario();
+                    aplicarMarcacoesMapa();
+                });
             }
 
             cargoSelect.addEventListener('change', function () {
                 carregarEspecialidades(this.value, null);
             });
+            especialidadeSelect.addEventListener('change', carregarMapaMensal);
+            modoAgendaSelect.addEventListener('change', refreshModoAgenda);
+            refreshModoAgenda();
             carregarEspecialidades(cargoSelect.value, especialidadeInicial);
-        }());
-
-        (function () {
-            var horaInicioInput = document.getElementById('horaInicio');
-            var horaFimInput = document.getElementById('horaFim');
-            var intervaloInput = document.getElementById('intervaloMinutos');
-            var vagasTotaisInput = document.getElementById('vagasTotais');
-            var vagasRetornoInput = document.getElementById('vagasRetorno');
-            var vagasTotaisHint = document.getElementById('vagasTotaisHint');
-            if (!horaInicioInput || !horaFimInput || !intervaloInput || !vagasTotaisInput || !vagasRetornoInput || !vagasTotaisHint) {
-                return;
-            }
-
-            function ajustarLimiteRetorno(vagasTotais) {
-                vagasRetornoInput.max = String(vagasTotais);
-                var retornoAtual = parseInt(vagasRetornoInput.value, 10);
-                if (!isNaN(retornoAtual) && retornoAtual > vagasTotais) {
-                    vagasRetornoInput.value = String(vagasTotais);
-                }
-            }
-
-            function parseMinutes(value) {
-                if (!value || value.indexOf(':') < 0) {
-                    return null;
-                }
-                var parts = value.split(':');
-                var hour = parseInt(parts[0], 10);
-                var minute = parseInt(parts[1], 10);
-                if (isNaN(hour) || isNaN(minute)) {
-                    return null;
-                }
-                return (hour * 60) + minute;
-            }
-
-            function atualizarVagasTotais() {
-                var inicioMin = parseMinutes(horaInicioInput.value);
-                var fimMin = parseMinutes(horaFimInput.value);
-                var intervalo = parseInt(intervaloInput.value, 10);
-
-                if (inicioMin === null || fimMin === null || isNaN(intervalo) || intervalo <= 0) {
-                    vagasTotaisInput.value = '0';
-                    ajustarLimiteRetorno(0);
-                    vagasTotaisHint.textContent = 'Preencha horario inicial, final e intervalo para calcular automaticamente.';
-                    return;
-                }
-                var duracao = fimMin - inicioMin;
-                if (duracao <= 0) {
-                    vagasTotaisInput.value = '0';
-                    ajustarLimiteRetorno(0);
-                    vagasTotaisHint.textContent = 'Hora final deve ser maior que hora inicial.';
-                    return;
-                }
-                if (duracao % intervalo !== 0) {
-                    vagasTotaisInput.value = '0';
-                    ajustarLimiteRetorno(0);
-                    vagasTotaisHint.textContent = 'Intervalo deve fechar exatamente no periodo informado.';
-                    return;
-                }
-
-                var vagas = Math.floor(duracao / intervalo);
-                vagasTotaisInput.value = String(vagas);
-                ajustarLimiteRetorno(vagas);
-                vagasTotaisHint.textContent = 'Total calculado automaticamente: ' + vagas + ' vaga(s).';
-            }
-
-            horaInicioInput.addEventListener('input', atualizarVagasTotais);
-            horaInicioInput.addEventListener('change', atualizarVagasTotais);
-            horaFimInput.addEventListener('input', atualizarVagasTotais);
-            horaFimInput.addEventListener('change', atualizarVagasTotais);
-            intervaloInput.addEventListener('change', atualizarVagasTotais);
-            vagasRetornoInput.addEventListener('input', function () {
-                var vagasTotais = parseInt(vagasTotaisInput.value, 10);
-                if (isNaN(vagasTotais) || vagasTotais < 0) {
-                    vagasTotais = 0;
-                }
-                ajustarLimiteRetorno(vagasTotais);
-            });
-            vagasRetornoInput.addEventListener('change', function () {
-                var vagasTotais = parseInt(vagasTotaisInput.value, 10);
-                if (isNaN(vagasTotais) || vagasTotais < 0) {
-                    vagasTotais = 0;
-                }
-                ajustarLimiteRetorno(vagasTotais);
-            });
-
-            atualizarVagasTotais();
         }());
     </script>
 </th:block>

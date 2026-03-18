@@ -53,7 +53,7 @@
                         <div class="custom-control custom-checkbox mb-2">
                             <input type="checkbox" class="custom-control-input" id="mostrarLivres" name="mostrarLivres" value="true"
                                    th:checked="${mostrarLivres}">
-                            <label class="custom-control-label filtro-label mb-0" for="mostrarLivres">Livres</label>
+                            <label class="custom-control-label filtro-label mb-0" for="mostrarLivres">Com vagas</label>
                         </div>
                     </div>
                     <div class="form-group col-md-2 d-flex align-items-end">
@@ -75,14 +75,20 @@
                 <div class="col-12 col-sm-6 col-lg mb-2">
                     <span class="badge badge-secondary d-block py-2"
                     ><i class="fa fa-calendar mr-1"></i>
-                        <span th:text="${'Eventos no periodo: ' + #lists.size(eventosCalendario)}">Eventos no periodo</span>
+                        <span th:text="${'Sessoes no periodo: ' + #lists.size(sessoesCalendario)}">Sessoes no periodo</span>
                     </span>
                 </div>
-                <div class="col-12 col-sm-6 col-lg mb-2" th:if="${mostrarLivres and horariosLivresDisponiveis}">
+                <div class="col-12 col-sm-6 col-lg mb-2">
                     <span class="badge badge-success d-block py-2"
                     ><i class="fa fa-check-circle mr-1"></i>
-                        <span th:text="${'Horarios livres: ' + qtdHorariosLivres}">Horarios livres</span>
+                        <span th:text="${'Vagas livres: ' + vagasLivresSessoes}">Vagas livres</span>
                     </span>
+                </div>
+                <div class="col-12 col-sm-6 col-lg mb-2">
+                    <span class="badge badge-primary d-block py-2"><i class="fa fa-list mr-1"></i><span th:text="${'Vagas totais: ' + totalVagasSessoes}">VAGAS TOTAIS</span></span>
+                </div>
+                <div class="col-12 col-sm-6 col-lg mb-2">
+                    <span class="badge badge-danger d-block py-2"><i class="fa fa-user mr-1"></i><span th:text="${'Vagas ocupadas: ' + vagasOcupadasSessoes}">VAGAS OCUPADAS</span></span>
                 </div>
                 <div class="col-12 col-sm-6 col-lg mb-2">
                     <span class="badge badge-secondary d-block py-2"><i class="fa fa-clock mr-1"></i><span th:text="${'Pendente: ' + qtdPendente}">PENDENTE</span></span>
@@ -137,18 +143,22 @@
                                               data-description=${evento.observacao != null ? evento.observacao : ''}">
                                 </div>
                             </div>
-                            <div id="agendamento-calendar-free-events" class="d-none" th:if="${mostrarLivres}">
-                                <div th:each="livre : ${horariosLivresCalendario}"
-                                     class="agendamento-event-free"
-                                     th:attr="data-id=${livre.agendaSlotId},
-                                              data-agenda-id=${livre.agendaId},
-                                              data-title=${'LIVRE | ' + livre.cargo + ' | ' + livre.especialidade},
-                                              data-start=${#temporals.format(livre.inicio, 'yyyy-MM-dd''T''HH:mm:ss')},
-                                              data-end=${#temporals.format(livre.fim, 'yyyy-MM-dd''T''HH:mm:ss')},
-                                              data-cargo=${livre.cargo},
-                                              data-especialidade=${livre.especialidade},
-                                              data-url=@{'/ui/agendamentos/' + ${livre.agendaId} + '/pacientes'},
-                                              data-description=${'Horario livre para agendamento'}">
+                            <div id="agendamento-calendar-session-events" class="d-none">
+                                <div th:each="sessao : ${sessoesCalendario}"
+                                     class="agendamento-event-session"
+                                     th:attr="data-id=${sessao.agendaId},
+                                              data-agenda-id=${sessao.agendaId},
+                                              data-title=${'SESSAO | ' + sessao.cargo + ' | ' + sessao.especialidade + ' | VAGAS: ' + sessao.vagasTotais + ' | LIVRES: ' + sessao.vagasLivres},
+                                              data-start=${#temporals.format(sessao.inicio, 'yyyy-MM-dd''T''HH:mm:ss')},
+                                              data-end=${#temporals.format(sessao.fim, 'yyyy-MM-dd''T''HH:mm:ss')},
+                                              data-cargo=${sessao.cargo},
+                                              data-especialidade=${sessao.especialidade},
+                                              data-modo-agenda=${sessao.modoAgenda},
+                                              data-vagas-totais=${sessao.vagasTotais},
+                                              data-vagas-ocupadas=${sessao.vagasOcupadas},
+                                              data-vagas-livres=${sessao.vagasLivres},
+                                              data-url=@{'/ui/agendamentos/' + ${sessao.agendaId} + '/pacientes'},
+                                              data-description=${sessao.modoAgenda == 'HORARIO_SESSAO' ? 'Sessao por horario' : 'Sessao por capacidade'}">
                                 </div>
                             </div>
                         </div>
@@ -232,13 +242,16 @@
         <div class="modal-dialog modal-lg" role="document">
             <form id="agendamento-livre-form" method="post" class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Agendar paciente em horario livre</h5>
+                    <h5 class="modal-title">Agendar paciente na sessao</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
                 <div class="modal-body">
-                    <p class="text-muted mb-3" id="agendamento-livre-slot-info">Horario selecionado</p>
+                    <p class="text-muted mb-3" id="agendamento-livre-slot-info">Sessao selecionada</p>
+                    <div class="alert alert-warning py-2 d-none" id="agendamento-livre-sem-vagas">
+                        Esta sessao nao possui vagas livres no momento.
+                    </div>
                     <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
                     <input type="hidden" name="origem" value="calendario">
                     <input type="hidden" name="cargoColaboradorId" th:value="${cargoColaboradorSelecionadoId}">
@@ -246,7 +259,6 @@
                     <input type="hidden" name="dataInicio" th:value="${dataInicio}">
                     <input type="hidden" name="dataFim" th:value="${dataFim}">
                     <input type="hidden" name="mostrarLivres" th:value="${mostrarLivres}">
-                    <input type="hidden" name="horaAtendimento" id="modal-hora-atendimento">
 
                     <div class="form-row">
                         <div class="form-group col-md-6">
@@ -279,7 +291,13 @@
                             <label>Qtd. sessoes</label>
                             <input type="number" class="form-control" name="quantidadeSessoes" id="modal-quantidade-sessoes" min="1" max="52" value="2">
                         </div>
-                        <div class="form-group col-md-9">
+                        <div class="form-group col-md-3 d-none" id="modal-horario-atendimento-group">
+                            <label>Horario<span class="required-mark">*</span></label>
+                            <select class="form-control" name="horaAtendimento" id="modal-horario-atendimento" disabled>
+                                <option value="">Selecione</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-md-6" id="modal-observacao-group">
                             <label>Observacao</label>
                             <input type="text" class="form-control" name="observacao">
                         </div>
@@ -287,7 +305,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary btn-sm">Agendar paciente</button>
+                    <button type="submit" class="btn btn-primary btn-sm" id="agendamento-livre-submit">Agendar paciente</button>
                 </div>
             </form>
         </div>
@@ -450,6 +468,18 @@
             border-color: #3ac47d;
             color: #1e7e34;
         }
+        #agendamento-calendar .fc-event.ev-status-sessao-livre {
+            background-color: #eef7f3;
+            border-color: #3ac47d;
+            color: #1e7e34;
+            border-style: dashed;
+        }
+        #agendamento-calendar .fc-event.ev-status-sessao-cheia {
+            background-color: #f8f9fb;
+            border-color: #adb5bd;
+            color: #5a6268;
+            border-style: dashed;
+        }
         #agendamento-calendar .fc-time-grid-event .fc-title {
             white-space: normal;
             font-size: 0.75rem;
@@ -520,6 +550,8 @@
                 }
 
                 var eventos = [];
+                var mostrarSomenteVagas = /*[[${mostrarLivres}]]*/ false;
+                var horariosDisponiveisUrlBase = '/ui/agendamentos/';
                 $('#agendamento-calendar-events .agendamento-event').each(function () {
                     var item = $(this);
                     eventos.push({
@@ -540,19 +572,30 @@
                         description: item.data('description')
                     });
                 });
-                $('#agendamento-calendar-free-events .agendamento-event-free').each(function () {
+                $('#agendamento-calendar-session-events .agendamento-event-session').each(function () {
                     var item = $(this);
+                    var vagasLivres = parseInt(item.data('vagasLivres'), 10) || 0;
+                    if (mostrarSomenteVagas && vagasLivres <= 0) {
+                        return;
+                    }
                     eventos.push({
-                        id: 'livre-' + item.data('id'),
+                        id: 'sessao-' + item.data('id'),
                         agendaId: item.data('agendaId'),
                         title: item.data('title'),
                         start: item.data('start'),
                         end: item.data('end'),
                         cargo: item.data('cargo'),
                         especialidade: item.data('especialidade'),
+                        modoAgenda: item.data('modoAgenda'),
                         url: item.data('url'),
-                        isLivre: true,
-                        className: 'ev-status-livre',
+                        isSessao: true,
+                        isLivre: false,
+                        vagasTotais: parseInt(item.data('vagasTotais'), 10) || 0,
+                        vagasOcupadas: parseInt(item.data('vagasOcupadas'), 10) || 0,
+                        vagasLivres: vagasLivres,
+                        statusCode: vagasLivres > 0 ? 'sessao-livre' : 'sessao-cheia',
+                        statusLabel: vagasLivres > 0 ? 'SESSAO COM VAGAS' : 'SESSAO LOTADA',
+                        className: vagasLivres > 0 ? 'ev-status-sessao-livre' : 'ev-status-sessao-cheia',
                         description: item.data('description')
                     });
                 });
@@ -560,10 +603,14 @@
                 var modalEl = $('#agendamento-livre-modal');
                 var modalFormEl = $('#agendamento-livre-form');
                 var modalSlotInfoEl = $('#agendamento-livre-slot-info');
-                var modalHoraAtendimentoEl = $('#modal-hora-atendimento');
+                var modalSemVagasEl = $('#agendamento-livre-sem-vagas');
+                var modalSubmitEl = $('#agendamento-livre-submit');
                 var modalPeriodicidadeEl = $('#modal-periodicidade-recorrencia');
                 var modalQuantidadeGroupEl = $('#modal-quantidade-sessoes-group');
                 var modalQuantidadeInputEl = $('#modal-quantidade-sessoes');
+                var modalHorarioGroupEl = $('#modal-horario-atendimento-group');
+                var modalHorarioSelectEl = $('#modal-horario-atendimento');
+                var modalObservacaoGroupEl = $('#modal-observacao-group');
                 var modalEventoEl = $('#agendamento-evento-modal');
                 var modalEventoSlotInfoEl = $('#agendamento-evento-slot-info');
                 var modalEventoPacienteEl = $('#agendamento-evento-paciente');
@@ -590,23 +637,85 @@
                 modalPeriodicidadeEl.on('change', refreshRecorrenciaModal);
                 refreshRecorrenciaModal();
 
-                function abrirModalHorarioLivre(event) {
+                function preencherHorariosModal(horarios, selecionado) {
+                    modalHorarioSelectEl.empty();
+                    modalHorarioSelectEl.append('<option value="">Selecione</option>');
+                    var possuiSelecionado = false;
+                    (horarios || []).forEach(function (horario) {
+                        var selected = String(selecionado || '') === String(horario) ? ' selected' : '';
+                        if (selected) {
+                            possuiSelecionado = true;
+                        }
+                        modalHorarioSelectEl.append('<option value="' + horario + '"' + selected + '>' + horario + '</option>');
+                    });
+                    if (!possuiSelecionado && (horarios || []).length > 0) {
+                        modalHorarioSelectEl.val(String(horarios[0]));
+                    }
+                }
+
+                function toggleCamposPorModoAgenda(modoAgenda, possuiVagas) {
+                    var modoHorario = modoAgenda === 'HORARIO_SESSAO';
+                    modalHorarioGroupEl.toggleClass('d-none', !modoHorario);
+                    modalHorarioSelectEl.prop('disabled', !modoHorario);
+                    modalHorarioSelectEl.prop('required', modoHorario);
+                    if (!modoHorario) {
+                        modalHorarioSelectEl.val('');
+                    }
+                    modalObservacaoGroupEl.removeClass('col-md-9').addClass(modoHorario ? 'col-md-6' : 'col-md-9');
+                    modalSubmitEl.prop('disabled', !possuiVagas);
+                }
+
+                function carregarHorariosDisponiveisModal(agendaId, horarioSelecionado) {
+                    if (!agendaId) {
+                        preencherHorariosModal([], null);
+                        return Promise.resolve([]);
+                    }
+                    return fetch(horariosDisponiveisUrlBase + agendaId + '/horarios-disponiveis')
+                        .then(function (response) { return response.ok ? response.json() : []; })
+                        .then(function (horarios) {
+                            var lista = Array.isArray(horarios) ? horarios : [];
+                            preencherHorariosModal(lista, horarioSelecionado);
+                            return lista;
+                        })
+                        .catch(function () {
+                            preencherHorariosModal([], null);
+                            return [];
+                        });
+                }
+
+                function abrirModalSessao(event) {
                     if (!event || !event.url || !event.start) {
                         return;
                     }
                     modalFormEl.attr('action', event.url);
-                    modalHoraAtendimentoEl.val(event.start.format('HH:mm'));
                     modalFormEl.find('select[name="pacienteId"]').val('');
                     modalFormEl.find('select[name="tipoVaga"]').val('NORMAL');
                     modalPeriodicidadeEl.val('NENHUMA');
                     modalQuantidadeInputEl.val('1');
                     refreshRecorrenciaModal();
                     modalFormEl.find('input[name="observacao"]').val('');
+                    preencherHorariosModal([], null);
 
-                    var descricao = event.start.format('DD/MM/YYYY HH:mm') + ' - ' + event.end.format('HH:mm')
+                    var descricao = event.start.format('DD/MM/YYYY HH:mm')
                         + ' | ' + (event.cargo || '')
-                        + ' | ' + (event.especialidade || 'NAO SE APLICA');
+                        + ' | ' + (event.especialidade || 'NAO SE APLICA')
+                        + ' | Vagas: ' + (event.vagasTotais || 0)
+                        + ' | Livres: ' + (event.vagasLivres || 0);
                     modalSlotInfoEl.text(descricao);
+                    var semVagas = (event.vagasLivres || 0) <= 0;
+                    modalSemVagasEl.toggleClass('d-none', !semVagas);
+                    toggleCamposPorModoAgenda(event.modoAgenda, !semVagas);
+
+                    if (event.modoAgenda === 'HORARIO_SESSAO') {
+                        carregarHorariosDisponiveisModal(event.agendaId, event.start.format('HH:mm'))
+                            .then(function (horarios) {
+                                var semHorarioLivre = horarios.length === 0;
+                                modalSemVagasEl.toggleClass('d-none', !(semVagas || semHorarioLivre));
+                                modalSubmitEl.prop('disabled', semVagas || semHorarioLivre);
+                                modalEl.modal('show');
+                            });
+                        return;
+                    }
                     modalEl.modal('show');
                 }
 
@@ -629,6 +738,12 @@
                 function classIconStatus(statusCode, isLivre) {
                     if (isLivre || statusCode === 'livre') {
                         return 'fa fa-check-circle';
+                    }
+                    if (statusCode === 'sessao-livre') {
+                        return 'fa fa-calendar-check-o';
+                    }
+                    if (statusCode === 'sessao-cheia') {
+                        return 'fa fa-calendar-times-o';
                     }
                     if (statusCode === 'confirmado') {
                         return 'fa fa-check-circle';
@@ -892,10 +1007,10 @@
                         }
                     },
                     eventClick: function (event) {
-                        if (event.isLivre) {
-                            abrirModalHorarioLivre(event);
-                            return false;
-                        }
+                    if (event.isSessao) {
+                        abrirModalSessao(event);
+                        return false;
+                    }
                         abrirModalAgendamento(event);
                         return false;
                     }

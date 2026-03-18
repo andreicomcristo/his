@@ -30,15 +30,17 @@
                     </div>
                 </div>
                 <div class="form-row">
-                    <div class="form-group col-md-12">
-                        <label>Cargos assistenciais permitidos para esta especialidade</label>
-                        <select class="form-control" th:field="*{cargoColaboradorIds}" multiple size="8">
+                    <div class="form-group col-md-8">
+                        <label>Cargo assistencial<span class="required-mark">*</span></label>
+                        <select class="form-control" th:field="*{cargoColaboradorId}">
+                            <option value="">Selecione</option>
                             <option th:each="cargo : ${cargosAssistenciais}"
                                     th:value="${cargo.id}"
                                     th:text="${cargo.descricao}"></option>
                         </select>
+                        <small class="text-danger" th:errors="*{cargoColaboradorId}"></small>
                         <small class="text-muted d-block">
-                            Se nenhum cargo for selecionado, a especialidade nao aparecera para criacao de agenda.
+                            A especialidade ficara vinculada a um unico cargo assistencial.
                         </small>
                     </div>
                 </div>

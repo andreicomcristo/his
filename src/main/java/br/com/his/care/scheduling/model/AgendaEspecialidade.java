@@ -9,6 +9,8 @@ import br.com.his.access.model.Unidade;
 import br.com.his.access.model.Usuario;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -54,6 +56,10 @@ public class AgendaEspecialidade {
 
     @Column(name = "intervalo_minutos", nullable = false)
     private Integer intervaloMinutos;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "modo_agenda", nullable = false, length = 30)
+    private ModoAgendaEspecialidade modoAgenda = ModoAgendaEspecialidade.CAPACIDADE_TURNO;
 
     @Column(name = "observacao", length = 255)
     private String observacao;
@@ -159,6 +165,14 @@ public class AgendaEspecialidade {
 
     public void setIntervaloMinutos(Integer intervaloMinutos) {
         this.intervaloMinutos = intervaloMinutos;
+    }
+
+    public ModoAgendaEspecialidade getModoAgenda() {
+        return modoAgenda;
+    }
+
+    public void setModoAgenda(ModoAgendaEspecialidade modoAgenda) {
+        this.modoAgenda = modoAgenda;
     }
 
     public String getObservacao() {

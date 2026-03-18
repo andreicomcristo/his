@@ -69,7 +69,8 @@
                     <th>Data</th>
                     <th>Cargo</th>
                     <th>Especialidade</th>
-                    <th>Horário</th>
+                    <th>Tipo agenda</th>
+                    <th>Horario base</th>
                     <th>Vagas</th>
                     <th>Disponíveis</th>
                     <th>Ativo</th>
@@ -80,14 +81,15 @@
                 </thead>
                 <tbody>
                 <tr th:if="${#lists.isEmpty(items)}">
-                    <td colspan="10" class="text-center">Nenhuma agenda encontrada</td>
+                    <td colspan="11" class="text-center">Nenhuma agenda encontrada</td>
                 </tr>
                 <tr th:each="item : ${items}">
                     <td th:text="${#temporals.format(item.dataAgenda, 'dd/MM/yyyy')}"></td>
                     <td th:text="${item.cargoColaborador.descricao}"></td>
                     <td th:text="${item.especialidade != null ? item.especialidade.descricao : '-'}"></td>
-                    <td th:text="${#temporals.format(item.horaInicio, 'HH:mm') + ' - ' + #temporals.format(item.horaFim, 'HH:mm')}"></td>
-                    <td th:text="${item.vagasTotais + ' (retorno: ' + item.vagasRetorno + ')'}"></td>
+                    <td th:text="${item.modoAgenda != null and item.modoAgenda.name() == 'HORARIO_SESSAO' ? 'Por horario' : 'Por capacidade'}"></td>
+                    <td th:text="${item.modoAgenda != null and item.modoAgenda.name() == 'HORARIO_SESSAO' ? #temporals.format(item.horaInicio, 'HH:mm') + ' - ' + #temporals.format(item.horaFim, 'HH:mm') : #temporals.format(item.horaInicio, 'HH:mm')}"></td>
+                    <td th:text="${item.vagasTotais}"></td>
                     <td>
                         <span class="badge"
                               th:classappend="${vagasDisponiveisPorAgenda[item.id] > 0} ? 'badge-success' : 'badge-danger'"
