@@ -19,12 +19,13 @@
             <form method="get" class="mb-3">
                 <div class="form-row">
                     <div class="form-group col-md-3">
-                        <label class="filtro-label">Cargo assistencial</label>
+                        <label class="filtro-label">Cargo assistencial<span class="required-mark">*</span></label>
                         <select name="cargoColaboradorId"
                                 id="cargoColaboradorFiltroId"
                                 class="form-control"
+                                required
                                 th:attr="data-especialidades-url-base=@{/ui/agendamentos/especialidades-por-cargo/}">
-                            <option value="">TODOS</option>
+                            <option value="" th:selected="${cargoColaboradorSelecionadoId == null}">Selecione</option>
                             <option th:each="cargo : ${cargos}"
                                     th:value="${cargo.id}"
                                     th:selected="${cargoColaboradorSelecionadoId == cargo.id}"
@@ -70,7 +71,11 @@
             <div class="alert alert-success py-2" th:if="${successMessage}" th:text="${successMessage}"></div>
             <div class="alert alert-danger py-2" th:if="${errorMessage}" th:text="${errorMessage}"></div>
             <div th:if="${infoMessage}" class="alert alert-info py-2" th:text="${infoMessage}"></div>
+            <div class="alert alert-info py-3" th:unless="${filtroCalendarioAplicado}">
+                Selecione o cargo assistencial e clique em Filtrar para carregar o calendario.
+            </div>
 
+            <div th:if="${filtroCalendarioAplicado}">
             <div class="row agenda-calendario-metricas mb-3">
                 <div class="col-12 col-sm-6 col-lg mb-2">
                     <span class="badge badge-secondary d-block py-2"
@@ -148,7 +153,7 @@
                                      class="agendamento-event-session"
                                      th:attr="data-id=${sessao.agendaId},
                                               data-agenda-id=${sessao.agendaId},
-                                              data-title=${'SESSAO | ' + sessao.cargo + ' | ' + sessao.especialidade + ' | VAGAS: ' + sessao.vagasTotais + ' | LIVRES: ' + sessao.vagasLivres},
+                                              data-title=${(sessao.modoAgenda == 'HORARIO_SESSAO' ? 'SESSAO' : 'TURNO') + ' | ' + sessao.cargo + ' | ' + sessao.especialidade + ' | VAGAS: ' + sessao.vagasTotais + ' | LIVRES: ' + sessao.vagasLivres},
                                               data-start=${#temporals.format(sessao.inicio, 'yyyy-MM-dd''T''HH:mm:ss')},
                                               data-end=${#temporals.format(sessao.fim, 'yyyy-MM-dd''T''HH:mm:ss')},
                                               data-cargo=${sessao.cargo},
@@ -159,6 +164,22 @@
                                               data-vagas-livres=${sessao.vagasLivres},
                                               data-url=@{'/ui/agendamentos/' + ${sessao.agendaId} + '/pacientes'},
                                               data-description=${sessao.modoAgenda == 'HORARIO_SESSAO' ? 'Sessao por horario' : 'Sessao por capacidade'}">
+                                </div>
+                            </div>
+                            <div id="agendamento-calendar-free-events" class="d-none">
+                                <div th:each="livre : ${horariosLivresCalendario}"
+                                     class="agendamento-event-free"
+                                     th:attr="data-id=${'livre-' + livre.agendaSlotId},
+                                              data-agenda-id=${livre.agendaId},
+                                              data-title=${'LIVRE | ' + livre.cargo + ' | ' + livre.especialidade},
+                                              data-start=${#temporals.format(livre.inicio, 'yyyy-MM-dd''T''HH:mm:ss')},
+                                              data-end=${#temporals.format(livre.fim, 'yyyy-MM-dd''T''HH:mm:ss')},
+                                              data-cargo=${livre.cargo},
+                                              data-especialidade=${livre.especialidade},
+                                              data-url=@{'/ui/agendamentos/' + ${livre.agendaId} + '/pacientes'},
+                                              data-status='livre',
+                                              data-status-label='LIVRE',
+                                              data-description='Horario livre para agendamento'">
                                 </div>
                             </div>
                         </div>
@@ -235,6 +256,7 @@
                     </table>
                 </div>
             </div>
+            </div>
         </div>
     </div>
 
@@ -308,6 +330,50 @@
                     <button type="submit" class="btn btn-primary btn-sm" id="agendamento-livre-submit">Agendar paciente</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <div class="modal fade" id="agendamento-turno-modal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-xl" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Agenda por turno</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted mb-3" id="agendamento-turno-slot-info">Turno selecionado</p>
+                    <div class="d-flex flex-wrap mb-3">
+                        <span class="badge badge-info mr-2 mb-2" id="agendamento-turno-vagas-totais">Vagas: 0</span>
+                        <span class="badge badge-primary mr-2 mb-2" id="agendamento-turno-vagas-ocupadas">Agendados: 0</span>
+                        <span class="badge badge-success mr-2 mb-2" id="agendamento-turno-vagas-livres">Livres: 0</span>
+                    </div>
+                    <div class="table-responsive mb-2">
+                        <table class="table table-sm table-striped mb-0">
+                            <thead>
+                            <tr>
+                                <th>Horario</th>
+                                <th>Paciente</th>
+                                <th>Tipo vaga</th>
+                                <th>Status</th>
+                                <th class="text-right">Acoes</th>
+                            </tr>
+                            </thead>
+                            <tbody id="agendamento-turno-pacientes-body">
+                            <tr>
+                                <td colspan="5" class="text-center text-muted">Nenhum paciente agendado neste turno</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer d-flex flex-wrap justify-content-end">
+                    <button type="button" class="btn btn-outline-primary btn-sm mr-2 mb-2" id="agendamento-turno-novo-btn">Novo agendamento</button>
+                    <a href="#" class="btn btn-outline-secondary btn-sm mr-2 mb-2" id="agendamento-turno-abrir-agenda-btn">Abrir agenda</a>
+                    <button type="button" class="btn btn-secondary btn-sm mb-2" data-dismiss="modal">Fechar</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -550,52 +616,155 @@
                 }
 
                 var eventos = [];
+                var eventosAgendadosPorAgenda = {};
+                var eventosAgendadosPorId = {};
+                var sessoesPorAgenda = {};
                 var mostrarSomenteVagas = /*[[${mostrarLivres}]]*/ false;
                 var horariosDisponiveisUrlBase = '/ui/agendamentos/';
+
+                function parseMoment(value) {
+                    var parsed = window.moment(value);
+                    return parsed && parsed.isValid() ? parsed : null;
+                }
+
+                function pushEventoAgendado(agendaId, evento) {
+                    var chave = String(agendaId);
+                    if (!eventosAgendadosPorAgenda[chave]) {
+                        eventosAgendadosPorAgenda[chave] = [];
+                    }
+                    eventosAgendadosPorAgenda[chave].push(evento);
+                    if (evento && evento.id !== undefined && evento.id !== null) {
+                        eventosAgendadosPorId[String(evento.id)] = evento;
+                    }
+                }
+
+                $('#agendamento-calendar-session-events .agendamento-event-session').each(function () {
+                    var item = $(this);
+                    var agendaId = item.data('agendaId');
+                    var inicio = parseMoment(item.data('start'));
+                    var fim = parseMoment(item.data('end'));
+                    if (!agendaId || !inicio || !fim) {
+                        return;
+                    }
+                    var modoAgenda = item.data('modoAgenda') || 'CAPACIDADE_TURNO';
+                    var vagasTotais = parseInt(item.data('vagasTotais'), 10) || 0;
+                    var vagasOcupadas = parseInt(item.data('vagasOcupadas'), 10) || 0;
+                    var vagasLivres = parseInt(item.data('vagasLivres'), 10) || 0;
+
+                    sessoesPorAgenda[String(agendaId)] = {
+                        agendaId: agendaId,
+                        start: inicio,
+                        end: fim,
+                        cargo: item.data('cargo'),
+                        especialidade: item.data('especialidade'),
+                        modoAgenda: modoAgenda,
+                        url: item.data('url'),
+                        vagasTotais: vagasTotais,
+                        vagasOcupadas: vagasOcupadas,
+                        vagasLivres: vagasLivres,
+                        description: item.data('description')
+                    };
+
+                    if (modoAgenda !== 'CAPACIDADE_TURNO') {
+                        return;
+                    }
+                    if (mostrarSomenteVagas && vagasLivres <= 0) {
+                        return;
+                    }
+
+                    eventos.push({
+                        id: 'sessao-' + item.data('id'),
+                        agendaId: agendaId,
+                        title: item.data('title'),
+                        start: inicio,
+                        end: fim,
+                        cargo: item.data('cargo'),
+                        especialidade: item.data('especialidade'),
+                        modoAgenda: modoAgenda,
+                        url: item.data('url'),
+                        isSessao: true,
+                        isLivre: false,
+                        vagasTotais: vagasTotais,
+                        vagasOcupadas: vagasOcupadas,
+                        vagasLivres: vagasLivres,
+                        statusCode: vagasLivres > 0 ? 'sessao-livre' : 'sessao-cheia',
+                        statusLabel: vagasLivres > 0 ? 'SESSAO COM VAGAS' : 'SESSAO LOTADA',
+                        className: vagasLivres > 0 ? 'ev-status-sessao-livre' : 'ev-status-sessao-cheia',
+                        description: item.data('description')
+                    });
+                });
+
                 $('#agendamento-calendar-events .agendamento-event').each(function () {
                     var item = $(this);
-                    eventos.push({
+                    var agendaId = item.data('agendaId');
+                    var inicio = parseMoment(item.data('start'));
+                    var fim = parseMoment(item.data('end'));
+                    if (!agendaId || !inicio || !fim) {
+                        return;
+                    }
+                    var sessao = sessoesPorAgenda[String(agendaId)];
+                    var modoAgenda = sessao && sessao.modoAgenda ? sessao.modoAgenda : 'CAPACIDADE_TURNO';
+                    var evento = {
                         id: item.data('id'),
-                        agendaId: item.data('agendaId'),
+                        agendaId: agendaId,
                         title: item.data('title'),
                         paciente: item.data('paciente'),
                         tipoVaga: item.data('tipoVaga'),
                         statusLabel: item.data('statusLabel'),
                         statusCode: item.data('status'),
-                        start: item.data('start'),
-                        end: item.data('end'),
+                        start: inicio,
+                        end: fim,
                         cargo: item.data('cargo'),
                         especialidade: item.data('especialidade'),
+                        modoAgenda: modoAgenda,
                         url: item.data('url'),
                         isLivre: false,
                         className: 'ev-status-' + item.data('status'),
                         description: item.data('description')
-                    });
+                    };
+                    pushEventoAgendado(agendaId, evento);
+                    if (modoAgenda === 'HORARIO_SESSAO') {
+                        eventos.push(evento);
+                    }
                 });
-                $('#agendamento-calendar-session-events .agendamento-event-session').each(function () {
+
+                $('#agendamento-calendar-free-events .agendamento-event-free').each(function () {
+                    if (!mostrarSomenteVagas) {
+                        return;
+                    }
                     var item = $(this);
-                    var vagasLivres = parseInt(item.data('vagasLivres'), 10) || 0;
-                    if (mostrarSomenteVagas && vagasLivres <= 0) {
+                    var agendaId = item.data('agendaId');
+                    var inicio = parseMoment(item.data('start'));
+                    var fim = parseMoment(item.data('end'));
+                    if (!agendaId || !inicio || !fim) {
+                        return;
+                    }
+                    var sessao = sessoesPorAgenda[String(agendaId)];
+                    var modoAgenda = sessao && sessao.modoAgenda ? sessao.modoAgenda : 'HORARIO_SESSAO';
+                    if (modoAgenda !== 'HORARIO_SESSAO') {
+                        return;
+                    }
+                    if (mostrarSomenteVagas && sessao && (sessao.vagasLivres || 0) <= 0) {
                         return;
                     }
                     eventos.push({
-                        id: 'sessao-' + item.data('id'),
-                        agendaId: item.data('agendaId'),
+                        id: item.data('id'),
+                        agendaId: agendaId,
                         title: item.data('title'),
-                        start: item.data('start'),
-                        end: item.data('end'),
+                        start: inicio,
+                        end: fim,
                         cargo: item.data('cargo'),
                         especialidade: item.data('especialidade'),
-                        modoAgenda: item.data('modoAgenda'),
+                        modoAgenda: modoAgenda,
                         url: item.data('url'),
                         isSessao: true,
-                        isLivre: false,
-                        vagasTotais: parseInt(item.data('vagasTotais'), 10) || 0,
-                        vagasOcupadas: parseInt(item.data('vagasOcupadas'), 10) || 0,
-                        vagasLivres: vagasLivres,
-                        statusCode: vagasLivres > 0 ? 'sessao-livre' : 'sessao-cheia',
-                        statusLabel: vagasLivres > 0 ? 'SESSAO COM VAGAS' : 'SESSAO LOTADA',
-                        className: vagasLivres > 0 ? 'ev-status-sessao-livre' : 'ev-status-sessao-cheia',
+                        isLivre: true,
+                        vagasTotais: sessao ? sessao.vagasTotais : 1,
+                        vagasOcupadas: sessao ? sessao.vagasOcupadas : 0,
+                        vagasLivres: sessao ? sessao.vagasLivres : 1,
+                        statusCode: 'livre',
+                        statusLabel: 'LIVRE',
+                        className: 'ev-status-livre',
                         description: item.data('description')
                     });
                 });
@@ -611,6 +780,14 @@
                 var modalHorarioGroupEl = $('#modal-horario-atendimento-group');
                 var modalHorarioSelectEl = $('#modal-horario-atendimento');
                 var modalObservacaoGroupEl = $('#modal-observacao-group');
+                var modalTurnoEl = $('#agendamento-turno-modal');
+                var modalTurnoSlotInfoEl = $('#agendamento-turno-slot-info');
+                var modalTurnoVagasTotaisEl = $('#agendamento-turno-vagas-totais');
+                var modalTurnoVagasOcupadasEl = $('#agendamento-turno-vagas-ocupadas');
+                var modalTurnoVagasLivresEl = $('#agendamento-turno-vagas-livres');
+                var modalTurnoPacientesBodyEl = $('#agendamento-turno-pacientes-body');
+                var modalTurnoNovoBtnEl = $('#agendamento-turno-novo-btn');
+                var modalTurnoAbrirAgendaBtnEl = $('#agendamento-turno-abrir-agenda-btn');
                 var modalEventoEl = $('#agendamento-evento-modal');
                 var modalEventoSlotInfoEl = $('#agendamento-evento-slot-info');
                 var modalEventoPacienteEl = $('#agendamento-evento-paciente');
@@ -765,6 +942,94 @@
 
                 function htmlIconStatus(statusCode, isLivre) {
                     return '<i class="' + classIconStatus(statusCode, isLivre) + ' agenda-status-icon" aria-hidden="true"></i>';
+                }
+
+                function escapeHtml(value) {
+                    return String(value == null ? '' : value)
+                        .replace(/&/g, '&amp;')
+                        .replace(/</g, '&lt;')
+                        .replace(/>/g, '&gt;')
+                        .replace(/"/g, '&quot;')
+                        .replace(/'/g, '&#39;');
+                }
+
+                function abrirModalAgendamentoComFechamentoTurno(event) {
+                    if (!event) {
+                        return;
+                    }
+                    if (modalTurnoEl.hasClass('show')) {
+                        modalTurnoEl.one('hidden.bs.modal', function () {
+                            abrirModalAgendamento(event);
+                        });
+                        modalTurnoEl.modal('hide');
+                        return;
+                    }
+                    abrirModalAgendamento(event);
+                }
+
+                function renderPacientesTurno(agendaId) {
+                    var itens = (eventosAgendadosPorAgenda[String(agendaId)] || []).slice();
+                    itens.sort(function (a, b) {
+                        if (a.start && b.start && a.start.valueOf() !== b.start.valueOf()) {
+                            return a.start.valueOf() - b.start.valueOf();
+                        }
+                        return String(a.paciente || '').localeCompare(String(b.paciente || ''), 'pt-BR');
+                    });
+                    if (!itens.length) {
+                        modalTurnoPacientesBodyEl.html('<tr><td colspan="5" class="text-center text-muted">Nenhum paciente agendado neste turno</td></tr>');
+                        return;
+                    }
+
+                    var linhas = itens.map(function (item) {
+                        var horario = '-';
+                        if (item.start && item.end) {
+                            horario = item.start.format('HH:mm') + ' - ' + item.end.format('HH:mm');
+                        }
+                        var statusHtml = '<span class="badge ' + classBadgeStatus(item.statusCode) + '">'
+                            + htmlIconStatus(item.statusCode, false) + escapeHtml(item.statusLabel || '-') + '</span>';
+                        var eventoId = item.id == null ? '' : String(item.id);
+                        return '<tr>'
+                            + '<td>' + escapeHtml(horario) + '</td>'
+                            + '<td>' + escapeHtml(item.paciente || '-') + '</td>'
+                            + '<td>' + escapeHtml(item.tipoVaga || '-') + '</td>'
+                            + '<td>' + statusHtml + '</td>'
+                            + '<td class="text-right"><button type="button" class="btn btn-outline-primary btn-sm js-turno-gerenciar" data-evento-id="' + escapeHtml(eventoId) + '">Acoes</button></td>'
+                            + '</tr>';
+                    }).join('');
+
+                    modalTurnoPacientesBodyEl.html(linhas);
+                    modalTurnoPacientesBodyEl.find('.js-turno-gerenciar').on('click', function () {
+                        var eventoId = String($(this).data('eventoId') || '');
+                        var evento = eventosAgendadosPorId[eventoId];
+                        if (!evento) {
+                            return;
+                        }
+                        abrirModalAgendamentoComFechamentoTurno(evento);
+                    });
+                }
+
+                function abrirModalTurno(event) {
+                    if (!event || !event.agendaId || !event.start || !event.end) {
+                        return;
+                    }
+                    var descricao = event.start.format('DD/MM/YYYY HH:mm') + ' - ' + event.end.format('HH:mm')
+                        + ' | ' + (event.cargo || '')
+                        + ' | ' + (event.especialidade || 'NAO SE APLICA');
+                    modalTurnoSlotInfoEl.text(descricao);
+                    modalTurnoVagasTotaisEl.text('Vagas: ' + (event.vagasTotais || 0));
+                    modalTurnoVagasOcupadasEl.text('Agendados: ' + (event.vagasOcupadas || 0));
+                    modalTurnoVagasLivresEl.text('Livres: ' + (event.vagasLivres || 0));
+                    modalTurnoAbrirAgendaBtnEl.attr('href', event.url || '#');
+                    modalTurnoNovoBtnEl.prop('disabled', (event.vagasLivres || 0) <= 0);
+                    modalTurnoNovoBtnEl.off('click').on('click', function () {
+                        modalTurnoEl.one('hidden.bs.modal', function () {
+                            abrirModalSessao(event);
+                        });
+                        modalTurnoEl.modal('hide');
+                    });
+
+                    renderPacientesTurno(event.agendaId);
+                    modalTurnoEl.modal('show');
                 }
 
                 function abrirModalAgendamento(event) {
@@ -1007,10 +1272,14 @@
                         }
                     },
                     eventClick: function (event) {
-                    if (event.isSessao) {
-                        abrirModalSessao(event);
-                        return false;
-                    }
+                        if (event.isSessao && event.modoAgenda === 'CAPACIDADE_TURNO') {
+                            abrirModalTurno(event);
+                            return false;
+                        }
+                        if (event.isLivre || (event.isSessao && event.modoAgenda === 'HORARIO_SESSAO')) {
+                            abrirModalSessao(event);
+                            return false;
+                        }
                         abrirModalAgendamento(event);
                         return false;
                     }

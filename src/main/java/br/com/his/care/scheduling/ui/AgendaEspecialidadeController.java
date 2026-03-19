@@ -27,8 +27,10 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import br.com.his.access.context.UnidadeContext;
 import br.com.his.access.repository.CargoColaboradorRepository;
 import br.com.his.access.service.OperationalPermissionService;
+import br.com.his.care.scheduling.dto.AgendaCalendarioLivreDto;
 import br.com.his.care.scheduling.dto.AgendaEspecialidadeForm;
 import br.com.his.care.scheduling.dto.AgendaCalendarioEventoDto;
+import br.com.his.care.scheduling.dto.AgendaCalendarioSessaoDto;
 import br.com.his.care.scheduling.dto.AgendaMapaMensalItemDto;
 import br.com.his.care.scheduling.dto.AgendaPacienteForm;
 import br.com.his.care.scheduling.dto.AgendaReagendamentoForm;
@@ -130,28 +132,46 @@ public class AgendaEspecialidadeController {
             fim = tmp;
         }
 
+        Long cargoSelecionadoId = cargoColaboradorId;
+        Long especialidadeSelecionadaId = cargoSelecionadoId == null ? null : especialidadeId;
+        boolean filtroCalendarioAplicado = cargoSelecionadoId != null;
+
         model.addAttribute("cargos", cargoColaboradorRepository.findAssistenciaisAtivosOrderByDescricaoAsc());
         model.addAttribute("especialidades", especialidadeAdminService.listarAtivas());
-        model.addAttribute("cargoColaboradorSelecionadoId", cargoColaboradorId);
-        model.addAttribute("especialidadeSelecionadaId", especialidadeId);
+        model.addAttribute("cargoColaboradorSelecionadoId", cargoSelecionadoId);
+        model.addAttribute("especialidadeSelecionadaId", especialidadeSelecionadaId);
         model.addAttribute("dataInicio", inicio);
         model.addAttribute("dataFim", fim);
         model.addAttribute("mostrarLivres", mostrarLivres);
+        model.addAttribute("filtroCalendarioAplicado", filtroCalendarioAplicado);
         model.addAttribute("pacientesDisponiveis", pacienteService.listarAtivosNaoMergeadosParaSelecao());
         model.addAttribute("tiposVaga", TipoVagaAgenda.values());
         model.addAttribute("periodicidadesRecorrencia", PeriodicidadeRecorrenciaAgendamento.values());
-        var eventosCalendario = agendaService.listarEventosCalendario(unidadeId, cargoColaboradorId, especialidadeId, inicio, fim);
-        var sessoesCalendario = agendaService.listarSessoesCalendario(unidadeId, cargoColaboradorId, especialidadeId, inicio, fim);
+
+        List<AgendaCalendarioEventoDto> eventosCalendario = List.of();
+        List<AgendaCalendarioSessaoDto> sessoesCalendario = List.of();
+        List<AgendaCalendarioLivreDto> horariosLivresCalendario = List.of();
+        long totalVagas = 0;
+        long vagasOcupadas = 0;
+        long vagasLivres = 0;
+
+        if (filtroCalendarioAplicado) {
+            eventosCalendario = agendaService.listarEventosCalendario(unidadeId, cargoSelecionadoId, especialidadeSelecionadaId, inicio, fim);
+            sessoesCalendario = agendaService.listarSessoesCalendario(unidadeId, cargoSelecionadoId, especialidadeSelecionadaId, inicio, fim);
+            horariosLivresCalendario = agendaService.listarHorariosLivresParaCalendario(unidadeId, cargoSelecionadoId, especialidadeSelecionadaId, inicio, fim);
+            totalVagas = sessoesCalendario.stream().mapToLong(item -> item.getVagasTotais()).sum();
+            vagasOcupadas = sessoesCalendario.stream().mapToLong(item -> item.getVagasOcupadas()).sum();
+            vagasLivres = sessoesCalendario.stream().mapToLong(item -> item.getVagasLivres()).sum();
+        }
+
         model.addAttribute("eventosCalendario", eventosCalendario);
         model.addAttribute("sessoesCalendario", sessoesCalendario);
+        model.addAttribute("horariosLivresCalendario", horariosLivresCalendario);
         model.addAttribute("qtdPendente", contarStatus(eventosCalendario, StatusAgendamentoPaciente.PENDENTE));
         model.addAttribute("qtdConfirmado", contarStatus(eventosCalendario, StatusAgendamentoPaciente.CONFIRMADO));
         model.addAttribute("qtdAtendido", contarStatus(eventosCalendario, StatusAgendamentoPaciente.ATENDIDO));
         model.addAttribute("qtdFaltou", contarStatus(eventosCalendario, StatusAgendamentoPaciente.FALTOU));
         model.addAttribute("qtdCancelado", contarStatus(eventosCalendario, StatusAgendamentoPaciente.CANCELADO));
-        long totalVagas = sessoesCalendario.stream().mapToLong(item -> item.getVagasTotais()).sum();
-        long vagasOcupadas = sessoesCalendario.stream().mapToLong(item -> item.getVagasOcupadas()).sum();
-        long vagasLivres = sessoesCalendario.stream().mapToLong(item -> item.getVagasLivres()).sum();
         model.addAttribute("totalVagasSessoes", totalVagas);
         model.addAttribute("vagasOcupadasSessoes", vagasOcupadas);
         model.addAttribute("vagasLivresSessoes", vagasLivres);
