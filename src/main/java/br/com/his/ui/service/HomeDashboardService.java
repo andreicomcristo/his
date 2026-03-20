@@ -72,7 +72,7 @@ public class HomeDashboardService {
                 select count(l.id)
                 from leito l
                 where l.unidade_id = ?
-                  and l.ativo = true
+                  and l.dt_cancelamento is null
                   and l.assistencial = true
                 """, unidadeId);
 
@@ -81,7 +81,7 @@ public class HomeDashboardService {
                 from leito l
                 join natureza_operacional_leito nol on nol.id = l.natureza_operacional_id
                 where l.unidade_id = ?
-                  and l.ativo = true
+                  and l.dt_cancelamento is null
                   and l.assistencial = true
                   and nol.virtual_superlotacao = true
                 """, unidadeId);
@@ -93,7 +93,7 @@ public class HomeDashboardService {
                 left join internacao i on i.id = lo.internacao_id
                 left join observacao o on o.id = lo.observacao_id
                 where l.unidade_id = ?
-                  and l.ativo = true
+                  and l.dt_cancelamento is null
                   and l.assistencial = true
                   and (i.id is null or i.data_hora_cancelamento is null)
                   and (o.id is null or o.data_hora_cancelamento is null)

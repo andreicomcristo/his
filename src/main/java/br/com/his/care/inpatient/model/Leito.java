@@ -1,25 +1,6 @@
 package br.com.his.care.inpatient.model;
 
-import br.com.his.care.attendance.api.dto.*;
-import br.com.his.care.attendance.dto.*;
-import br.com.his.care.attendance.model.*;
-import br.com.his.care.attendance.repository.*;
-import br.com.his.care.attendance.service.*;
-import br.com.his.care.admission.dto.*;
-import br.com.his.care.admission.model.*;
-import br.com.his.care.admission.repository.*;
-import br.com.his.care.triage.dto.*;
-import br.com.his.care.triage.model.*;
-import br.com.his.care.triage.repository.*;
-import br.com.his.care.inpatient.dto.*;
-import br.com.his.care.inpatient.model.*;
-import br.com.his.care.inpatient.repository.*;
-import br.com.his.care.inpatient.service.*;
-import br.com.his.care.episode.model.*;
-import br.com.his.care.episode.repository.*;
-import br.com.his.care.timeline.dto.*;
-import br.com.his.care.timeline.model.*;
-import br.com.his.care.timeline.repository.*;
+import java.time.LocalDateTime;
 
 import br.com.his.access.model.Unidade;
 import jakarta.persistence.Column;
@@ -75,8 +56,23 @@ public class Leito {
     @JoinColumn(name = "natureza_operacional_id", nullable = false)
     private NaturezaOperacionalLeito naturezaOperacional;
 
-    @Column(nullable = false)
-    private boolean ativo;
+    @Column(name = "dt_cadastro", nullable = false)
+    private LocalDateTime dtCadastro;
+
+    @Column(name = "dt_cancelamento")
+    private LocalDateTime dtCancelamento;
+
+    @Column(name = "dt_atualizacao", nullable = false)
+    private LocalDateTime dtAtualizacao;
+
+    @Column(name = "cadastro_user_id")
+    private Long cadastroUserId;
+
+    @Column(name = "atualizacao_user_id")
+    private Long atualizacaoUserId;
+
+    @Column(name = "cancelamento_user_id")
+    private Long cancelamentoUserId;
 
     public Long getId() {
         return id;
@@ -166,11 +162,51 @@ public class Leito {
         this.permiteDestinoDefinitivo = permiteDestinoDefinitivo;
     }
 
-    public boolean isAtivo() {
-        return ativo;
+    public LocalDateTime getDtCadastro() {
+        return dtCadastro;
     }
 
-    public void setAtivo(boolean ativo) {
-        this.ativo = ativo;
+    public void setDtCadastro(LocalDateTime dtCadastro) {
+        this.dtCadastro = dtCadastro;
+    }
+
+    public LocalDateTime getDtCancelamento() {
+        return dtCancelamento;
+    }
+
+    public void setDtCancelamento(LocalDateTime dtCancelamento) {
+        this.dtCancelamento = dtCancelamento;
+    }
+
+    public LocalDateTime getDtAtualizacao() {
+        return dtAtualizacao;
+    }
+
+    public void setDtAtualizacao(LocalDateTime dtAtualizacao) {
+        this.dtAtualizacao = dtAtualizacao;
+    }
+
+    public Long getCadastroUserId() {
+        return cadastroUserId;
+    }
+
+    public void setCadastroUserId(Long cadastroUserId) {
+        this.cadastroUserId = cadastroUserId;
+    }
+
+    public Long getAtualizacaoUserId() {
+        return atualizacaoUserId;
+    }
+
+    public void setAtualizacaoUserId(Long atualizacaoUserId) {
+        this.atualizacaoUserId = atualizacaoUserId;
+    }
+
+    public Long getCancelamentoUserId() {
+        return cancelamentoUserId;
+    }
+
+    public void setCancelamentoUserId(Long cancelamentoUserId) {
+        this.cancelamentoUserId = cancelamentoUserId;
     }
 }

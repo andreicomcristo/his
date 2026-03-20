@@ -38,13 +38,22 @@ public class LeitoAdminController {
         return "pages/care/inpatient/admin/leitos/list";
     }
 
+    @GetMapping("/cancelados")
+    public String listarCancelados(@RequestParam(required = false) String q, Model model) {
+        var items = service.listarCancelados(q);
+        model.addAttribute("items", items);
+        model.addAttribute("mapaModalidades", service.mapaModalidadesDescricao(items));
+        model.addAttribute("q", q);
+        return "pages/care/inpatient/admin/leitos/cancel_list";
+    }
+
     @GetMapping("/novo")
     public String novo(Model model) {
         if (!model.containsAttribute("form")) {
             model.addAttribute("form", new LeitoForm());
         }
         model.addAttribute("modoEdicao", false);
-        populateModel(model);
+        populateModel(model, (LeitoForm) model.getAttribute("form"));
         return "pages/care/inpatient/admin/leitos/form";
     }
 
@@ -55,7 +64,7 @@ public class LeitoAdminController {
                         RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
             model.addAttribute("modoEdicao", false);
-            populateModel(model);
+            populateModel(model, form);
             return "pages/care/inpatient/admin/leitos/form";
         }
         try {
@@ -65,17 +74,18 @@ public class LeitoAdminController {
         } catch (IllegalArgumentException ex) {
             model.addAttribute("modoEdicao", false);
             model.addAttribute("errorMessage", ex.getMessage());
-            populateModel(model);
+            populateModel(model, form);
             return "pages/care/inpatient/admin/leitos/form";
         }
     }
 
     @GetMapping("/{id}/editar")
     public String editar(@PathVariable Long id, Model model) {
-        model.addAttribute("form", service.toForm(service.buscar(id)));
+        LeitoForm form = service.toForm(service.buscar(id));
+        model.addAttribute("form", form);
         model.addAttribute("modoEdicao", true);
         model.addAttribute("itemId", id);
-        populateModel(model);
+        populateModel(model, form);
         return "pages/care/inpatient/admin/leitos/form";
     }
 
@@ -88,7 +98,7 @@ public class LeitoAdminController {
         if (bindingResult.hasErrors()) {
             model.addAttribute("modoEdicao", true);
             model.addAttribute("itemId", id);
-            populateModel(model);
+            populateModel(model, form);
             return "pages/care/inpatient/admin/leitos/form";
         }
         try {
@@ -99,7 +109,7 @@ public class LeitoAdminController {
             model.addAttribute("modoEdicao", true);
             model.addAttribute("itemId", id);
             model.addAttribute("errorMessage", ex.getMessage());
-            populateModel(model);
+            populateModel(model, form);
             return "pages/care/inpatient/admin/leitos/form";
         }
     }
@@ -111,9 +121,38 @@ public class LeitoAdminController {
         return "redirect:/ui/admin/leitos";
     }
 
-    private void populateModel(Model model) {
+    @PostMapping("/{id}/restaurar")
+    public String restaurar(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        try {
+            service.restaurar(id);
+            redirectAttributes.addFlashAttribute("successMessage", "Leito restaurado com sucesso");
+        } catch (IllegalArgumentException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+        }
+        return "redirect:/ui/admin/leitos/cancelados";
+    }
+
+    @PostMapping("/{id}/excluir-permanente")
+    public String excluirPermanente(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        try {
+            service.excluirPermanente(id);
+            redirectAttributes.addFlashAttribute("successMessage", "Leito excluido permanentemente com sucesso");
+        } catch (IllegalArgumentException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+        }
+        return "redirect:/ui/admin/leitos/cancelados";
+    }
+
+    private void populateModel(Model model, LeitoForm form) {
         model.addAttribute("unidades", unidadeAdminService.listar(null));
-        model.addAttribute("areas", service.listarAreasComLeito());
+        var areas = service.listarAreasComLeito();
+        model.addAttribute("areas", areas);
+        var areaLegado = (form == null || form.getAreaId() == null)
+                ? null
+                : areas.stream().anyMatch(item -> item.getId().equals(form.getAreaId()))
+                        ? null
+                        : service.buscarAreaCanceladaOpcional(form.getAreaId()).orElse(null);
+        model.addAttribute("areaLegado", areaLegado);
         model.addAttribute("tiposLeito", service.listarTiposAtivos());
         model.addAttribute("perfisLeito", service.listarPerfisAtivos());
         model.addAttribute("naturezasOperacionais", service.listarNaturezasOperacionaisAtivas());

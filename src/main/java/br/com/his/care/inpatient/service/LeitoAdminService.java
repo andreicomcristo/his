@@ -1,17 +1,21 @@
 package br.com.his.care.inpatient.service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import br.com.his.access.model.Unidade;
 import br.com.his.access.repository.UnidadeRepository;
+import br.com.his.access.service.UsuarioAuditoriaService;
 import br.com.his.care.inpatient.dto.LeitoForm;
 import br.com.his.care.inpatient.model.Area;
 import br.com.his.care.inpatient.model.Leito;
@@ -41,6 +45,7 @@ public class LeitoAdminService {
     private final NaturezaOperacionalLeitoRepository naturezaOperacionalLeitoRepository;
     private final LeitoModalidadeTipoRepository leitoModalidadeTipoRepository;
     private final LeitoModalidadeRepository leitoModalidadeRepository;
+    private final UsuarioAuditoriaService usuarioAuditoriaService;
 
     public LeitoAdminService(LeitoRepository leitoRepository,
                              UnidadeRepository unidadeRepository,
@@ -50,7 +55,8 @@ public class LeitoAdminService {
                              PerfilLeitoRepository perfilLeitoRepository,
                              NaturezaOperacionalLeitoRepository naturezaOperacionalLeitoRepository,
                              LeitoModalidadeTipoRepository leitoModalidadeTipoRepository,
-                             LeitoModalidadeRepository leitoModalidadeRepository) {
+                             LeitoModalidadeRepository leitoModalidadeRepository,
+                             UsuarioAuditoriaService usuarioAuditoriaService) {
         this.leitoRepository = leitoRepository;
         this.unidadeRepository = unidadeRepository;
         this.areaRepository = areaRepository;
@@ -60,15 +66,25 @@ public class LeitoAdminService {
         this.naturezaOperacionalLeitoRepository = naturezaOperacionalLeitoRepository;
         this.leitoModalidadeTipoRepository = leitoModalidadeTipoRepository;
         this.leitoModalidadeRepository = leitoModalidadeRepository;
+        this.usuarioAuditoriaService = usuarioAuditoriaService;
     }
 
     @Transactional(readOnly = true)
     public List<Leito> listar(String q) {
         String filtro = normalize(q);
-        if (filtro == null) {
+        if (filtro == null || filtro.isBlank()) {
             return leitoRepository.findAllWithReferencesOrderByNome();
         }
         return leitoRepository.buscarPorFiltro(filtro);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Leito> listarCancelados(String q) {
+        String filtro = normalize(q);
+        if (filtro == null || filtro.isBlank()) {
+            return leitoRepository.findAllCanceladosWithReferencesOrderByNome();
+        }
+        return leitoRepository.buscarCanceladosPorFiltro(filtro);
     }
 
     @Transactional(readOnly = true)
@@ -97,6 +113,14 @@ public class LeitoAdminService {
     }
 
     @Transactional(readOnly = true)
+    public Optional<Area> buscarAreaCanceladaOpcional(Long areaId) {
+        if (areaId == null) {
+            return Optional.empty();
+        }
+        return areaRepository.findByIdAndDtCancelamentoIsNotNull(areaId);
+    }
+
+    @Transactional(readOnly = true)
     public Map<Long, String> mapaModalidadesDescricao(List<Leito> leitos) {
         if (leitos == null || leitos.isEmpty()) {
             return Map.of();
@@ -117,12 +141,27 @@ public class LeitoAdminService {
 
     @Transactional(readOnly = true)
     public Leito buscar(Long id) {
-        return leitoRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Leito nao encontrado"));
+        return leitoRepository.findByIdAndDtCancelamentoIsNull(id)
+                .orElseThrow(() -> new IllegalArgumentException("Leito nao encontrado"));
+    }
+
+    @Transactional(readOnly = true)
+    public Leito buscarCancelado(Long id) {
+        return leitoRepository.findByIdAndDtCancelamentoIsNotNull(id)
+                .orElseThrow(() -> new IllegalArgumentException("Leito cancelado nao encontrado"));
     }
 
     @Transactional
     public Leito criar(LeitoForm form) {
+        LocalDateTime now = LocalDateTime.now();
+        Long usuarioAtualId = currentUserId();
         Leito leito = new Leito();
+        leito.setDtCadastro(now);
+        leito.setDtAtualizacao(now);
+        leito.setCadastroUserId(usuarioAtualId);
+        leito.setAtualizacaoUserId(usuarioAtualId);
+        leito.setDtCancelamento(null);
+        leito.setCancelamentoUserId(null);
         List<LeitoModalidadeTipo> modalidades = apply(leito, form);
         Leito saved = leitoRepository.save(leito);
         salvarModalidades(saved, modalidades);
@@ -131,8 +170,12 @@ public class LeitoAdminService {
 
     @Transactional
     public Leito atualizar(Long id, LeitoForm form) {
+        LocalDateTime now = LocalDateTime.now();
+        Long usuarioAtualId = currentUserId();
         Leito leito = buscar(id);
         List<LeitoModalidadeTipo> modalidades = apply(leito, form);
+        leito.setDtAtualizacao(now);
+        leito.setAtualizacaoUserId(usuarioAtualId);
         Leito saved = leitoRepository.save(leito);
         salvarModalidades(saved, modalidades);
         return saved;
@@ -140,8 +183,39 @@ public class LeitoAdminService {
 
     @Transactional
     public void excluir(Long id) {
-        leitoModalidadeRepository.deleteByLeitoId(id);
-        leitoRepository.delete(buscar(id));
+        LocalDateTime now = LocalDateTime.now();
+        Long usuarioAtualId = currentUserId();
+        Leito leito = buscar(id);
+        leito.setDtCancelamento(now);
+        leito.setCancelamentoUserId(usuarioAtualId);
+        leito.setDtAtualizacao(now);
+        leito.setAtualizacaoUserId(usuarioAtualId);
+        leitoRepository.save(leito);
+    }
+
+    @Transactional
+    public void restaurar(Long id) {
+        LocalDateTime now = LocalDateTime.now();
+        Long usuarioAtualId = currentUserId();
+        Leito leito = buscarCancelado(id);
+        leito.setDtCancelamento(null);
+        leito.setCancelamentoUserId(null);
+        leito.setDtAtualizacao(now);
+        leito.setAtualizacaoUserId(usuarioAtualId);
+        leitoRepository.save(leito);
+    }
+
+    @Transactional
+    public void excluirPermanente(Long id) {
+        Leito leito = buscarCancelado(id);
+        try {
+            leitoModalidadeRepository.deleteByLeitoId(leito.getId());
+            leitoModalidadeRepository.flush();
+            leitoRepository.delete(leito);
+            leitoRepository.flush();
+        } catch (DataIntegrityViolationException ex) {
+            throw new IllegalArgumentException("Leito possui vinculos e nao pode ser excluido permanentemente");
+        }
     }
 
     @Transactional(readOnly = true)
@@ -159,7 +233,6 @@ public class LeitoAdminService {
         form.setNaturezaOperacionalId(leito.getNaturezaOperacional() == null
                 ? null
                 : leito.getNaturezaOperacional().getId());
-        form.setAtivo(leito.isAtivo());
         form.setModalidadeIds(leitoModalidadeRepository.findByLeitoIdWithTipoOrderByDescricaoAsc(leito.getId())
                 .stream()
                 .map(item -> item.getModalidadeTipo().getId())
@@ -170,8 +243,16 @@ public class LeitoAdminService {
     private List<LeitoModalidadeTipo> apply(Leito leito, LeitoForm form) {
         Unidade unidade = unidadeRepository.findById(form.getUnidadeId())
                 .orElseThrow(() -> new IllegalArgumentException("Unidade nao encontrada"));
-        Area area = areaRepository.findByIdAndDtCancelamentoIsNull(form.getAreaId())
-                .orElseThrow(() -> new IllegalArgumentException("Area nao encontrada"));
+        Area areaAtual = leito.getArea();
+        Area area;
+        if (areaAtual != null
+                && areaAtual.getId() != null
+                && areaAtual.getId().equals(form.getAreaId())) {
+            area = areaAtual;
+        } else {
+            area = areaRepository.findByIdAndDtCancelamentoIsNull(form.getAreaId())
+                    .orElseThrow(() -> new IllegalArgumentException("Area nao encontrada"));
+        }
         TipoLeito tipoLeito = tipoLeitoRepository.findById(form.getTipoLeitoId())
                 .orElseThrow(() -> new IllegalArgumentException("Tipo de leito nao encontrado"));
         PerfilLeito perfilLeito = null;
@@ -228,7 +309,6 @@ public class LeitoAdminService {
         leito.setPermiteDestinoDefinitivo(form.isPermiteDestinoDefinitivo());
         leito.setAssistencial(form.isAssistencial());
         leito.setNaturezaOperacional(naturezaOperacional);
-        leito.setAtivo(form.isAtivo());
         return modalidades;
     }
 
@@ -257,6 +337,12 @@ public class LeitoAdminService {
     private static String normalizeUpper(String value) {
         String normalized = normalize(value);
         return normalized == null ? null : normalized.toUpperCase();
+    }
+
+    private Long currentUserId() {
+        return usuarioAuditoriaService.usuarioAtual()
+                .map(usuario -> usuario.getId())
+                .orElse(null);
     }
 }
 

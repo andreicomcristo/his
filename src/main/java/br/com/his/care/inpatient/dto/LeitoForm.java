@@ -38,8 +38,6 @@ public class LeitoForm {
     @NotNull(message = "Natureza operacional e obrigatoria")
     private Long naturezaOperacionalId;
 
-    private boolean ativo = true;
-
     public Long getUnidadeId() {
         return unidadeId;
     }
@@ -128,11 +126,4 @@ public class LeitoForm {
         this.permiteDestinoDefinitivo = permiteDestinoDefinitivo;
     }
 
-    public boolean isAtivo() {
-        return ativo;
-    }
-
-    public void setAtivo(boolean ativo) {
-        this.ativo = ativo;
-    }
 }

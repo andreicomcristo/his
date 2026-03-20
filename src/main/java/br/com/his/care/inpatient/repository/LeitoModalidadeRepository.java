@@ -67,7 +67,7 @@ public interface LeitoModalidadeRepository extends JpaRepository<LeitoModalidade
             join fetch l.area a
             join fetch l.unidade u
             where l.unidade.id = :unidadeId
-              and l.ativo = true
+              and l.dtCancelamento is null
               and lm.modalidadeTipo.ativo = true
               and upper(lm.modalidadeTipo.codigo) = upper(:modalidadeCodigo)
             order by a.descricao, l.codigo

@@ -1167,7 +1167,7 @@ public class IndicadorLeanService {
                 left join perfil_leito pl on pl.id = l.perfil_leito_id
                 join natureza_operacional_leito nol on nol.id = l.natureza_operacional_id
                 where l.unidade_id = ?
-                  and l.ativo = true
+                  and l.dt_cancelamento is null
                   and l.assistencial = true
                 """);
         List<Object> params = new ArrayList<>();
@@ -1208,7 +1208,7 @@ public class IndicadorLeanService {
                 left join internacao i on i.id = lo.internacao_id
                 left join observacao o on o.id = lo.observacao_id
                 where l.unidade_id = ?
-                  and l.ativo = true
+                  and l.dt_cancelamento is null
                   and l.assistencial = true
                   and lo.data_hora_entrada < ?
                   and coalesce(lo.data_hora_saida, ?) > ?

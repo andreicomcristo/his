@@ -269,11 +269,8 @@ public class LeitoOcupacaoService {
                                String modalidadeCodigo,
                                boolean exigeDestinoDefinitivo,
                                LeitoOcupacao ocupacaoAtual) {
-        Leito leito = leitoRepository.findById(leitoId)
+        Leito leito = leitoRepository.findByIdAndDtCancelamentoIsNull(leitoId)
                 .orElseThrow(() -> new IllegalArgumentException("Leito nao encontrado"));
-        if (!leito.isAtivo()) {
-            throw new IllegalArgumentException("Leito inativo");
-        }
         if (!Objects.equals(leito.getUnidade().getId(), unidadeId)) {
             throw new IllegalArgumentException("Leito nao pertence a unidade do atendimento");
         }
