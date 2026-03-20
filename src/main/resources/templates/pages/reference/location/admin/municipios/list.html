@@ -54,7 +54,7 @@
                 <thead>
                 <tr>
                     <th>ID</th>
-                    <th>Nome</th>
+                    <th>Descricao</th>
                     <th>UF</th>
                     <th class="text-center">Opcoes</th>
                 </tr>
@@ -65,7 +65,7 @@
                 </tr>
                 <tr th:each="item : ${items}">
                     <td th:text="${item.id}"></td>
-                    <td th:text="${item.nome}"></td>
+                    <td th:text="${item.descricao}"></td>
                     <td th:text="${item.unidadeFederativa.sigla}"></td>
                     <td class="text-center">
                         <div class="dropdown d-inline-block">
@@ -85,7 +85,7 @@
                                         class="dropdown-item text-danger js-municipio-action"
                                         data-action="excluir"
                                         th:data-action-url="@{'/ui/admin/municipios/' + ${item.id} + '/excluir'}"
-                                        th:data-item-nome="${item.nome}">
+                                        th:data-item-descricao="${item.descricao}">
                                     <i class="nav-link-icon lnr-trash mr-2"></i><span>Excluir</span>
                                 </button>
                             </div>
@@ -138,8 +138,8 @@
             actionButtons.forEach(function (button) {
                 button.addEventListener('click', function () {
                     pendingActionUrl = this.getAttribute('data-action-url');
-                    var pendingNome = this.getAttribute('data-item-nome') || '';
-                    modalMessageEl.textContent = 'Deseja excluir o municipio "' + pendingNome + '"? Ele recebera dt_cancelamento e nao sera mais listado.';
+                    var pendingDescricao = this.getAttribute('data-item-descricao') || '';
+                    modalMessageEl.textContent = 'Deseja excluir o municipio "' + pendingDescricao + '"? Ele recebera dt_cancelamento e nao sera mais listado.';
 
                     if (window.jQuery) {
                         var dropdown = window.jQuery(this).closest('.dropdown');

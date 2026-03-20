@@ -146,7 +146,7 @@ public class ProcedenciaAdminService {
         if (unidadeFederativaId == null) {
             return List.of();
         }
-        return municipioRepository.findByUnidadeFederativaIdOrderByNome(unidadeFederativaId);
+        return municipioRepository.findByUnidadeFederativaIdOrderByDescricao(unidadeFederativaId);
     }
 
     @Transactional(readOnly = true)
@@ -223,7 +223,7 @@ public class ProcedenciaAdminService {
         }
         procedencia.setBairro(null);
         procedencia.setMunicipio(municipio);
-        procedencia.setDescricao(normalizeUpper(municipio.getNome()));
+        procedencia.setDescricao(normalizeUpper(municipio.getDescricao()));
     }
 
     private Unidade resolveUnidade(Long unidadeId) {

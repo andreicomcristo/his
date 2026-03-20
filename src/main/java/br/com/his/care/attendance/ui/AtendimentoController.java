@@ -1094,7 +1094,7 @@ public class AtendimentoController {
         model.addAttribute("ufs", unidadeFederativaRepository.findAllByOrderByDescricaoAsc());
         model.addAttribute("municipios", form.getUnidadeFederativaId() == null
                 ? List.of()
-                : MunicipioRepository.findByUnidadeFederativaIdOrderByNome(form.getUnidadeFederativaId()));
+                : MunicipioRepository.findByUnidadeFederativaIdOrderByDescricao(form.getUnidadeFederativaId()));
     }
 
     private String registerChegadaToken(HttpSession session) {

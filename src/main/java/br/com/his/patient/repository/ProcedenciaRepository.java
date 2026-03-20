@@ -26,7 +26,7 @@ public interface ProcedenciaRepository extends JpaRepository<Procedencia, Long> 
                or upper(coalesce(tp.descricao, '')) like concat('%', upper(:q), '%')
                or upper(coalesce(u.nome, '')) like concat('%', upper(:q), '%')
                or upper(coalesce(b.descricao, '')) like concat('%', upper(:q), '%')
-               or upper(coalesce(m.nome, '')) like concat('%', upper(:q), '%')
+               or upper(coalesce(m.descricao, '')) like concat('%', upper(:q), '%')
             order by p.descricao, p.id
             """)
     List<Procedencia> buscarPorFiltro(@Param("q") String q);
@@ -44,7 +44,7 @@ public interface ProcedenciaRepository extends JpaRepository<Procedencia, Long> 
                 or upper(coalesce(tp.descricao, '')) like concat('%', upper(:q), '%')
                 or upper(coalesce(u.nome, '')) like concat('%', upper(:q), '%')
                 or upper(coalesce(b.descricao, '')) like concat('%', upper(:q), '%')
-                or upper(coalesce(m.nome, '')) like concat('%', upper(:q), '%')
+                or upper(coalesce(m.descricao, '')) like concat('%', upper(:q), '%')
               )
             order by p.descricao, p.id
             """)

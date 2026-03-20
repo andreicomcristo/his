@@ -89,7 +89,7 @@ public class PacienteController {
     @GetMapping("/municipios-por-uf/{unidadeFederativaId}")
     @ResponseBody
     public List<PacienteLookupOption> MunicipiosPorUf(@PathVariable Long unidadeFederativaId) {
-        return MunicipioRepository.findByUnidadeFederativaIdOrderByNome(unidadeFederativaId)
+        return MunicipioRepository.findByUnidadeFederativaIdOrderByDescricao(unidadeFederativaId)
                 .stream()
                 .map(this::toMunicipioOption)
                 .toList();
@@ -388,11 +388,11 @@ public class PacienteController {
         }
         model.addAttribute("municipios", unidadeFederativaId == null
                 ? List.of()
-                : MunicipioRepository.findByUnidadeFederativaIdOrderByNome(unidadeFederativaId));
+                : MunicipioRepository.findByUnidadeFederativaIdOrderByDescricao(unidadeFederativaId));
     }
 
     private PacienteLookupOption toMunicipioOption(Municipio Municipio) {
-        return new PacienteLookupOption(Municipio.getId(), Municipio.getNome());
+        return new PacienteLookupOption(Municipio.getId(), Municipio.getDescricao());
     }
 }
 

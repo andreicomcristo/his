@@ -15,9 +15,12 @@ import br.com.his.access.repository.TipoUnidadeRepository;
 public class TipoUnidadeAdminService {
 
     private final TipoUnidadeRepository repository;
+    private final UsuarioAuditoriaService usuarioAuditoriaService;
 
-    public TipoUnidadeAdminService(TipoUnidadeRepository repository) {
+    public TipoUnidadeAdminService(TipoUnidadeRepository repository,
+                                   UsuarioAuditoriaService usuarioAuditoriaService) {
         this.repository = repository;
+        this.usuarioAuditoriaService = usuarioAuditoriaService;
     }
 
     @Transactional(readOnly = true)
@@ -56,32 +59,53 @@ public class TipoUnidadeAdminService {
 
     @Transactional
     public TipoUnidade criar(TipoUnidadeForm form) {
+        LocalDateTime now = LocalDateTime.now();
+        Long usuarioAtualId = currentUserId();
         validarCodigoDuplicado(form.getCodigo(), null);
         TipoUnidade item = new TipoUnidade();
+        item.setDtCadastro(now);
+        item.setDtAtualizacao(now);
+        item.setCadastroUserId(usuarioAtualId);
+        item.setAtualizacaoUserId(usuarioAtualId);
         apply(item, form);
         item.setDtCancelamento(null);
+        item.setCancelamentoUserId(null);
         return repository.save(item);
     }
 
     @Transactional
     public TipoUnidade atualizar(Long id, TipoUnidadeForm form) {
+        LocalDateTime now = LocalDateTime.now();
+        Long usuarioAtualId = currentUserId();
         validarCodigoDuplicado(form.getCodigo(), id);
         TipoUnidade item = buscarAtivo(id);
         apply(item, form);
+        item.setDtAtualizacao(now);
+        item.setAtualizacaoUserId(usuarioAtualId);
         return repository.save(item);
     }
 
     @Transactional
     public void excluir(Long id) {
+        LocalDateTime now = LocalDateTime.now();
+        Long usuarioAtualId = currentUserId();
         TipoUnidade item = buscarAtivo(id);
-        item.setDtCancelamento(LocalDateTime.now());
+        item.setDtCancelamento(now);
+        item.setCancelamentoUserId(usuarioAtualId);
+        item.setDtAtualizacao(now);
+        item.setAtualizacaoUserId(usuarioAtualId);
         repository.save(item);
     }
 
     @Transactional
     public void restaurar(Long id) {
+        LocalDateTime now = LocalDateTime.now();
+        Long usuarioAtualId = currentUserId();
         TipoUnidade item = buscarCancelado(id);
         item.setDtCancelamento(null);
+        item.setCancelamentoUserId(null);
+        item.setDtAtualizacao(now);
+        item.setAtualizacaoUserId(usuarioAtualId);
         repository.save(item);
     }
 
@@ -128,5 +152,11 @@ public class TipoUnidadeAdminService {
     private static String normalizeUpper(String value) {
         String normalized = normalize(value);
         return normalized == null ? null : normalized.toUpperCase();
+    }
+
+    private Long currentUserId() {
+        return usuarioAuditoriaService.usuarioAtual()
+                .map(usuario -> usuario.getId())
+                .orElse(null);
     }
 }

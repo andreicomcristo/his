@@ -459,7 +459,7 @@
                                 <label>Municipio</label>
                                 <select class="form-control" th:field="*{pacienteForm.municipioId}" id="municipioId">
                                     <option value="">Selecione</option>
-                                    <option th:each="item : ${municipios}" th:value="${item.id}" th:text="${item.nome}"></option>
+                                    <option th:each="item : ${municipios}" th:value="${item.id}" th:text="${item.descricao}"></option>
                                 </select>
                             </div>
                         </div>

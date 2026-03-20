@@ -142,7 +142,7 @@ public class MunicipioAdminController {
     }
 
     private PacienteLookupOption toOption(Municipio municipio) {
-        return new PacienteLookupOption(municipio.getId(), municipio.getNome());
+        return new PacienteLookupOption(municipio.getId(), municipio.getDescricao());
     }
 
     private void populateModel(Model model, MunicipioForm form) {

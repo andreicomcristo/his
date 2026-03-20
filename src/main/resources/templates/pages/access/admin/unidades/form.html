@@ -83,14 +83,14 @@
                         <select class="multiselect-dropdown form-control"
                                 th:field="*{municipioId}"
                                 id="municipioId"
-                                th:attr="data-legado-id=${municipioLegado != null ? municipioLegado.id : ''},data-legado-label=${municipioLegado != null ? municipioLegado.nome + ' (cancelado - legado)' : ''}">
+                                th:attr="data-legado-id=${municipioLegado != null ? municipioLegado.id : ''},data-legado-label=${municipioLegado != null ? municipioLegado.descricao + ' (cancelado - legado)' : ''}">
                             <option value="">Selecione</option>
                             <option th:if="${municipioLegado != null}"
                                     th:value="${municipioLegado.id}"
-                                    th:text="${municipioLegado.nome + ' (cancelado - legado)'}"></option>
+                                    th:text="${municipioLegado.descricao + ' (cancelado - legado)'}"></option>
                             <option th:each="municipio : ${municipios}"
                                     th:value="${municipio.id}"
-                                    th:text="${municipio.nome}"></option>
+                                    th:text="${municipio.descricao}"></option>
                         </select>
                         <small class="text-warning d-block" th:if="${municipioLegado != null}">
                             Municipio legado cancelado: pode manter este valor, mas novos vinculos devem usar municipio ativo.

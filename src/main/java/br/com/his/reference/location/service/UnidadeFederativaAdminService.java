@@ -8,6 +8,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import br.com.his.access.service.UsuarioAuditoriaService;
 import br.com.his.reference.location.dto.UnidadeFederativaForm;
 import br.com.his.reference.location.model.UnidadeFederativa;
 import br.com.his.reference.location.repository.UnidadeFederativaRepository;
@@ -16,9 +17,12 @@ import br.com.his.reference.location.repository.UnidadeFederativaRepository;
 public class UnidadeFederativaAdminService {
 
     private final UnidadeFederativaRepository repository;
+    private final UsuarioAuditoriaService usuarioAuditoriaService;
 
-    public UnidadeFederativaAdminService(UnidadeFederativaRepository repository) {
+    public UnidadeFederativaAdminService(UnidadeFederativaRepository repository,
+                                         UsuarioAuditoriaService usuarioAuditoriaService) {
         this.repository = repository;
+        this.usuarioAuditoriaService = usuarioAuditoriaService;
     }
 
     @Transactional(readOnly = true)
@@ -63,30 +67,51 @@ public class UnidadeFederativaAdminService {
 
     @Transactional
     public UnidadeFederativa criar(UnidadeFederativaForm form) {
+        LocalDateTime now = LocalDateTime.now();
+        Long usuarioAtualId = currentUserId();
         UnidadeFederativa uf = new UnidadeFederativa();
+        uf.setDtCadastro(now);
+        uf.setDtAtualizacao(now);
+        uf.setCadastroUserId(usuarioAtualId);
+        uf.setAtualizacaoUserId(usuarioAtualId);
         uf.setDtCancelamento(null);
+        uf.setCancelamentoUserId(null);
         apply(uf, form);
         return repository.save(uf);
     }
 
     @Transactional
     public UnidadeFederativa atualizar(Long id, UnidadeFederativaForm form) {
+        LocalDateTime now = LocalDateTime.now();
+        Long usuarioAtualId = currentUserId();
         UnidadeFederativa uf = buscar(id);
         apply(uf, form);
+        uf.setDtAtualizacao(now);
+        uf.setAtualizacaoUserId(usuarioAtualId);
         return repository.save(uf);
     }
 
     @Transactional
     public void excluir(Long id) {
+        LocalDateTime now = LocalDateTime.now();
+        Long usuarioAtualId = currentUserId();
         UnidadeFederativa uf = buscar(id);
-        uf.setDtCancelamento(LocalDateTime.now());
+        uf.setDtCancelamento(now);
+        uf.setCancelamentoUserId(usuarioAtualId);
+        uf.setDtAtualizacao(now);
+        uf.setAtualizacaoUserId(usuarioAtualId);
         repository.save(uf);
     }
 
     @Transactional
     public void restaurar(Long id) {
+        LocalDateTime now = LocalDateTime.now();
+        Long usuarioAtualId = currentUserId();
         UnidadeFederativa uf = buscarCancelada(id);
         uf.setDtCancelamento(null);
+        uf.setCancelamentoUserId(null);
+        uf.setDtAtualizacao(now);
+        uf.setAtualizacaoUserId(usuarioAtualId);
         repository.save(uf);
     }
 
@@ -117,5 +142,11 @@ public class UnidadeFederativaAdminService {
 
     private String normalize(String value) {
         return value == null ? null : value.trim();
+    }
+
+    private Long currentUserId() {
+        return usuarioAuditoriaService.usuarioAtual()
+                .map(usuario -> usuario.getId())
+                .orElse(null);
     }
 }

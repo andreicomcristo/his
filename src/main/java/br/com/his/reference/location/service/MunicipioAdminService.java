@@ -8,6 +8,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import br.com.his.access.service.UsuarioAuditoriaService;
 import br.com.his.reference.location.dto.MunicipioForm;
 import br.com.his.reference.location.model.Municipio;
 import br.com.his.reference.location.model.UnidadeFederativa;
@@ -19,17 +20,21 @@ public class MunicipioAdminService {
 
     private final MunicipioRepository repository;
     private final UnidadeFederativaRepository unidadeFederativaRepository;
+    private final UsuarioAuditoriaService usuarioAuditoriaService;
 
-    public MunicipioAdminService(MunicipioRepository repository, UnidadeFederativaRepository unidadeFederativaRepository) {
+    public MunicipioAdminService(MunicipioRepository repository,
+                                 UnidadeFederativaRepository unidadeFederativaRepository,
+                                 UsuarioAuditoriaService usuarioAuditoriaService) {
         this.repository = repository;
         this.unidadeFederativaRepository = unidadeFederativaRepository;
+        this.usuarioAuditoriaService = usuarioAuditoriaService;
     }
 
     @Transactional(readOnly = true)
     public List<Municipio> listar(String q) {
         String filtro = normalize(q);
         if (filtro == null || filtro.isBlank()) {
-            return repository.findAtivosWithUnidadeFederativaOrderByNome();
+            return repository.findAtivosWithUnidadeFederativaOrderByDescricao();
         }
         return repository.buscarAtivosPorFiltro(filtro);
     }
@@ -38,7 +43,7 @@ public class MunicipioAdminService {
     public List<Municipio> listarCancelados(String q) {
         String filtro = normalize(q);
         if (filtro == null || filtro.isBlank()) {
-            return repository.findCanceladosWithUnidadeFederativaOrderByNome();
+            return repository.findCanceladosWithUnidadeFederativaOrderByDescricao();
         }
         return repository.buscarCanceladosPorFiltro(filtro);
     }
@@ -62,35 +67,56 @@ public class MunicipioAdminService {
 
     @Transactional(readOnly = true)
     public List<Municipio> listarPorUf(Long unidadeFederativaId) {
-        return repository.findByUnidadeFederativaIdOrderByNome(unidadeFederativaId);
+        return repository.findByUnidadeFederativaIdOrderByDescricao(unidadeFederativaId);
     }
 
     @Transactional
     public Municipio criar(MunicipioForm form) {
+        LocalDateTime now = LocalDateTime.now();
+        Long usuarioAtualId = currentUserId();
         Municipio municipio = new Municipio();
+        municipio.setDtCadastro(now);
+        municipio.setDtAtualizacao(now);
+        municipio.setCadastroUserId(usuarioAtualId);
+        municipio.setAtualizacaoUserId(usuarioAtualId);
         municipio.setDtCancelamento(null);
+        municipio.setCancelamentoUserId(null);
         apply(municipio, form);
         return repository.save(municipio);
     }
 
     @Transactional
     public Municipio atualizar(Long id, MunicipioForm form) {
+        LocalDateTime now = LocalDateTime.now();
+        Long usuarioAtualId = currentUserId();
         Municipio municipio = buscar(id);
         apply(municipio, form);
+        municipio.setDtAtualizacao(now);
+        municipio.setAtualizacaoUserId(usuarioAtualId);
         return repository.save(municipio);
     }
 
     @Transactional
     public void excluir(Long id) {
+        LocalDateTime now = LocalDateTime.now();
+        Long usuarioAtualId = currentUserId();
         Municipio municipio = buscar(id);
-        municipio.setDtCancelamento(LocalDateTime.now());
+        municipio.setDtCancelamento(now);
+        municipio.setCancelamentoUserId(usuarioAtualId);
+        municipio.setDtAtualizacao(now);
+        municipio.setAtualizacaoUserId(usuarioAtualId);
         repository.save(municipio);
     }
 
     @Transactional
     public void restaurar(Long id) {
+        LocalDateTime now = LocalDateTime.now();
+        Long usuarioAtualId = currentUserId();
         Municipio municipio = buscarCancelado(id);
         municipio.setDtCancelamento(null);
+        municipio.setCancelamentoUserId(null);
+        municipio.setDtAtualizacao(now);
+        municipio.setAtualizacaoUserId(usuarioAtualId);
         repository.save(municipio);
     }
 
@@ -107,7 +133,7 @@ public class MunicipioAdminService {
 
     public MunicipioForm toForm(Municipio municipio) {
         MunicipioForm form = new MunicipioForm();
-        form.setNome(municipio.getNome());
+        form.setDescricao(municipio.getDescricao());
         form.setCodigoIbge(municipio.getCodigoIbge());
         form.setUnidadeFederativaId(municipio.getUnidadeFederativa().getId());
         return form;
@@ -124,12 +150,18 @@ public class MunicipioAdminService {
             uf = unidadeFederativaRepository.findByIdAndDtCancelamentoIsNull(form.getUnidadeFederativaId())
                     .orElseThrow(() -> new IllegalArgumentException("UF nao encontrada"));
         }
-        municipio.setNome(normalize(form.getNome()).toUpperCase());
+        municipio.setDescricao(normalize(form.getDescricao()).toUpperCase());
         municipio.setCodigoIbge(normalize(form.getCodigoIbge()));
         municipio.setUnidadeFederativa(uf);
     }
 
     private String normalize(String value) {
         return value == null ? null : value.trim();
+    }
+
+    private Long currentUserId() {
+        return usuarioAuditoriaService.usuarioAtual()
+                .map(usuario -> usuario.getId())
+                .orElse(null);
     }
 }

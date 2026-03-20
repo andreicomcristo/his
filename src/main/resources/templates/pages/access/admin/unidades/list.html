@@ -62,7 +62,7 @@
                     <td th:text="${u.nome}"></td>
                     <td th:text="${u.sigla == null ? '-' : u.sigla}"></td>
                     <td th:text="${u.tipoUnidade == null ? '-' : u.tipoUnidade.descricao}"></td>
-                    <td th:text="${u.municipio == null ? '-' : u.municipio.nome + ' - ' + u.municipio.unidadeFederativa.sigla}"></td>
+                    <td th:text="${u.municipio == null ? '-' : u.municipio.descricao + ' - ' + u.municipio.unidadeFederativa.sigla}"></td>
                     <td th:text="${u.cnes}"></td>
                     <td>
                         <span class="badge" th:classappend="${u.ativo} ? 'badge-success' : 'badge-secondary'"

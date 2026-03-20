@@ -21,11 +21,11 @@ public interface BairroRepository extends JpaRepository<Bairro, Long> {
             where b.dtCancelamento is null
               and (
                     upper(b.descricao) like concat('%', upper(:q), '%')
-                 or upper(c.nome) like concat('%', upper(:q), '%')
+                 or upper(c.descricao) like concat('%', upper(:q), '%')
                  or upper(uf.descricao) like concat('%', upper(:q), '%')
                  or upper(uf.sigla) like concat('%', upper(:q), '%')
               )
-            order by uf.sigla, c.nome, b.descricao
+            order by uf.sigla, c.descricao, b.descricao
             """)
     List<Bairro> buscarPorFiltro(String q);
 
@@ -35,7 +35,7 @@ public interface BairroRepository extends JpaRepository<Bairro, Long> {
             join fetch b.municipio c
             join fetch c.unidadeFederativa uf
             where b.dtCancelamento is null
-            order by uf.sigla, c.nome, b.descricao
+            order by uf.sigla, c.descricao, b.descricao
             """)
     List<Bairro> findAllWithMunicipioOrderByDescricao();
 
@@ -47,11 +47,11 @@ public interface BairroRepository extends JpaRepository<Bairro, Long> {
             where b.dtCancelamento is not null
               and (
                     upper(b.descricao) like concat('%', upper(:q), '%')
-                 or upper(c.nome) like concat('%', upper(:q), '%')
+                 or upper(c.descricao) like concat('%', upper(:q), '%')
                  or upper(uf.descricao) like concat('%', upper(:q), '%')
                  or upper(uf.sigla) like concat('%', upper(:q), '%')
               )
-            order by b.dtCancelamento desc, uf.sigla, c.nome, b.descricao
+            order by b.dtCancelamento desc, uf.sigla, c.descricao, b.descricao
             """)
     List<Bairro> buscarCanceladosPorFiltro(String q);
 
@@ -61,7 +61,7 @@ public interface BairroRepository extends JpaRepository<Bairro, Long> {
             join fetch b.municipio c
             join fetch c.unidadeFederativa uf
             where b.dtCancelamento is not null
-            order by b.dtCancelamento desc, uf.sigla, c.nome, b.descricao
+            order by b.dtCancelamento desc, uf.sigla, c.descricao, b.descricao
             """)
     List<Bairro> findAllCanceladosWithMunicipioOrderByDescricao();
 

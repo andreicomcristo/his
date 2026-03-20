@@ -55,7 +55,7 @@
                 <tr th:each="item : ${items}">
                     <td th:text="${item.id}"></td>
                     <td th:text="${item.descricao}"></td>
-                    <td th:text="${item.municipio.nome}"></td>
+                    <td th:text="${item.municipio.descricao}"></td>
                     <td th:text="${item.municipio.unidadeFederativa.sigla}"></td>
                     <td class="text-center">
                         <div class="dropdown d-inline-block">

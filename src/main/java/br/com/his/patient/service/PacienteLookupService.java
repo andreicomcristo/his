@@ -130,11 +130,11 @@ public class PacienteLookupService {
     }
 
     public List<PacienteLookupOption> listarMunicipiosProcedenciaEntrada() {
-        return MunicipioRepository.findAllWithUnidadeFederativaOrderByNome()
+        return MunicipioRepository.findAllWithUnidadeFederativaOrderByDescricao()
                 .stream()
                 .map(Municipio -> new PacienteLookupOption(
                         Municipio.getId(),
-                        Municipio.getNome() + " - " + Municipio.getUnidadeFederativa().getSigla(),
+                        Municipio.getDescricao() + " - " + Municipio.getUnidadeFederativa().getSigla(),
                         Municipio.getUnidadeFederativa().getId()))
                 .toList();
     }

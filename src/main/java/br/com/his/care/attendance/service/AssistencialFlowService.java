@@ -1440,7 +1440,7 @@ public class AssistencialFlowService {
                     nova.setTipoProcedencia(tipoProcedencia);
                     nova.setBairro(null);
                     nova.setMunicipio(municipio);
-                    nova.setDescricao(normalize(municipio.getNome()));
+                    nova.setDescricao(normalize(municipio.getDescricao()));
                     nova.setUnidade(null);
                     nova.setAtivo(true);
                     return procedenciaRepository.save(nova);

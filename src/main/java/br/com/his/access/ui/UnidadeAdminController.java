@@ -147,7 +147,7 @@ public class UnidadeAdminController {
         Long unidadeFederativaId = form == null ? null : form.getUnidadeFederativaId();
         java.util.List<Municipio> municipios = unidadeFederativaId == null
                 ? java.util.List.of()
-                : municipioRepository.findByUnidadeFederativaIdOrderByNome(unidadeFederativaId);
+                : municipioRepository.findByUnidadeFederativaIdOrderByDescricao(unidadeFederativaId);
         model.addAttribute("municipios", municipios);
         var municipioLegado = (form == null || form.getMunicipioId() == null)
                 ? null

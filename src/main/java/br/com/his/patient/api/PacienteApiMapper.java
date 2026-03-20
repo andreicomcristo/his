@@ -119,7 +119,7 @@ public class PacienteApiMapper {
         response.setComplemento(paciente.getComplemento());
         response.setBairro(paciente.getBairro());
         response.setMunicipioId(paciente.getMunicipio() == null ? null : paciente.getMunicipio().getId());
-        response.setMunicipio(paciente.getMunicipio() == null ? null : paciente.getMunicipio().getNome());
+        response.setMunicipio(paciente.getMunicipio() == null ? null : paciente.getMunicipio().getDescricao());
         response.setUnidadeFederativaId(paciente.getMunicipio() == null ? null : paciente.getMunicipio().getUnidadeFederativa().getId());
         response.setUf(paciente.getMunicipio() == null ? null : paciente.getMunicipio().getUnidadeFederativa().getSigla());
         response.setTemporario(paciente.isTemporario());

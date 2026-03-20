@@ -55,7 +55,7 @@ public class CepLookupService {
         response.setMunicipioNome(normalize(viaCep.localidade()));
         if (Municipio != null) {
             response.setMunicipioId(Municipio.getId());
-            response.setMunicipioNome(Municipio.getNome());
+            response.setMunicipioNome(Municipio.getDescricao());
         }
         return response;
     }
@@ -81,14 +81,14 @@ public class CepLookupService {
             return null;
         }
         String municipioNormalizada = normalizeForMatch(localidade);
-        List<Municipio> Municipios = MunicipioRepository.findByUnidadeFederativaIdOrderByNome(ufId);
+        List<Municipio> Municipios = MunicipioRepository.findByUnidadeFederativaIdOrderByDescricao(ufId);
         for (Municipio Municipio : Municipios) {
-            if (normalizeForMatch(Municipio.getNome()).equals(municipioNormalizada)) {
+            if (normalizeForMatch(Municipio.getDescricao()).equals(municipioNormalizada)) {
                 return Municipio;
             }
         }
         for (Municipio Municipio : Municipios) {
-            String nome = normalizeForMatch(Municipio.getNome());
+            String nome = normalizeForMatch(Municipio.getDescricao());
             if (nome.contains(municipioNormalizada) || municipioNormalizada.contains(nome)) {
                 return Municipio;
             }

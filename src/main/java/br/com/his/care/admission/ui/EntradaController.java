@@ -308,7 +308,7 @@ public class EntradaController {
         model.addAttribute("ufs", unidadeFederativaRepository.findAllByOrderByDescricaoAsc());
         model.addAttribute("municipios", form.getUnidadeFederativaId() == null
                 ? java.util.List.of()
-                : MunicipioRepository.findByUnidadeFederativaIdOrderByNome(form.getUnidadeFederativaId()));
+                : MunicipioRepository.findByUnidadeFederativaIdOrderByDescricao(form.getUnidadeFederativaId()));
     }
 
     private void copyPacienteToForm(Paciente paciente, PacienteForm form) {

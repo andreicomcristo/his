@@ -19,11 +19,11 @@ public interface MunicipioRepository extends JpaRepository<Municipio, Long> {
             join fetch m.unidadeFederativa uf
             where m.dtCancelamento is null
               and (
-                    upper(m.nome) like concat('%', upper(:q), '%')
+                    upper(m.descricao) like concat('%', upper(:q), '%')
                     or upper(uf.descricao) like concat('%', upper(:q), '%')
                     or upper(uf.sigla) like concat('%', upper(:q), '%')
               )
-            order by uf.sigla, m.nome
+            order by uf.sigla, m.descricao
             """)
     List<Municipio> buscarAtivosPorFiltro(String q);
 
@@ -33,11 +33,11 @@ public interface MunicipioRepository extends JpaRepository<Municipio, Long> {
             join fetch m.unidadeFederativa uf
             where m.dtCancelamento is null
               and (
-                    upper(m.nome) like concat('%', upper(:q), '%')
+                    upper(m.descricao) like concat('%', upper(:q), '%')
                     or upper(uf.descricao) like concat('%', upper(:q), '%')
                     or upper(uf.sigla) like concat('%', upper(:q), '%')
               )
-            order by uf.sigla, m.nome
+            order by uf.sigla, m.descricao
             """)
     List<Municipio> buscarPorFiltro(String q);
 
@@ -46,18 +46,18 @@ public interface MunicipioRepository extends JpaRepository<Municipio, Long> {
             from Municipio m
             join fetch m.unidadeFederativa uf
             where m.dtCancelamento is null
-            order by uf.sigla, m.nome
+            order by uf.sigla, m.descricao
             """)
-    List<Municipio> findAtivosWithUnidadeFederativaOrderByNome();
+    List<Municipio> findAtivosWithUnidadeFederativaOrderByDescricao();
 
     @Query("""
             select m
             from Municipio m
             join fetch m.unidadeFederativa uf
             where m.dtCancelamento is null
-            order by uf.sigla, m.nome
+            order by uf.sigla, m.descricao
             """)
-    List<Municipio> findAllWithUnidadeFederativaOrderByNome();
+    List<Municipio> findAllWithUnidadeFederativaOrderByDescricao();
 
     @Query("""
             select m
@@ -65,11 +65,11 @@ public interface MunicipioRepository extends JpaRepository<Municipio, Long> {
             join fetch m.unidadeFederativa uf
             where m.dtCancelamento is not null
               and (
-                    upper(m.nome) like concat('%', upper(:q), '%')
+                    upper(m.descricao) like concat('%', upper(:q), '%')
                     or upper(uf.descricao) like concat('%', upper(:q), '%')
                     or upper(uf.sigla) like concat('%', upper(:q), '%')
               )
-            order by m.dtCancelamento desc, uf.sigla, m.nome
+            order by m.dtCancelamento desc, uf.sigla, m.descricao
             """)
     List<Municipio> buscarCanceladosPorFiltro(String q);
 
@@ -78,9 +78,9 @@ public interface MunicipioRepository extends JpaRepository<Municipio, Long> {
             from Municipio m
             join fetch m.unidadeFederativa uf
             where m.dtCancelamento is not null
-            order by m.dtCancelamento desc, uf.sigla, m.nome
+            order by m.dtCancelamento desc, uf.sigla, m.descricao
             """)
-    List<Municipio> findCanceladosWithUnidadeFederativaOrderByNome();
+    List<Municipio> findCanceladosWithUnidadeFederativaOrderByDescricao();
 
     @Query("""
             select m
@@ -88,8 +88,8 @@ public interface MunicipioRepository extends JpaRepository<Municipio, Long> {
             join fetch m.unidadeFederativa uf
             where uf.id = :unidadeFederativaId
               and m.dtCancelamento is null
-            order by m.nome
+            order by m.descricao
             """)
-    List<Municipio> findByUnidadeFederativaIdOrderByNome(Long unidadeFederativaId);
+    List<Municipio> findByUnidadeFederativaIdOrderByDescricao(Long unidadeFederativaId);
 }
 

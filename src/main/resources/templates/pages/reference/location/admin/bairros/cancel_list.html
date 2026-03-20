@@ -60,7 +60,7 @@
                 <tr th:each="item : ${items}">
                     <td th:text="${item.id}"></td>
                     <td th:text="${item.descricao}"></td>
-                    <td th:text="${item.municipio.nome}"></td>
+                    <td th:text="${item.municipio.descricao}"></td>
                     <td th:text="${item.municipio.unidadeFederativa.sigla}"></td>
                     <td th:text="${item.dtCancelamento != null ? #temporals.format(item.dtCancelamento, 'dd/MM/yyyy HH:mm') : '-'}"></td>
                     <td class="text-center">

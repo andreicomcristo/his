@@ -9,9 +9,9 @@ public class MunicipioForm {
     @NotNull(message = "UF e obrigatoria")
     private Long unidadeFederativaId;
 
-    @NotBlank(message = "Nome e obrigatorio")
+    @NotBlank(message = "Descricao e obrigatoria")
     @Size(max = 100)
-    private String nome;
+    private String descricao;
 
     @Size(max = 5)
     private String codigoIbge;
@@ -24,12 +24,12 @@ public class MunicipioForm {
         this.unidadeFederativaId = unidadeFederativaId;
     }
 
-    public String getNome() {
-        return nome;
+    public String getDescricao() {
+        return descricao;
     }
 
-    public void setNome(String nome) {
-        this.nome = nome;
+    public void setDescricao(String descricao) {
+        this.descricao = descricao;
     }
 
     public String getCodigoIbge() {

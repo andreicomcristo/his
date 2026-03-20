@@ -64,7 +64,7 @@
                             <option value="">Selecione</option>
                             <option th:each="item : ${municipios}"
                                     th:value="${item.id}"
-                                    th:text="${item.nome}">MACEIO</option>
+                                    th:text="${item.descricao}">MACEIO</option>
                         </select>
                         <small class="text-danger" th:errors="*{municipioId}"></small>
                     </div>
@@ -75,7 +75,7 @@
                             <option value="">Selecione</option>
                             <option th:each="item : ${bairros}"
                                     th:value="${item.id}"
-                                    th:text="${item.nome}">CENTRO</option>
+                                    th:text="${item.descricao}">CENTRO</option>
                         </select>
                         <small class="text-danger" th:errors="*{bairroId}"></small>
                     </div>

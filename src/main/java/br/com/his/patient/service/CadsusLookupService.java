@@ -224,7 +224,7 @@ public class CadsusLookupService {
                 uf = unidadeFederativaRepository.findBySiglaIgnoreCase(ufSigla).orElse(null);
             } else if (municipioNome != null) {
                 Municipio Municipio = MunicipioRepository.findAll().stream()
-                        .filter(c -> normalizeForMatch(c.getNome()).equals(normalizeForMatch(municipioNome)))
+                        .filter(c -> normalizeForMatch(c.getDescricao()).equals(normalizeForMatch(municipioNome)))
                         .findFirst()
                         .orElse(null);
                 if (Municipio != null) {
@@ -257,13 +257,13 @@ public class CadsusLookupService {
     }
 
     private Municipio matchCity(Long ufId, String municipioNome) {
-        List<Municipio> Municipios = MunicipioRepository.findByUnidadeFederativaIdOrderByNome(ufId);
+        List<Municipio> Municipios = MunicipioRepository.findByUnidadeFederativaIdOrderByDescricao(ufId);
         String target = normalizeForMatch(municipioNome);
         return Municipios.stream()
-                .filter(c -> normalizeForMatch(c.getNome()).equals(target))
+                .filter(c -> normalizeForMatch(c.getDescricao()).equals(target))
                 .findFirst()
                 .orElseGet(() -> Municipios.stream()
-                        .filter(c -> normalizeForMatch(c.getNome()).contains(target) || target.contains(normalizeForMatch(c.getNome())))
+                        .filter(c -> normalizeForMatch(c.getDescricao()).contains(target) || target.contains(normalizeForMatch(c.getDescricao())))
                         .findFirst()
                         .orElse(null));
     }
