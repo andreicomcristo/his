@@ -46,7 +46,7 @@
                 <thead>
                 <tr>
                     <th>ID</th>
-                    <th>Nome</th>
+                    <th>Descricao</th>
                     <th>Município</th>
                     <th>UF</th>
                     <th>Data cancelamento</th>
@@ -59,9 +59,9 @@
                 </tr>
                 <tr th:each="item : ${items}">
                     <td th:text="${item.id}"></td>
-                    <td th:text="${item.nome}"></td>
-                    <td th:text="${item.Municipio.nome}"></td>
-                    <td th:text="${item.Municipio.unidadeFederativa.sigla}"></td>
+                    <td th:text="${item.descricao}"></td>
+                    <td th:text="${item.municipio.nome}"></td>
+                    <td th:text="${item.municipio.unidadeFederativa.sigla}"></td>
                     <td th:text="${item.dtCancelamento != null ? #temporals.format(item.dtCancelamento, 'dd/MM/yyyy HH:mm') : '-'}"></td>
                     <td class="text-center">
                         <div class="dropdown d-inline-block">
@@ -77,7 +77,7 @@
                                         class="dropdown-item text-info js-bairro-action"
                                         data-action="restaurar"
                                         th:data-action-url="@{'/ui/admin/bairros/' + ${item.id} + '/restaurar'}"
-                                        th:data-item-nome="${item.nome}">
+                                        th:data-item-descricao="${item.descricao}">
                                     <i class="nav-link-icon pe-7s-refresh-2 mr-2"></i><span>Restaurar</span>
                                 </button>
                                 <hr>
@@ -85,7 +85,7 @@
                                         class="dropdown-item text-danger js-bairro-action"
                                         data-action="excluir-permanente"
                                         th:data-action-url="@{'/ui/admin/bairros/' + ${item.id} + '/excluir-permanente'}"
-                                        th:data-item-nome="${item.nome}">
+                                        th:data-item-descricao="${item.descricao}">
                                     <i class="nav-link-icon lnr-trash mr-2"></i><span>Excluir permanente</span>
                                 </button>
                             </div>
@@ -136,18 +136,18 @@
             var confirmBtn = document.getElementById('bairroActionModalConfirmBtn');
             var pendingActionUrl = null;
 
-            function configByAction(action, itemNome) {
+            function configByAction(action, itemDescricao) {
                 if (action === 'excluir-permanente') {
                     return {
                         title: 'Excluir bairro permanentemente',
-                        message: 'Deseja excluir permanentemente o bairro "' + itemNome + '"? Esta ação é irreversível.',
+                        message: 'Deseja excluir permanentemente o bairro "' + itemDescricao + '"? Esta ação é irreversível.',
                         buttonHtml: '<i class="nav-link-icon lnr-trash mr-2"></i>Excluir permanente',
                         buttonClass: 'btn-danger'
                     };
                 }
                 return {
                     title: 'Restaurar bairro',
-                    message: 'Deseja restaurar o bairro "' + itemNome + '"?',
+                    message: 'Deseja restaurar o bairro "' + itemDescricao + '"?',
                     buttonHtml: '<i class="nav-link-icon pe-7s-refresh-2 mr-2"></i>Restaurar',
                     buttonClass: 'btn-info'
                 };
@@ -160,9 +160,9 @@
             actionButtons.forEach(function (button) {
                 button.addEventListener('click', function () {
                     pendingActionUrl = this.getAttribute('data-action-url');
-                    var pendingNome = this.getAttribute('data-item-nome') || '';
+                    var pendingDescricao = this.getAttribute('data-item-descricao') || '';
                     var action = this.getAttribute('data-action') || 'restaurar';
-                    var config = configByAction(action, pendingNome);
+                    var config = configByAction(action, pendingDescricao);
 
                     modalTitleEl.textContent = config.title;
                     modalMessageEl.textContent = config.message;

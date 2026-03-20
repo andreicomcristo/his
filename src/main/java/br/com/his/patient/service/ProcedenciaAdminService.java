@@ -154,7 +154,7 @@ public class ProcedenciaAdminService {
         if (municipioId == null) {
             return List.of();
         }
-        return bairroRepository.findAtivosByMunicipioIdOrderByNome(municipioId);
+        return bairroRepository.findAtivosByMunicipioIdOrderByDescricao(municipioId);
     }
 
     @Transactional(readOnly = true)
@@ -201,7 +201,7 @@ public class ProcedenciaAdminService {
         }
         procedencia.setBairro(bairro);
         procedencia.setMunicipio(null);
-        procedencia.setDescricao(normalizeUpper(bairro.getNome()));
+        procedencia.setDescricao(normalizeUpper(bairro.getDescricao()));
     }
 
     private void aplicarMunicipio(Procedencia procedencia,

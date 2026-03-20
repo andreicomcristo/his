@@ -16,74 +16,74 @@ public interface BairroRepository extends JpaRepository<Bairro, Long> {
     @Query("""
             select b
             from Bairro b
-            join fetch b.Municipio c
+            join fetch b.municipio c
             join fetch c.unidadeFederativa uf
             where b.dtCancelamento is null
               and (
-                    upper(b.nome) like concat('%', upper(:q), '%')
+                    upper(b.descricao) like concat('%', upper(:q), '%')
                  or upper(c.nome) like concat('%', upper(:q), '%')
                  or upper(uf.descricao) like concat('%', upper(:q), '%')
                  or upper(uf.sigla) like concat('%', upper(:q), '%')
               )
-            order by uf.sigla, c.nome, b.nome
+            order by uf.sigla, c.nome, b.descricao
             """)
     List<Bairro> buscarPorFiltro(String q);
 
     @Query("""
             select b
             from Bairro b
-            join fetch b.Municipio c
+            join fetch b.municipio c
             join fetch c.unidadeFederativa uf
             where b.dtCancelamento is null
-            order by uf.sigla, c.nome, b.nome
+            order by uf.sigla, c.nome, b.descricao
             """)
-    List<Bairro> findAllWithMunicipioOrderByNome();
+    List<Bairro> findAllWithMunicipioOrderByDescricao();
 
     @Query("""
             select b
             from Bairro b
-            join fetch b.Municipio c
+            join fetch b.municipio c
             join fetch c.unidadeFederativa uf
             where b.dtCancelamento is not null
               and (
-                    upper(b.nome) like concat('%', upper(:q), '%')
+                    upper(b.descricao) like concat('%', upper(:q), '%')
                  or upper(c.nome) like concat('%', upper(:q), '%')
                  or upper(uf.descricao) like concat('%', upper(:q), '%')
                  or upper(uf.sigla) like concat('%', upper(:q), '%')
               )
-            order by b.dtCancelamento desc, uf.sigla, c.nome, b.nome
+            order by b.dtCancelamento desc, uf.sigla, c.nome, b.descricao
             """)
     List<Bairro> buscarCanceladosPorFiltro(String q);
 
     @Query("""
             select b
             from Bairro b
-            join fetch b.Municipio c
+            join fetch b.municipio c
             join fetch c.unidadeFederativa uf
             where b.dtCancelamento is not null
-            order by b.dtCancelamento desc, uf.sigla, c.nome, b.nome
+            order by b.dtCancelamento desc, uf.sigla, c.nome, b.descricao
             """)
-    List<Bairro> findAllCanceladosWithMunicipioOrderByNome();
+    List<Bairro> findAllCanceladosWithMunicipioOrderByDescricao();
 
     @Query("""
             select b
             from Bairro b
-            join fetch b.Municipio c
+            join fetch b.municipio c
             join fetch c.unidadeFederativa uf
             where c.id = :municipioId
               and b.dtCancelamento is null
-            order by b.nome
+            order by b.descricao
             """)
-    List<Bairro> findByMunicipioIdOrderByNome(Long municipioId);
+    List<Bairro> findByMunicipioIdOrderByDescricao(Long municipioId);
 
     @Query("""
             select b
             from Bairro b
-            join fetch b.Municipio c
+            join fetch b.municipio c
             join fetch c.unidadeFederativa uf
             where c.id = :municipioId
               and b.dtCancelamento is null
-            order by b.nome
+            order by b.descricao
             """)
-    List<Bairro> findAtivosByMunicipioIdOrderByNome(Long municipioId);
+    List<Bairro> findAtivosByMunicipioIdOrderByDescricao(Long municipioId);
 }

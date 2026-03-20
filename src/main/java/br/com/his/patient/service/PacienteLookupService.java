@@ -123,9 +123,9 @@ public class PacienteLookupService {
         if (municipioId == null) {
             return List.of();
         }
-        return bairroRepository.findAtivosByMunicipioIdOrderByNome(municipioId)
+        return bairroRepository.findAtivosByMunicipioIdOrderByDescricao(municipioId)
                 .stream()
-                .map(bairro -> new PacienteLookupOption(bairro.getId(), bairro.getNome()))
+                .map(bairro -> new PacienteLookupOption(bairro.getId(), bairro.getDescricao()))
                 .toList();
     }
 

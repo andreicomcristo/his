@@ -56,7 +56,7 @@
                         <td th:text="${item.id}">1</td>
                         <td th:text="${item.tipoProcedencia != null ? item.tipoProcedencia.descricao : '-'}">BAIRRO</td>
                         <td th:text="${item.descricao}">CENTRO</td>
-                        <td th:text="${item.bairro != null ? item.bairro.nome : '-'}">CENTRO</td>
+                        <td th:text="${item.bairro != null ? item.bairro.descricao : '-'}">CENTRO</td>
                         <td th:text="${item.municipio != null ? item.municipio.nome : (item.bairro != null and item.bairro.municipio != null ? item.bairro.municipio.nome : '-')}">MACEIO</td>
                         <td th:text="${item.unidade != null ? item.unidade.nome : 'GLOBAL'}">GLOBAL</td>
                         <td th:text="${item.ativo ? 'SIM' : 'NAO'}">SIM</td>

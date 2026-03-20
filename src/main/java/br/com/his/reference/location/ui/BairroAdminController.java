@@ -144,7 +144,7 @@ public class BairroAdminController {
     }
 
     private PacienteLookupOption toOption(Bairro bairro) {
-        return new PacienteLookupOption(bairro.getId(), bairro.getNome());
+        return new PacienteLookupOption(bairro.getId(), bairro.getDescricao());
     }
 
     private void populateModel(Model model, BairroForm form) {

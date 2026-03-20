@@ -25,7 +25,7 @@ public interface ProcedenciaRepository extends JpaRepository<Procedencia, Long> 
             where upper(coalesce(p.descricao, '')) like concat('%', upper(:q), '%')
                or upper(coalesce(tp.descricao, '')) like concat('%', upper(:q), '%')
                or upper(coalesce(u.nome, '')) like concat('%', upper(:q), '%')
-               or upper(coalesce(b.nome, '')) like concat('%', upper(:q), '%')
+               or upper(coalesce(b.descricao, '')) like concat('%', upper(:q), '%')
                or upper(coalesce(m.nome, '')) like concat('%', upper(:q), '%')
             order by p.descricao, p.id
             """)
@@ -43,7 +43,7 @@ public interface ProcedenciaRepository extends JpaRepository<Procedencia, Long> 
                    upper(coalesce(p.descricao, '')) like concat('%', upper(:q), '%')
                 or upper(coalesce(tp.descricao, '')) like concat('%', upper(:q), '%')
                 or upper(coalesce(u.nome, '')) like concat('%', upper(:q), '%')
-                or upper(coalesce(b.nome, '')) like concat('%', upper(:q), '%')
+                or upper(coalesce(b.descricao, '')) like concat('%', upper(:q), '%')
                 or upper(coalesce(m.nome, '')) like concat('%', upper(:q), '%')
               )
             order by p.descricao, p.id

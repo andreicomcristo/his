@@ -45,7 +45,7 @@
                 <thead>
                 <tr>
                     <th>ID</th>
-                    <th>Nome</th>
+                    <th>Descricao</th>
                     <th>Município</th>
                     <th>UF</th>
                     <th class="text-center">Opções</th>
@@ -54,9 +54,9 @@
                 <tbody>
                 <tr th:each="item : ${items}">
                     <td th:text="${item.id}"></td>
-                    <td th:text="${item.nome}"></td>
-                    <td th:text="${item.Municipio.nome}"></td>
-                    <td th:text="${item.Municipio.unidadeFederativa.sigla}"></td>
+                    <td th:text="${item.descricao}"></td>
+                    <td th:text="${item.municipio.nome}"></td>
+                    <td th:text="${item.municipio.unidadeFederativa.sigla}"></td>
                     <td class="text-center">
                         <div class="dropdown d-inline-block">
                             <button class="btn btn-sm btn-outline-secondary dropdown-toggle"
@@ -75,7 +75,7 @@
                                         class="dropdown-item text-danger js-bairro-action"
                                         data-action="excluir"
                                         th:data-action-url="@{'/ui/admin/bairros/' + ${item.id} + '/excluir'}"
-                                        th:data-item-nome="${item.nome}">
+                                        th:data-item-descricao="${item.descricao}">
                                     <i class="nav-link-icon lnr-trash mr-2"></i><span>Excluir</span>
                                 </button>
                             </div>
@@ -129,7 +129,7 @@
             function configByAction() {
                 return {
                     title: 'Excluir bairro',
-                    message: 'Deseja excluir o bairro "' + pendingNome + '"? Ele receberá dt_cancelamento e não será mais listado.',
+                    message: 'Deseja excluir o bairro "' + pendingDescricao + '"? Ele receberá dt_cancelamento e não será mais listado.',
                     buttonHtml: '<i class="nav-link-icon lnr-trash mr-2"></i>Excluir',
                     buttonClass: 'btn-danger'
                 };
@@ -139,12 +139,12 @@
                 confirmBtn.classList.remove('btn-danger', 'btn-warning', 'btn-success', 'btn-primary');
             }
 
-            var pendingNome = '';
+            var pendingDescricao = '';
 
             actionButtons.forEach(function (button) {
                 button.addEventListener('click', function () {
                     pendingActionUrl = this.getAttribute('data-action-url');
-                    pendingNome = this.getAttribute('data-item-nome') || '';
+                    pendingDescricao = this.getAttribute('data-item-descricao') || '';
                     var config = configByAction();
 
                     modalTitleEl.textContent = config.title;

@@ -22,13 +22,28 @@ public class Bairro {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "municipio_id", nullable = false)
-    private Municipio Municipio;
+    private Municipio municipio;
 
-    @Column(nullable = false, length = 100)
-    private String nome;
+    @Column(name = "descricao", nullable = false, length = 100)
+    private String descricao;
+
+    @Column(name = "dt_cadastro", nullable = false)
+    private LocalDateTime dtCadastro;
 
     @Column(name = "dt_cancelamento")
     private LocalDateTime dtCancelamento;
+
+    @Column(name = "dt_atualizacao", nullable = false)
+    private LocalDateTime dtAtualizacao;
+
+    @Column(name = "cadastro_user_id")
+    private Long cadastroUserId;
+
+    @Column(name = "atualizacao_user_id")
+    private Long atualizacaoUserId;
+
+    @Column(name = "cancelamento_user_id")
+    private Long cancelamentoUserId;
 
     public Long getId() {
         return id;
@@ -39,19 +54,19 @@ public class Bairro {
     }
 
     public Municipio getMunicipio() {
-        return Municipio;
+        return municipio;
     }
 
-    public void setMunicipio(Municipio Municipio) {
-        this.Municipio = Municipio;
+    public void setMunicipio(Municipio municipio) {
+        this.municipio = municipio;
     }
 
-    public String getNome() {
-        return nome;
+    public String getDescricao() {
+        return descricao;
     }
 
-    public void setNome(String nome) {
-        this.nome = nome;
+    public void setDescricao(String descricao) {
+        this.descricao = descricao;
     }
 
     public LocalDateTime getDtCancelamento() {
@@ -60,5 +75,45 @@ public class Bairro {
 
     public void setDtCancelamento(LocalDateTime dtCancelamento) {
         this.dtCancelamento = dtCancelamento;
+    }
+
+    public LocalDateTime getDtCadastro() {
+        return dtCadastro;
+    }
+
+    public void setDtCadastro(LocalDateTime dtCadastro) {
+        this.dtCadastro = dtCadastro;
+    }
+
+    public LocalDateTime getDtAtualizacao() {
+        return dtAtualizacao;
+    }
+
+    public void setDtAtualizacao(LocalDateTime dtAtualizacao) {
+        this.dtAtualizacao = dtAtualizacao;
+    }
+
+    public Long getCadastroUserId() {
+        return cadastroUserId;
+    }
+
+    public void setCadastroUserId(Long cadastroUserId) {
+        this.cadastroUserId = cadastroUserId;
+    }
+
+    public Long getAtualizacaoUserId() {
+        return atualizacaoUserId;
+    }
+
+    public void setAtualizacaoUserId(Long atualizacaoUserId) {
+        this.atualizacaoUserId = atualizacaoUserId;
+    }
+
+    public Long getCancelamentoUserId() {
+        return cancelamentoUserId;
+    }
+
+    public void setCancelamentoUserId(Long cancelamentoUserId) {
+        this.cancelamentoUserId = cancelamentoUserId;
     }
 }

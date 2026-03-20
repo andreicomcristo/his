@@ -132,7 +132,7 @@ public class ProcedenciaAdminController {
     @ResponseBody
     public List<PacienteLookupOption> listarBairrosPorMunicipio(@PathVariable Long municipioId) {
         return service.listarBairrosPorMunicipio(municipioId).stream()
-                .map(item -> new PacienteLookupOption(item.getId(), item.getNome()))
+                .map(item -> new PacienteLookupOption(item.getId(), item.getDescricao()))
                 .toList();
     }
 
