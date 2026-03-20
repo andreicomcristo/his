@@ -35,6 +35,13 @@ public class AreaAdminController {
         return "pages/care/inpatient/admin/areas/list";
     }
 
+    @GetMapping("/cancelados")
+    public String listarCancelados(@RequestParam(required = false) String q, Model model) {
+        model.addAttribute("items", service.listarCanceladas(q));
+        model.addAttribute("q", q);
+        return "pages/care/inpatient/admin/areas/cancel_list";
+    }
+
     @GetMapping("/novo")
     public String novo(Model model) {
         if (!model.containsAttribute("form")) {
@@ -91,6 +98,28 @@ public class AreaAdminController {
         service.excluir(id);
         redirectAttributes.addFlashAttribute("successMessage", "Area excluida com sucesso");
         return "redirect:/ui/admin/areas";
+    }
+
+    @PostMapping("/{id}/restaurar")
+    public String restaurar(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        try {
+            service.restaurar(id);
+            redirectAttributes.addFlashAttribute("successMessage", "Area restaurada com sucesso");
+        } catch (IllegalArgumentException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+        }
+        return "redirect:/ui/admin/areas/cancelados";
+    }
+
+    @PostMapping("/{id}/excluir-permanente")
+    public String excluirPermanente(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        try {
+            service.excluirPermanente(id);
+            redirectAttributes.addFlashAttribute("successMessage", "Area excluida permanentemente com sucesso");
+        } catch (IllegalArgumentException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+        }
+        return "redirect:/ui/admin/areas/cancelados";
     }
 
     private void populateModel(Model model) {

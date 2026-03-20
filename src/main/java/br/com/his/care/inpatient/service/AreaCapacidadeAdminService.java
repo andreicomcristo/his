@@ -32,7 +32,8 @@ public class AreaCapacidadeAdminService {
 
     @Transactional(readOnly = true)
     public Area buscarArea(Long areaId) {
-        return areaRepository.findById(areaId).orElseThrow(() -> new IllegalArgumentException("Area nao encontrada"));
+        return areaRepository.findByIdAndDtCancelamentoIsNull(areaId)
+                .orElseThrow(() -> new IllegalArgumentException("Area nao encontrada"));
     }
 
     @Transactional(readOnly = true)

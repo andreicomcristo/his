@@ -170,7 +170,7 @@ public class LeitoAdminService {
     private List<LeitoModalidadeTipo> apply(Leito leito, LeitoForm form) {
         Unidade unidade = unidadeRepository.findById(form.getUnidadeId())
                 .orElseThrow(() -> new IllegalArgumentException("Unidade nao encontrada"));
-        Area area = areaRepository.findById(form.getAreaId())
+        Area area = areaRepository.findByIdAndDtCancelamentoIsNull(form.getAreaId())
                 .orElseThrow(() -> new IllegalArgumentException("Area nao encontrada"));
         TipoLeito tipoLeito = tipoLeitoRepository.findById(form.getTipoLeitoId())
                 .orElseThrow(() -> new IllegalArgumentException("Tipo de leito nao encontrado"));

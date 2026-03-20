@@ -167,7 +167,7 @@ public class ObservacaoService {
         Map<Long, String> result = new LinkedHashMap<>();
         for (Observacao item : observacoes) {
             String descricao = leitoOcupacaoService.buscarOcupacaoAbertaPorObservacao(item.getId())
-                    .map(ocupacao -> ocupacao.getLeito().getArea().getNome() + " - " + ocupacao.getLeito().getCodigo())
+                    .map(ocupacao -> ocupacao.getLeito().getArea().getDescricao() + " - " + ocupacao.getLeito().getCodigo())
                     .orElse("-");
             result.put(item.getId(), descricao);
         }

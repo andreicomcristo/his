@@ -1077,7 +1077,7 @@ public class IndicadorLeanService {
                 join area_capacidade ac on ac.area_id = a.id
                 join capacidade_area ca on ca.id = ac.capacidade_area_id
                 where a.unidade_id = ?
-                  and a.ativo = true
+                  and a.dt_cancelamento is null
                   and ca.ativo = true
                   and upper(ca.nome) = 'SALA_CLASSIFICACAO'
                 """, Long.class, unidadeId);

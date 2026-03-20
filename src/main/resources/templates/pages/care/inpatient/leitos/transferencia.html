@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
       th:replace="~{layout/base :: layout('Transferencia Interna de Leito', ~{::content})}">
 <th:block th:fragment="content">
@@ -9,7 +9,7 @@
             <div class="alert alert-light border mb-3">
                 <div><strong>Paciente:</strong> <span th:text="${atendimento.paciente.nomeExibicao}"></span></div>
                 <div><strong>Atendimento:</strong> #<span th:text="${atendimento.id}"></span></div>
-                <div><strong>Leito atual:</strong> <span th:text="${ocupacao.leito.area.nome + ' - ' + ocupacao.leito.codigo}"></span></div>
+                <div><strong>Leito atual:</strong> <span th:text="${ocupacao.leito.area.descricao + ' - ' + ocupacao.leito.codigo}"></span></div>
                 <div><strong>Modalidade:</strong> <span th:text="${modalidadeTransferencia}"></span></div>
             </div>
 
@@ -23,7 +23,7 @@
                             <option value="">Selecione</option>
                             <option th:each="item : ${leitosDestino}"
                                     th:value="${item.id}"
-                                    th:text="${item.area.nome + ' - ' + item.codigo + (item.descricao != null ? ' - ' + item.descricao : '')}"></option>
+                                    th:text="${item.area.descricao + ' - ' + item.codigo + (item.descricao != null ? ' - ' + item.descricao : '')}"></option>
                         </select>
                         <small class="text-danger" th:errors="*{leitoDestinoId}"></small>
                     </div>

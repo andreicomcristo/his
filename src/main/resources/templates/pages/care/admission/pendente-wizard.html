@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
 <body>
 <th:block th:replace="~{layout/base :: layout('HIS | Entrada Pendente', ~{::section})}">
@@ -178,7 +178,7 @@
             <div class="pending-stepper">
                 <div class="pending-step"
                      th:classappend="${currentStep > 1} ? ' is-done' : (${currentStep == 1} ? ' is-active' : '')">
-                    <div class="pending-step-dot" th:text="${currentStep > 1 ? '✓' : '1'}">1</div>
+                    <div class="pending-step-dot" th:text="${currentStep > 1 ? 'âœ“' : '1'}">1</div>
                     <div class="pending-step-title">Paciente</div>
                     <div class="pending-step-subtitle">Completar cadastro</div>
                 </div>
@@ -218,7 +218,7 @@
                             <span class="summary-value" th:text="${atendimento.status != null ? atendimento.status.descricao : '-'}"></span>
                         </div>
                         <div class="summary-item-wide" th:if="${classificacao != null}">
-                            <span class="summary-label">Classificação:</span>
+                            <span class="summary-label">ClassificaÃ§Ã£o:</span>
                             <span class="summary-value"
                                   th:text="${classificacao.classificacaoCor != null ? classificacao.classificacaoCor.descricao + ' - ' : ''} + ${classificacao.queixaPrincipal ?: 'SEM QUEIXA REGISTRADA'}"></span>
                         </div>
@@ -325,7 +325,7 @@
 
                         <div class="form-row">
                             <div class="form-group col-md-4">
-                                <label>Raça ou Cor</label>
+                                <label>RaÃ§a ou Cor</label>
                                 <select id="racaCorId" class="form-control" th:field="*{pacienteForm.racaCorId}">
                                     <option value="">Selecione</option>
                                     <option th:each="item : ${racasCor}" th:value="${item.id}" th:text="${item.descricao}"></option>
@@ -484,7 +484,7 @@
                                         <label>Area da entrada<span class="required-mark">*</span></label>
                                         <select class="form-control" th:field="*{entradaForm.areaId}">
                                             <option value="">Selecione</option>
-                                            <option th:each="area : ${areasEntrada}" th:value="${area.id}" th:text="${area.nome}"></option>
+                                            <option th:each="area : ${areasEntrada}" th:value="${area.id}" th:text="${area.descricao}"></option>
                                         </select>
                                         <small class="text-danger" th:errors="*{entradaForm.areaId}"></small>
                                     </div>

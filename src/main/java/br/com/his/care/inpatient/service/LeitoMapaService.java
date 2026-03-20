@@ -104,7 +104,7 @@ public class LeitoMapaService {
             LeitoMapaAreaDto area = areas.computeIfAbsent(leito.getArea().getId(), ignored -> {
                 LeitoMapaAreaDto dto = new LeitoMapaAreaDto();
                 dto.setAreaId(leito.getArea().getId());
-                dto.setAreaNome(leito.getArea().getNome());
+                dto.setAreaNome(leito.getArea().getDescricao());
                 return dto;
             });
 
@@ -112,7 +112,7 @@ public class LeitoMapaService {
             item.setLeitoId(leito.getId());
             item.setCodigo(leito.getCodigo());
             item.setDescricao(leito.getDescricao());
-            item.setAreaNome(leito.getArea().getNome());
+            item.setAreaNome(leito.getArea().getDescricao());
             item.setNaturezaOperacionalDescricao(
                     leito.getNaturezaOperacional() == null ? "-" : leito.getNaturezaOperacional().getDescricao());
             item.setVirtualSuperlotacao(

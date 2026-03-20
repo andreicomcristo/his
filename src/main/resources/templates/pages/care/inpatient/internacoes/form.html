@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
       th:replace="~{layout/base :: layout(${modoEdicao} ? 'Editar Internacao' : 'Nova Internacao', ~{::content})}">
 <th:block th:fragment="content">
@@ -71,14 +71,14 @@
                                 <option value="">Sem leito</option>
                                 <option th:each="item : ${leitosDisponiveis}"
                                         th:value="${item.id}"
-                                        th:text="${item.area.nome + ' - ' + item.codigo + (item.descricao != null ? ' - ' + item.descricao : '')}"></option>
+                                        th:text="${item.area.descricao + ' - ' + item.codigo + (item.descricao != null ? ' - ' + item.descricao : '')}"></option>
                             </select>
                         </th:block>
                         <select th:if="${modoEdicao or !leitoTravado}" class="form-control" th:field="*{leitoId}">
                             <option value="">Sem leito</option>
                             <option th:each="item : ${leitosDisponiveis}"
                                     th:value="${item.id}"
-                                    th:text="${item.area.nome + ' - ' + item.codigo + (item.descricao != null ? ' - ' + item.descricao : '')}"></option>
+                                    th:text="${item.area.descricao + ' - ' + item.codigo + (item.descricao != null ? ' - ' + item.descricao : '')}"></option>
                         </select>
                     </div>
                 </div>

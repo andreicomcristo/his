@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
 <body>
 <th:block th:replace="~{layout/base :: layout('HIS | Novo Atendimento', ~{::section})}">
@@ -222,19 +222,19 @@
             <div class="wizard-stepper">
                 <div class="wizard-step"
                      th:classappend="${wizard.currentStep > 1} ? ' is-done' : (${wizard.currentStep == 1} ? ' is-active' : '')">
-                    <div class="wizard-step-dot" th:text="${wizard.currentStep > 1 ? '✓' : '1'}">1</div>
+                    <div class="wizard-step-dot" th:text="${wizard.currentStep > 1 ? 'âœ“' : '1'}">1</div>
                     <div class="wizard-step-title">Tipo de paciente</div>
                     <div class="wizard-step-subtitle">Identificado ou nao</div>
                 </div>
                 <div class="wizard-step"
                      th:classappend="${wizard.currentStep > 2} ? ' is-done' : (${wizard.currentStep == 2} ? ' is-active' : '')">
-                    <div class="wizard-step-dot" th:text="${wizard.currentStep > 2 ? '✓' : '2'}">2</div>
+                    <div class="wizard-step-dot" th:text="${wizard.currentStep > 2 ? 'âœ“' : '2'}">2</div>
                     <div class="wizard-step-title">Paciente</div>
                     <div class="wizard-step-subtitle">Busca ou cadastro</div>
                 </div>
                 <div class="wizard-step"
                      th:classappend="${wizard.currentStep > 3} ? ' is-done' : (${wizard.currentStep == 3} ? ' is-active' : '')">
-                    <div class="wizard-step-dot" th:text="${wizard.currentStep > 3 ? '✓' : '3'}">3</div>
+                    <div class="wizard-step-dot" th:text="${wizard.currentStep > 3 ? 'âœ“' : '3'}">3</div>
                     <div class="wizard-step-title">Atendimento</div>
                     <div class="wizard-step-subtitle">Confirmacao</div>
                 </div>
@@ -622,7 +622,7 @@
                                         <label>Area da entrada<span class="required-mark">*</span></label>
                                         <select class="form-control" th:field="*{entradaForm.areaId}">
                                             <option value="">Selecione</option>
-                                            <option th:each="area : ${areasEntrada}" th:value="${area.id}" th:text="${area.nome}"></option>
+                                            <option th:each="area : ${areasEntrada}" th:value="${area.id}" th:text="${area.descricao}"></option>
                                         </select>
                                         <small class="text-danger" th:if="${wizardErrors['entradaForm.areaId']}" th:text="${wizardErrors['entradaForm.areaId']}"></small>
                                     </div>

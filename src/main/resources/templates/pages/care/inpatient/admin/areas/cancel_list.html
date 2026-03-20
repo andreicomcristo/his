@@ -1,28 +1,22 @@
 ﻿<!DOCTYPE html>
 <html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layout/base :: layout('Administração - Áreas', ~{::content})}">
+      th:replace="~{layout/base :: layout('Administração - Áreas Canceladas', ~{::content})}">
 <th:block th:fragment="content">
     <div class="main-card mb-3 card">
         <div class="card-body">
             <div class="d-flex justify-content-between align-items-center">
-                <h5 class="card-title">Áreas</h5>
+                <h5 class="card-title">Áreas canceladas</h5>
                 <div class="btn-group btn-group-sm" role="group">
-                    <a class="btn btn-outline-info"
-                       th:href="@{/ui/admin/areas/cancelados}"
+                    <a class="btn btn-secondary"
+                       th:href="@{/ui/admin/areas}"
                        data-toggle="tooltip"
                        data-placement="top"
-                       title="Visualizar áreas canceladas">
-                        <i class="nav-link-icon lnr-book mr-2"></i>Cancelados</a>
-                    <a class="btn btn-primary"
-                       th:href="@{/ui/admin/areas/novo}"
-                       data-toggle="tooltip"
-                       data-placement="top"
-                       title="Adicionar uma nova área">
-                        <i class="nav-link-icon lnr-plus-circle mr-2"></i>Adicionar</a>
+                       title="Voltar para áreas">
+                        <i class="nav-link-icon lnr-arrow-left mr-2"></i>Voltar</a>
                 </div>
             </div>
 
-            <form method="get">
+            <form method="get" th:action="@{/ui/admin/areas/cancelados}">
                 <div class="form-row">
                     <div class="form-group col-md-12">
                         <label class="filtro-label">Pesquisa</label>
@@ -38,7 +32,7 @@
                         <button class="btn btn-sm btn-primary mr-2" type="submit">
                             <i class="nav-link-icon lnr-magnifier mr-2"></i>Buscar
                         </button>
-                        <a th:href="@{/ui/admin/areas}" class="btn btn-sm btn-secondary">
+                        <a th:href="@{/ui/admin/areas/cancelados}" class="btn btn-sm btn-secondary">
                             <i class="nav-link-icon lnr-cross mr-2"></i>Limpar
                         </a>
                     </div>
@@ -46,6 +40,7 @@
             </form>
 
             <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+            <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
 
             <table class="table table-sm table-striped">
                 <thead>
@@ -54,17 +49,20 @@
                     <th>Unidade</th>
                     <th>Descrição</th>
                     <th>Detalhamento</th>
+                    <th>Data cancelamento</th>
                     <th class="text-center">Opções</th>
                 </tr>
                 </thead>
                 <tbody>
+                <tr th:if="${#lists.isEmpty(items)}">
+                    <td colspan="6" class="text-center">Nenhuma área cancelada encontrada</td>
+                </tr>
                 <tr th:each="item : ${items}">
                     <td th:text="${item.id}"></td>
-                    <td th:inline="text">
-                    <!--[[${item.unidade.nome}]] - -->[[${item.unidade.sigla}]]
-                    </td>
+                    <td th:text="${item.unidade.nome}"></td>
                     <td th:text="${item.descricao}"></td>
                     <td th:text="${item.detalhamento != null ? item.detalhamento : '-'}"></td>
+                    <td th:text="${item.dtCancelamento != null ? #temporals.format(item.dtCancelamento, 'dd/MM/yyyy HH:mm') : '-'}"></td>
                     <td class="text-center">
                         <div class="dropdown d-inline-block">
                             <button class="btn btn-sm btn-outline-secondary dropdown-toggle"
@@ -75,20 +73,20 @@
                                 <i class="nav-link-icon lnr-menu"></i>
                             </button>
                             <div class="dropdown-menu dropdown-menu-right">
-                                <a class="dropdown-item"
-                                   th:href="@{'/ui/admin/areas/' + ${item.id} + '/capacidades'}">
-                                    <i class="nav-link-icon lnr-link mr-2"></i><span>Capacidades</span>
-                                </a>
-                                <a class="dropdown-item text-warning"
-                                   th:href="@{'/ui/admin/areas/' + ${item.id} + '/editar'}">
-                                    <i class="nav-link-icon lnr-pencil mr-2"></i><span>Editar</span>
-                                </a>
+                                <button type="button"
+                                        class="dropdown-item text-info js-area-action"
+                                        data-action="restaurar"
+                                        th:data-action-url="@{'/ui/admin/areas/' + ${item.id} + '/restaurar'}"
+                                        th:data-item-descricao="${item.descricao}">
+                                    <i class="nav-link-icon pe-7s-refresh-2 mr-2"></i><span>Restaurar</span>
+                                </button>
+                                <hr>
                                 <button type="button"
                                         class="dropdown-item text-danger js-area-action"
-                                        data-action="excluir"
-                                        th:data-action-url="@{'/ui/admin/areas/' + ${item.id} + '/excluir'}"
+                                        data-action="excluir-permanente"
+                                        th:data-action-url="@{'/ui/admin/areas/' + ${item.id} + '/excluir-permanente'}"
                                         th:data-item-descricao="${item.descricao}">
-                                    <i class="nav-link-icon lnr-trash mr-2"></i><span>Excluir</span>
+                                    <i class="nav-link-icon lnr-trash mr-2"></i><span>Excluir permanente</span>
                                 </button>
                             </div>
                         </div>
@@ -137,7 +135,23 @@
             var modalMessageEl = document.getElementById('areaActionModalMessage');
             var confirmBtn = document.getElementById('areaActionModalConfirmBtn');
             var pendingActionUrl = null;
-            var pendingDescricao = '';
+
+            function configByAction(action, itemDescricao) {
+                if (action === 'excluir-permanente') {
+                    return {
+                        title: 'Excluir area permanentemente',
+                        message: 'Deseja excluir permanentemente a area "' + itemDescricao + '"? Esta acao e irreversivel.',
+                        buttonHtml: '<i class="nav-link-icon lnr-trash mr-2"></i>Excluir permanente',
+                        buttonClass: 'btn-danger'
+                    };
+                }
+                return {
+                    title: 'Restaurar area',
+                    message: 'Deseja restaurar a area "' + itemDescricao + '"?',
+                    buttonHtml: '<i class="nav-link-icon pe-7s-refresh-2 mr-2"></i>Restaurar',
+                    buttonClass: 'btn-info'
+                };
+            }
 
             function clearButtonStyle() {
                 confirmBtn.classList.remove('btn-danger', 'btn-warning', 'btn-success', 'btn-primary');
@@ -146,13 +160,15 @@
             actionButtons.forEach(function (button) {
                 button.addEventListener('click', function () {
                     pendingActionUrl = this.getAttribute('data-action-url');
-                    pendingDescricao = this.getAttribute('data-item-descricao') || '';
-                    modalTitleEl.textContent = 'Excluir area';
-                    modalMessageEl.textContent = 'Deseja excluir a area "' + pendingDescricao
-                        + '"? Ela recebera dt_cancelamento e nao sera mais listada.';
-                    confirmBtn.innerHTML = '<i class="nav-link-icon lnr-trash mr-2"></i>Excluir';
+                    var pendingDescricao = this.getAttribute('data-item-descricao') || '';
+                    var action = this.getAttribute('data-action') || 'restaurar';
+                    var config = configByAction(action, pendingDescricao);
+
+                    modalTitleEl.textContent = config.title;
+                    modalMessageEl.textContent = config.message;
+                    confirmBtn.innerHTML = config.buttonHtml;
                     clearButtonStyle();
-                    confirmBtn.classList.add('btn-danger');
+                    confirmBtn.classList.add(config.buttonClass);
 
                     if (window.jQuery) {
                         var dropdown = window.jQuery(this).closest('.dropdown');

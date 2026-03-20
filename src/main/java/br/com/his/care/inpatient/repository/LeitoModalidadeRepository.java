@@ -70,7 +70,7 @@ public interface LeitoModalidadeRepository extends JpaRepository<LeitoModalidade
               and l.ativo = true
               and lm.modalidadeTipo.ativo = true
               and upper(lm.modalidadeTipo.codigo) = upper(:modalidadeCodigo)
-            order by a.nome, l.codigo
+            order by a.descricao, l.codigo
             """)
     List<Leito> findLeitosAtivosPorUnidadeEModalidade(Long unidadeId, String modalidadeCodigo);
 }

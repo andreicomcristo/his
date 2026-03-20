@@ -549,7 +549,7 @@ public class AssistencialFlowService {
 
     private Entrada registrarEntrada(Atendimento atendimento, EntradaForm form) {
         Entrada entrada = entradaRepository.findByAtendimentoId(atendimento.getId()).orElseGet(Entrada::new);
-        Area area = areaRepository.findById(form.getAreaId())
+        Area area = areaRepository.findByIdAndDtCancelamentoIsNull(form.getAreaId())
                 .orElseThrow(() -> new IllegalArgumentException("Area da entrada nao encontrada"));
         FormaChegada formaChegada = formaChegadaRepository.findById(form.getFormaChegadaId())
                 .orElseThrow(() -> new IllegalArgumentException("Forma de chegada nao encontrada"));
@@ -576,7 +576,7 @@ public class AssistencialFlowService {
                 ? null
                 : profissaoRepository.findById(form.getProfissaoId())
                         .orElseThrow(() -> new IllegalArgumentException("Profissao nao encontrada"));
-        if (!area.isAtivo() || !area.getUnidade().getId().equals(atendimento.getUnidade().getId())) {
+        if (!area.getUnidade().getId().equals(atendimento.getUnidade().getId())) {
             throw new IllegalArgumentException("Area da entrada invalida para a unidade atual");
         }
         if (!formaChegada.isAtivo()) {

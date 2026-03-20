@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
 <body>
 <th:block th:replace="~{layout/base :: layout('HIS | Atendimentos', ~{::section})}">
@@ -209,11 +209,11 @@
                 <table class="table table-bordered table-hover table-sm">
                     <thead>
                     <tr>
-                        <th>Código</th>
+                        <th>CÃ³digo</th>
                         <th>Dados do paciente</th>
                         <th>Dados do atendimento/entrada</th>
-                        <th>Classificação de risco</th>
-                        <th>Situação atual / Desfecho</th>
+                        <th>ClassificaÃ§Ã£o de risco</th>
+                        <th>SituaÃ§Ã£o atual / Desfecho</th>
                         <th>Acoes</th>
                     </tr>
                     </thead>
@@ -229,7 +229,7 @@
                         <td>
                             <span class="fila-main" th:text="${a.paciente.nomeExibicao}"></span>
                             <span class="fila-line" th:if="${a.paciente.cpf != null}" th:text="${'CPF: ' + a.paciente.cpf}"></span>
-                            <span class="fila-line" th:if="${a.paciente.cns != null}" th:text="${'Cartão SUS: ' + a.paciente.cns}"></span>
+                            <span class="fila-line" th:if="${a.paciente.cns != null}" th:text="${'CartÃ£o SUS: ' + a.paciente.cns}"></span>
                             <span class="fila-line" th:if="${a.paciente.dataNascimento != null}"
                                   th:text="${#temporals.format(a.paciente.dataNascimento, 'dd/MM/yyyy') + ' - ' + T(java.time.Period).between(a.paciente.dataNascimento, T(java.time.LocalDate).now()).years + ' ANO(S)'}"></span>
                             <span class="fila-line" th:if="${a.paciente.dataNascimento == null and a.paciente.idadeAparente != null}"
@@ -242,7 +242,7 @@
                                       th:text="${entrada != null and entrada.dataHoraEntrada != null ? #temporals.format(entrada.dataHoraEntrada, 'dd/MM/yyyy - HH:mm') : #temporals.format(a.dataHoraChegada, 'dd/MM/yyyy - HH:mm')}"></span>
                                 <span class="fila-line" th:text="${a.tipoAtendimento}"></span>
                                 <span class="fila-line" th:if="${entrada != null and entrada.motivoEntrada != null}" th:text="${entrada.motivoEntrada.descricao}"></span>
-                                <span class="fila-line" th:if="${entrada != null and entrada.area != null}" th:text="${'Área: ' + entrada.area.nome}"></span>
+                                <span class="fila-line" th:if="${entrada != null and entrada.area != null}" th:text="${'Ãrea: ' + entrada.area.descricao}"></span>
                             </th:block>
                         </td>
                         <td>
@@ -255,7 +255,7 @@
                                           th:if="${classificacao.queixaPrincipal != null}"
                                           th:text="${classificacao.queixaPrincipal}"></span>
                                 </th:block>
-                                <span class="fila-line" th:if="${classificacao == null or classificacao.classificacaoCor == null}">SEM CLASSIFICAÇÃO</span>
+                                <span class="fila-line" th:if="${classificacao == null or classificacao.classificacaoCor == null}">SEM CLASSIFICAÃ‡ÃƒO</span>
                             </th:block>
                         </td>
                         <td>
@@ -295,13 +295,13 @@
                                         data-toggle="dropdown"
                                         aria-haspopup="true"
                                         aria-expanded="false"
-                                        title="Ações"
-                                        aria-label="Ações">
+                                        title="AÃ§Ãµes"
+                                        aria-label="AÃ§Ãµes">
                                     <i class="fa fa-list-ul"></i>
                                     <span class="caret"></span>
                                 </button>
                                 <div class="dropdown-menu dropdown-menu-right atendimento-acoes-menu" role="menu">
-                                    <div class="atendimento-acoes-header">OPÇÕES</div>
+                                    <div class="atendimento-acoes-header">OPÃ‡Ã•ES</div>
                                     <div class="atendimento-acoes-body">
                                         <a th:if="${canTriagemExecutar}" class="dropdown-item" th:href="@{/ui/triagem/{id}(id=${a.id})}">Classificacao de risco</a>
                                         <a th:if="${canRegistrarEntrada}"

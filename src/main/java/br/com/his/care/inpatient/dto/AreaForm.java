@@ -9,14 +9,12 @@ public class AreaForm {
     @NotNull(message = "Unidade e obrigatoria")
     private Long unidadeId;
 
-    @NotBlank(message = "Nome e obrigatorio")
+    @NotBlank(message = "Descricao e obrigatoria")
     @Size(max = 150)
-    private String nome;
-
-    @Size(max = 500)
     private String descricao;
 
-    private boolean ativo = true;
+    @Size(max = 500)
+    private String detalhamento;
 
     public Long getUnidadeId() {
         return unidadeId;
@@ -24,14 +22,6 @@ public class AreaForm {
 
     public void setUnidadeId(Long unidadeId) {
         this.unidadeId = unidadeId;
-    }
-
-    public String getNome() {
-        return nome;
-    }
-
-    public void setNome(String nome) {
-        this.nome = nome;
     }
 
     public String getDescricao() {
@@ -42,11 +32,11 @@ public class AreaForm {
         this.descricao = descricao;
     }
 
-    public boolean isAtivo() {
-        return ativo;
+    public String getDetalhamento() {
+        return detalhamento;
     }
 
-    public void setAtivo(boolean ativo) {
-        this.ativo = ativo;
+    public void setDetalhamento(String detalhamento) {
+        this.detalhamento = detalhamento;
     }
 }

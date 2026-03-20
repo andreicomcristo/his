@@ -1,6 +1,6 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layout/base :: layout('Administração - Leitos', ~{::content})}">
+      th:replace="~{layout/base :: layout('AdministraÃ§Ã£o - Leitos', ~{::content})}">
 <th:block th:fragment="content">
     <div class="main-card mb-3 card">
         <div class="card-body">
@@ -44,8 +44,8 @@
                 <tr>
                     <th>ID</th>
                     <th>Unidade</th>
-                    <th>Área</th>
-                    <th>Código</th>
+                    <th>Ãrea</th>
+                    <th>CÃ³digo</th>
                     <th>Tipo</th>
                     <th>Perfil</th>
                     <th>Natureza</th>
@@ -61,16 +61,16 @@
                 <tr th:each="item : ${items}">
                     <td th:text="${item.id}"></td>
                     <td th:text="${item.unidade.nome}"></td>
-                    <td th:text="${item.area.nome}"></td>
+                    <td th:text="${item.area.descricao}"></td>
                     <td th:text="${item.codigo}"></td>
                     <td th:text="${item.tipoLeito.descricao}"></td>
                     <td th:text="${item.perfilLeito != null ? item.perfilLeito.descricao : '-'}"></td>
                     <td th:text="${item.naturezaOperacional != null ? item.naturezaOperacional.descricao : '-'}"></td>
                     <td th:text="${mapaModalidades[item.id]}"></td>
-                    <td th:text="${item.recebePs ? 'SIM' : 'NÃO'}"></td>
-                    <td th:text="${item.permiteDestinoDefinitivo ? 'SIM' : 'NÃO'}"></td>
-                    <td th:text="${item.assistencial ? 'SIM' : 'NÃO'}"></td>
-                    <td th:text="${item.ativo ? 'SIM' : 'NÃO'}"></td>
+                    <td th:text="${item.recebePs ? 'SIM' : 'NÃƒO'}"></td>
+                    <td th:text="${item.permiteDestinoDefinitivo ? 'SIM' : 'NÃƒO'}"></td>
+                    <td th:text="${item.assistencial ? 'SIM' : 'NÃƒO'}"></td>
+                    <td th:text="${item.ativo ? 'SIM' : 'NÃƒO'}"></td>
                     <td class="text-right">
                         <div class="dropdown d-inline-block">
                             <button class="btn btn-sm btn-outline-secondary dropdown-toggle"

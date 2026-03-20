@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
       th:replace="~{layout/base :: layout('Administracao - Capacidades da Area', ~{::content})}">
 <th:block th:fragment="content">
@@ -6,7 +6,7 @@
         <div class="card-body">
             <h5 class="card-title">Capacidades da area</h5>
             <p class="text-muted mb-3">
-                <strong th:text="${area.nome}">AREA</strong>
+                <strong th:text="${area.descricao}">AREA</strong>
                 <span> | </span>
                 <span th:text="${area.unidade.nome}">UNIDADE</span>
             </p>

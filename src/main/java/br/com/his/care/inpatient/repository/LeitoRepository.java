@@ -40,12 +40,12 @@ public interface LeitoRepository extends JpaRepository<Leito, Long> {
             join fetch l.naturezaOperacional n
             where upper(l.codigo) like concat('%', upper(:q), '%')
                or upper(coalesce(l.descricao, '')) like concat('%', upper(:q), '%')
-               or upper(a.nome) like concat('%', upper(:q), '%')
+               or upper(a.descricao) like concat('%', upper(:q), '%')
                or upper(u.nome) like concat('%', upper(:q), '%')
                or upper(t.descricao) like concat('%', upper(:q), '%')
                or upper(coalesce(p.descricao, '')) like concat('%', upper(:q), '%')
                or upper(n.descricao) like concat('%', upper(:q), '%')
-            order by u.nome, a.nome, l.codigo
+            order by u.nome, a.descricao, l.codigo
             """)
     List<Leito> buscarPorFiltro(String q);
 
@@ -57,7 +57,7 @@ public interface LeitoRepository extends JpaRepository<Leito, Long> {
             join fetch l.tipoLeito t
             left join fetch l.perfilLeito p
             join fetch l.naturezaOperacional n
-            order by u.nome, a.nome, l.codigo
+            order by u.nome, a.descricao, l.codigo
             """)
     List<Leito> findAllWithReferencesOrderByNome();
 
@@ -82,7 +82,7 @@ public interface LeitoRepository extends JpaRepository<Leito, Long> {
             join fetch l.naturezaOperacional n
             where l.unidade.id = :unidadeId
               and l.ativo = true
-            order by a.nome, l.codigo
+            order by a.descricao, l.codigo
             """)
     List<Leito> findAtivosByUnidadeIdOrderByAreaENome(Long unidadeId);
 }

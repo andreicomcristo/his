@@ -1,6 +1,6 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layout/base :: layout(${modoEdicao} ? 'Administração - Editar Leito' : 'Administração - Novo Leito', ~{::content})}">
+      th:replace="~{layout/base :: layout(${modoEdicao} ? 'AdministraÃ§Ã£o - Editar Leito' : 'AdministraÃ§Ã£o - Novo Leito', ~{::content})}">
 <th:block th:fragment="content">
     <div class="main-card mb-3 card">
         <div class="card-body">
@@ -22,22 +22,22 @@
                         <small class="text-danger" th:errors="*{unidadeId}"></small>
                     </div>
                     <div class="form-group col-md-4">
-                        <label>Área<span class="required-mark">*</span></label>
+                        <label>Ãrea<span class="required-mark">*</span></label>
                         <select class="multiselect-dropdown form-control" th:field="*{areaId}">
                             <option value="">Selecione</option>
                             <option th:each="area : ${areas}"
                                     th:value="${area.id}"
                                     th:attr="data-unidade-id=${area.unidade.id}"
-                                    th:text="${area.nome + ' - ' + area.unidade.nome}"></option>
+                                    th:text="${area.descricao + ' - ' + area.unidade.nome}"></option>
                         </select>
                         <small class="text-danger" th:errors="*{areaId}"></small>
                     </div>
                     <div class="form-group col-md-4">
-                        <label>Código<span class="required-mark">*</span></label>
+                        <label>CÃ³digo<span class="required-mark">*</span></label>
                         <input type="text"
                                class="form-control"
                                th:field="*{codigo}"
-                               placeholder="Informe o código do leito">
+                               placeholder="Informe o cÃ³digo do leito">
                         <small class="text-danger" th:errors="*{codigo}"></small>
                     </div>
                 </div>
@@ -74,11 +74,11 @@
                         <small class="text-danger" th:errors="*{naturezaOperacionalId}"></small>
                     </div>
                     <div class="form-group col-md-3">
-                        <label>Descrição</label>
+                        <label>DescriÃ§Ã£o</label>
                         <input type="text"
                                class="form-control"
                                th:field="*{descricao}"
-                               placeholder="Informe a descrição do leito">
+                               placeholder="Informe a descriÃ§Ã£o do leito">
                         <small class="text-danger" th:errors="*{descricao}"></small>
                     </div>
                 </div>
@@ -98,7 +98,7 @@
                                 </label>
                             </div>
                         </div>
-                        <small class="form-text text-muted">Selecione se o leito recebe observação, internação ou ambos.</small>
+                        <small class="form-text text-muted">Selecione se o leito recebe observaÃ§Ã£o, internaÃ§Ã£o ou ambos.</small>
                     </div>
                 </div>
 
