@@ -50,8 +50,12 @@ public class Entrada {
     private Atendimento atendimento;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "area_id")
-    private Area area;
+    @JoinColumn(name = "area_porta_entrada_id")
+    private Area areaPortaEntrada;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "area_execucao_id")
+    private Area areaExecucao;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "forma_chegada_id")
@@ -133,12 +137,28 @@ public class Entrada {
         this.atendimento = atendimento;
     }
 
+    public Area getAreaPortaEntrada() {
+        return areaPortaEntrada;
+    }
+
+    public void setAreaPortaEntrada(Area areaPortaEntrada) {
+        this.areaPortaEntrada = areaPortaEntrada;
+    }
+
+    public Area getAreaExecucao() {
+        return areaExecucao;
+    }
+
+    public void setAreaExecucao(Area areaExecucao) {
+        this.areaExecucao = areaExecucao;
+    }
+
     public Area getArea() {
-        return area;
+        return areaPortaEntrada;
     }
 
     public void setArea(Area area) {
-        this.area = area;
+        this.areaPortaEntrada = area;
     }
 
     public Procedencia getProcedencia() {

@@ -75,6 +75,10 @@ public class ClassificacaoRisco {
     @JoinColumn(name = "regua_dor_id")
     private ReguaDor reguaDor;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "area_execucao_id")
+    private Area areaExecucao;
+
     @Column(name = "medicacoes_uso_continuo", length = 500)
     private String medicacoesUsoContinuo;
 
@@ -163,6 +167,14 @@ public class ClassificacaoRisco {
 
     public void setReguaDor(ReguaDor reguaDor) {
         this.reguaDor = reguaDor;
+    }
+
+    public Area getAreaExecucao() {
+        return areaExecucao;
+    }
+
+    public void setAreaExecucao(Area areaExecucao) {
+        this.areaExecucao = areaExecucao;
     }
 
     public String getMedicacoesUsoContinuo() {

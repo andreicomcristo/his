@@ -12,11 +12,24 @@ public interface AreaRepository extends JpaRepository<Area, Long> {
 
     Optional<Area> findByIdAndDtCancelamentoIsNull(Long id);
     Optional<Area> findByIdAndDtCancelamentoIsNotNull(Long id);
+    Optional<Area> findByIdAndUnidadeIdAndDtCancelamentoIsNull(Long id, Long unidadeId);
+    @Query("""
+            select a
+            from Area a
+            join fetch a.unidade u
+            join fetch a.tipoArea ta
+            where u.id = :unidadeId
+              and a.dtCancelamento is null
+            order by a.descricao
+            """)
+    List<Area> findByUnidadeIdAndDtCancelamentoIsNullOrderByDescricaoAsc(Long unidadeId);
+    boolean existsByTipoAreaId(Long tipoAreaId);
 
     @Query("""
             select distinct a
             from Area a
             join fetch a.unidade u
+            join fetch a.tipoArea ta
             join AreaCapacidade ac on ac.area.id = a.id
             join CapacidadeArea ca on ca.id = ac.capacidadeArea.id
             where u.id = :unidadeId
@@ -28,9 +41,25 @@ public interface AreaRepository extends JpaRepository<Area, Long> {
     List<Area> findAreasAtivasRecebemEntradaByUnidadeId(Long unidadeId);
 
     @Query("""
+            select distinct a
+            from Area a
+            join fetch a.unidade u
+            join fetch a.tipoArea ta
+            join AreaCapacidade ac on ac.area.id = a.id
+            join CapacidadeArea ca on ca.id = ac.capacidadeArea.id
+            where u.id = :unidadeId
+              and a.dtCancelamento is null
+              and ca.ativo = true
+              and upper(ca.nome) in ('REALIZA_CLASSIFICACAO', 'SALA_CLASSIFICACAO')
+            order by a.descricao
+            """)
+    List<Area> findAreasAtivasTriagemByUnidadeId(Long unidadeId);
+
+    @Query("""
             select a
             from Area a
             join fetch a.unidade u
+            join fetch a.tipoArea ta
             where a.dtCancelamento is null
               and (
                    upper(a.descricao) like concat('%', upper(:q), '%')
@@ -45,6 +74,7 @@ public interface AreaRepository extends JpaRepository<Area, Long> {
             select a
             from Area a
             join fetch a.unidade u
+            join fetch a.tipoArea ta
             where a.dtCancelamento is null
             order by u.nome, a.descricao
             """)
@@ -54,6 +84,7 @@ public interface AreaRepository extends JpaRepository<Area, Long> {
             select a
             from Area a
             join fetch a.unidade u
+            join fetch a.tipoArea ta
             where a.dtCancelamento is not null
               and (
                    upper(a.descricao) like concat('%', upper(:q), '%')
@@ -68,6 +99,7 @@ public interface AreaRepository extends JpaRepository<Area, Long> {
             select a
             from Area a
             join fetch a.unidade u
+            join fetch a.tipoArea ta
             where a.dtCancelamento is not null
             order by a.dtCancelamento desc, u.nome, a.descricao
             """)
@@ -77,6 +109,7 @@ public interface AreaRepository extends JpaRepository<Area, Long> {
             select distinct a
             from Area a
             join fetch a.unidade u
+            join fetch a.tipoArea ta
             join AreaCapacidade ac on ac.area.id = a.id
             join CapacidadeArea ca on ca.id = ac.capacidadeArea.id
             where a.dtCancelamento is null
@@ -86,5 +119,3 @@ public interface AreaRepository extends JpaRepository<Area, Long> {
             """)
     List<Area> findAreasAtivasComLeito();
 }
-
-

@@ -326,19 +326,19 @@
             <div class="wizard-stepper">
                 <div class="wizard-step"
                      th:classappend="${wizard.currentStep > 1} ? ' is-done' : (${wizard.currentStep == 1} ? ' is-active' : '')">
-                    <div class="wizard-step-dot" th:text="${wizard.currentStep > 1 ? '✓' : '1'}">1</div>
+                    <div class="wizard-step-dot">1</div>
                     <div class="wizard-step-title">Tipo de paciente</div>
                     <div class="wizard-step-subtitle">Identificado ou nao</div>
                 </div>
                 <div class="wizard-step"
                      th:classappend="${wizard.currentStep > 2} ? ' is-done' : (${wizard.currentStep == 2} ? ' is-active' : '')">
-                    <div class="wizard-step-dot" th:text="${wizard.currentStep > 2 ? '✓' : '2'}">2</div>
+                    <div class="wizard-step-dot">2</div>
                     <div class="wizard-step-title">Paciente</div>
                     <div class="wizard-step-subtitle">Busca ou cadastro</div>
                 </div>
                 <div class="wizard-step"
                      th:classappend="${wizard.currentStep > 3} ? ' is-done' : (${wizard.currentStep == 3} ? ' is-active' : '')">
-                    <div class="wizard-step-dot" th:text="${wizard.currentStep > 3 ? '✓' : '3'}">3</div>
+                    <div class="wizard-step-dot">3</div>
                     <div class="wizard-step-title">Atendimento</div>
                     <div class="wizard-step-subtitle">Confirmacao</div>
                 </div>
@@ -510,7 +510,7 @@
                             <div class="form-group col-md-4">
                                 <label>Tipo de atendimento</label>
                                 <select class="form-control form-select chat-input" th:field="*{tipoAtendimento}">
-                                    <option th:each="t : ${tiposAtendimento}" th:value="${t}" th:text="${t}"></option>
+                                    <option th:each="t : ${tiposAtendimento}" th:value="${t.codigo}" th:text="${t.descricao}"></option>
                                 </select>
                                 <small class="text-danger" th:if="${wizardErrors['tipoAtendimento']}" th:text="${wizardErrors['tipoAtendimento']}"></small>
                             </div>
@@ -867,6 +867,18 @@
                             <div class="card-header"><strong>Classificacao de risco</strong></div>
                             <div class="card-body">
                                 <div class="form-row">
+                                    <div class="form-group col-md-6">
+                                        <label>Posto de triagem<span class="required-mark">*</span></label>
+                                        <select class="form-control" th:field="*{triagemForm.areaExecucaoId}">
+                                            <option value="">Selecione</option>
+                                            <option th:each="area : ${areasExecucaoTriagem}"
+                                                    th:value="${area.id}"
+                                                    th:text="${area.descricao}"></option>
+                                        </select>
+                                        <small class="text-danger"
+                                               th:if="${wizardErrors['triagemForm.areaExecucaoId']}"
+                                               th:text="${wizardErrors['triagemForm.areaExecucaoId']}"></small>
+                                    </div>
                                     <div class="form-group col-md-4">
                                         <label>Cor de classificacao<span class="required-mark">*</span></label>
                                         <select class="form-control" th:field="*{triagemForm.classificacaoCorId}">

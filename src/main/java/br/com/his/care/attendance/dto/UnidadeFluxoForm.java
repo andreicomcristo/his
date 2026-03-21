@@ -1,5 +1,8 @@
 package br.com.his.care.attendance.dto;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import br.com.his.care.attendance.model.PrimeiroPassoFluxo;
 import jakarta.validation.constraints.NotNull;
 
@@ -11,10 +14,7 @@ public class UnidadeFluxoForm {
     private boolean exigeFichaParaMedico;
     private boolean permiteAgendamento;
 
-    private boolean triagemObrigatoriaUrgencia;
-    private boolean triagemObrigatoriaAmbulatorial;
-    private boolean triagemObrigatoriaInternacaoDireta;
-    private boolean triagemObrigatoriaProcedimento;
+    private List<UnidadeTipoAtendimentoConfigForm> tiposAtendimento = new ArrayList<>();
 
     public PrimeiroPassoFluxo getPrimeiroPasso() {
         return primeiroPasso;
@@ -40,35 +40,11 @@ public class UnidadeFluxoForm {
         this.permiteAgendamento = permiteAgendamento;
     }
 
-    public boolean isTriagemObrigatoriaUrgencia() {
-        return triagemObrigatoriaUrgencia;
+    public List<UnidadeTipoAtendimentoConfigForm> getTiposAtendimento() {
+        return tiposAtendimento;
     }
 
-    public void setTriagemObrigatoriaUrgencia(boolean triagemObrigatoriaUrgencia) {
-        this.triagemObrigatoriaUrgencia = triagemObrigatoriaUrgencia;
-    }
-
-    public boolean isTriagemObrigatoriaAmbulatorial() {
-        return triagemObrigatoriaAmbulatorial;
-    }
-
-    public void setTriagemObrigatoriaAmbulatorial(boolean triagemObrigatoriaAmbulatorial) {
-        this.triagemObrigatoriaAmbulatorial = triagemObrigatoriaAmbulatorial;
-    }
-
-    public boolean isTriagemObrigatoriaInternacaoDireta() {
-        return triagemObrigatoriaInternacaoDireta;
-    }
-
-    public void setTriagemObrigatoriaInternacaoDireta(boolean triagemObrigatoriaInternacaoDireta) {
-        this.triagemObrigatoriaInternacaoDireta = triagemObrigatoriaInternacaoDireta;
-    }
-
-    public boolean isTriagemObrigatoriaProcedimento() {
-        return triagemObrigatoriaProcedimento;
-    }
-
-    public void setTriagemObrigatoriaProcedimento(boolean triagemObrigatoriaProcedimento) {
-        this.triagemObrigatoriaProcedimento = triagemObrigatoriaProcedimento;
+    public void setTiposAtendimento(List<UnidadeTipoAtendimentoConfigForm> tiposAtendimento) {
+        this.tiposAtendimento = tiposAtendimento == null ? new ArrayList<>() : tiposAtendimento;
     }
 }

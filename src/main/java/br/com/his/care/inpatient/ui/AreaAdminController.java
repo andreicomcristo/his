@@ -13,6 +13,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import br.com.his.care.inpatient.dto.AreaForm;
 import br.com.his.care.inpatient.service.AreaAdminService;
+import br.com.his.care.inpatient.service.TipoAreaAdminService;
 import br.com.his.access.service.UnidadeAdminService;
 import jakarta.validation.Valid;
 
@@ -22,10 +23,14 @@ public class AreaAdminController {
 
     private final AreaAdminService service;
     private final UnidadeAdminService unidadeAdminService;
+    private final TipoAreaAdminService tipoAreaAdminService;
 
-    public AreaAdminController(AreaAdminService service, UnidadeAdminService unidadeAdminService) {
+    public AreaAdminController(AreaAdminService service,
+                               UnidadeAdminService unidadeAdminService,
+                               TipoAreaAdminService tipoAreaAdminService) {
         this.service = service;
         this.unidadeAdminService = unidadeAdminService;
+        this.tipoAreaAdminService = tipoAreaAdminService;
     }
 
     @GetMapping
@@ -124,5 +129,6 @@ public class AreaAdminController {
 
     private void populateModel(Model model) {
         model.addAttribute("unidades", unidadeAdminService.listar(null));
+        model.addAttribute("tiposArea", tipoAreaAdminService.listarAtivos());
     }
 }

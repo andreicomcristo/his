@@ -1,5 +1,7 @@
 package br.com.his.care.admission.ui;
 
+import java.util.List;
+
 import br.com.his.care.attendance.api.dto.*;
 import br.com.his.care.attendance.dto.*;
 import br.com.his.care.attendance.model.*;
@@ -34,6 +36,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import br.com.his.access.context.UnidadeContext;
 import br.com.his.access.service.OperationalPermissionService;
 import br.com.his.care.admission.dto.EntradaPendenteForm;
 import br.com.his.care.admission.dto.EntradaForm;
@@ -56,6 +59,7 @@ public class EntradaController {
 
     private final AssistencialFlowService assistencialFlowService;
     private final OperationalPermissionService operationalPermissionService;
+    private final UnidadeContext unidadeContext;
     private final AreaRepository areaRepository;
     private final FormaChegadaRepository formaChegadaRepository;
     private final GrauParentescoRepository grauParentescoRepository;
@@ -70,6 +74,7 @@ public class EntradaController {
 
     public EntradaController(AssistencialFlowService assistencialFlowService,
                              OperationalPermissionService operationalPermissionService,
+                             UnidadeContext unidadeContext,
                              AreaRepository areaRepository,
                              FormaChegadaRepository formaChegadaRepository,
                              GrauParentescoRepository grauParentescoRepository,
@@ -83,6 +88,7 @@ public class EntradaController {
                              SmartValidator validator) {
         this.assistencialFlowService = assistencialFlowService;
         this.operationalPermissionService = operationalPermissionService;
+        this.unidadeContext = unidadeContext;
         this.areaRepository = areaRepository;
         this.formaChegadaRepository = formaChegadaRepository;
         this.grauParentescoRepository = grauParentescoRepository;
@@ -99,11 +105,15 @@ public class EntradaController {
     @GetMapping("/atendimento/{atendimentoId}")
     public String telaPorAtendimento(@PathVariable Long atendimentoId, Model model) {
         requirePermission();
+        Atendimento atendimento = assistencialFlowService.buscarAtendimento(atendimentoId);
+        List<Area> areasEntrada = areaRepository.findAreasAtivasRecebemEntradaByUnidadeId(atendimento.getUnidade().getId());
+        Long areaExecucaoRecepcaoAtualId = resolveAreaExecucaoRecepcaoAtual(atendimento.getUnidade().getId(), areasEntrada);
         if (!model.containsAttribute("form")) {
             EntradaForm form = assistencialFlowService.buscarEntradaPorAtendimento(atendimentoId)
                     .map(entrada -> {
                         EntradaForm f = new EntradaForm();
-                        f.setAreaId(entrada.getArea() == null ? null : entrada.getArea().getId());
+                        f.setAreaPortaEntradaId(entrada.getAreaPortaEntrada() == null ? null : entrada.getAreaPortaEntrada().getId());
+                        f.setAreaExecucaoId(entrada.getAreaExecucao() == null ? null : entrada.getAreaExecucao().getId());
                         f.setTipoProcedenciaId(entrada.getProcedencia() == null || entrada.getProcedencia().getTipoProcedencia() == null
                                 ? null : entrada.getProcedencia().getTipoProcedencia().getId());
                         f.setProcedenciaId(entrada.getProcedencia() == null ? null : entrada.getProcedencia().getId());
@@ -131,7 +141,6 @@ public class EntradaController {
                         return f;
                     })
                     .orElse(new EntradaForm());
-            var atendimento = assistencialFlowService.buscarAtendimento(atendimentoId);
             if (form.getProfissaoId() == null
                     && atendimento.getPaciente() != null
                     && atendimento.getPaciente().getProfissao() != null) {
@@ -139,10 +148,12 @@ public class EntradaController {
             }
             model.addAttribute("form", form);
         }
+        applyAreaExecucaoRecepcaoDefault((EntradaForm) model.getAttribute("form"), areaExecucaoRecepcaoAtualId, areasEntrada);
         model.addAttribute("atendimentoId", atendimentoId);
         model.addAttribute("formAction", "/ui/entradas/atendimento/" + atendimentoId);
-        var atendimento = assistencialFlowService.buscarAtendimento(atendimentoId);
-        model.addAttribute("areasEntrada", areaRepository.findAreasAtivasRecebemEntradaByUnidadeId(atendimento.getUnidade().getId()));
+        model.addAttribute("areasEntrada", areasEntrada);
+        model.addAttribute("areasExecucaoRecepcao", areasEntrada);
+        model.addAttribute("areaExecucaoRecepcaoAtualId", areaExecucaoRecepcaoAtualId);
         model.addAttribute("tiposProcedenciaEntrada", pacienteLookupService.listarTiposProcedenciaEntrada());
         model.addAttribute("procedenciasEntrada", pacienteLookupService.listarProcedenciasEntrada(atendimento.getUnidade().getId()));
         model.addAttribute("bairrosEntrada", pacienteLookupService.listarBairrosPorMunicipio(
@@ -186,12 +197,23 @@ public class EntradaController {
                                        Model model,
                                        RedirectAttributes redirectAttributes) {
         requirePermission();
+        Atendimento atendimento = assistencialFlowService.buscarAtendimento(atendimentoId);
+        List<Area> areasEntrada = areaRepository.findAreasAtivasRecebemEntradaByUnidadeId(atendimento.getUnidade().getId());
+        Long areaExecucaoRecepcaoAtualId = resolveAreaExecucaoRecepcaoAtual(atendimento.getUnidade().getId(), areasEntrada);
+        applyAreaExecucaoRecepcaoDefault(form, areaExecucaoRecepcaoAtualId, areasEntrada);
+        if (form.getAreaPortaEntradaId() != null && !isAreaEntradaValida(form.getAreaPortaEntradaId(), areasEntrada)) {
+            bindingResult.rejectValue("areaPortaEntradaId", "entrada.areaPortaEntrada.invalid", "Porta de entrada invalida para a unidade atual.");
+        }
+        if (form.getAreaExecucaoId() != null && !isAreaEntradaValida(form.getAreaExecucaoId(), areasEntrada)) {
+            bindingResult.rejectValue("areaExecucaoId", "entrada.areaExecucao.invalid", "Area de execucao invalida para a unidade atual.");
+        }
         validateProcedencia(form, bindingResult, "");
         if (bindingResult.hasErrors()) {
-            var atendimento = assistencialFlowService.buscarAtendimento(atendimentoId);
             model.addAttribute("atendimentoId", atendimentoId);
             model.addAttribute("formAction", "/ui/entradas/atendimento/" + atendimentoId);
-            model.addAttribute("areasEntrada", areaRepository.findAreasAtivasRecebemEntradaByUnidadeId(atendimento.getUnidade().getId()));
+            model.addAttribute("areasEntrada", areasEntrada);
+            model.addAttribute("areasExecucaoRecepcao", areasEntrada);
+            model.addAttribute("areaExecucaoRecepcaoAtualId", areaExecucaoRecepcaoAtualId);
             model.addAttribute("tiposProcedenciaEntrada", pacienteLookupService.listarTiposProcedenciaEntrada());
             model.addAttribute("procedenciasEntrada", pacienteLookupService.listarProcedenciasEntrada(atendimento.getUnidade().getId()));
             model.addAttribute("bairrosEntrada", pacienteLookupService.listarBairrosPorMunicipio(
@@ -207,6 +229,7 @@ public class EntradaController {
         }
         try {
             assistencialFlowService.registrarEntradaPorAtendimento(atendimentoId, form);
+            rememberAreaExecucaoRecepcao(form.getAreaExecucaoId());
             redirectAttributes.addFlashAttribute("successMessage", "Entrada registrada");
             return "redirect:/ui/atendimentos";
         } catch (IllegalArgumentException ex) {
@@ -249,9 +272,24 @@ public class EntradaController {
                                         RedirectAttributes redirectAttributes) {
         requirePermission();
         Atendimento atendimento = assistencialFlowService.buscarAtendimento(atendimentoId);
+        List<Area> areasEntrada = areaRepository.findAreasAtivasRecebemEntradaByUnidadeId(atendimento.getUnidade().getId());
+        Long areaExecucaoRecepcaoAtualId = resolveAreaExecucaoRecepcaoAtual(atendimento.getUnidade().getId(), areasEntrada);
+        applyAreaExecucaoRecepcaoDefault(pendenteForm.getEntradaForm(), areaExecucaoRecepcaoAtualId, areasEntrada);
         bindingResult.pushNestedPath("entradaForm");
         validator.validate(pendenteForm.getEntradaForm(), bindingResult);
         bindingResult.popNestedPath();
+        if (pendenteForm.getEntradaForm().getAreaPortaEntradaId() != null
+                && !isAreaEntradaValida(pendenteForm.getEntradaForm().getAreaPortaEntradaId(), areasEntrada)) {
+            bindingResult.rejectValue("entradaForm.areaPortaEntradaId",
+                    "entrada.areaPortaEntrada.invalid",
+                    "Porta de entrada invalida para a unidade atual.");
+        }
+        if (pendenteForm.getEntradaForm().getAreaExecucaoId() != null
+                && !isAreaEntradaValida(pendenteForm.getEntradaForm().getAreaExecucaoId(), areasEntrada)) {
+            bindingResult.rejectValue("entradaForm.areaExecucaoId",
+                    "entrada.areaExecucao.invalid",
+                    "Area de execucao invalida para a unidade atual.");
+        }
         validateProcedencia(pendenteForm.getEntradaForm(), bindingResult, "entradaForm.");
         if (bindingResult.hasErrors()) {
             populatePendenteModel(model, atendimento, pendenteForm, 2);
@@ -259,6 +297,7 @@ public class EntradaController {
         }
         try {
             assistencialFlowService.registrarEntradaPorAtendimento(atendimentoId, pendenteForm.getEntradaForm());
+            rememberAreaExecucaoRecepcao(pendenteForm.getEntradaForm().getAreaExecucaoId());
             redirectAttributes.addFlashAttribute("successMessage", "Entrada registrada");
             return "redirect:/ui/atendimentos/pendentes-entrada";
         } catch (IllegalArgumentException ex) {
@@ -269,10 +308,15 @@ public class EntradaController {
     }
 
     private void populatePendenteModel(Model model, Atendimento atendimento, EntradaPendenteForm pendenteForm, int currentStep) {
+        List<Area> areasEntrada = areaRepository.findAreasAtivasRecebemEntradaByUnidadeId(atendimento.getUnidade().getId());
+        Long areaExecucaoRecepcaoAtualId = resolveAreaExecucaoRecepcaoAtual(atendimento.getUnidade().getId(), areasEntrada);
+        applyAreaExecucaoRecepcaoDefault(pendenteForm.getEntradaForm(), areaExecucaoRecepcaoAtualId, areasEntrada);
         model.addAttribute("atendimento", atendimento);
         model.addAttribute("classificacao", assistencialFlowService.mapaUltimaClassificacao(java.util.List.of(atendimento.getId())).get(atendimento.getId()));
         model.addAttribute("currentStep", currentStep);
-        model.addAttribute("areasEntrada", areaRepository.findAreasAtivasRecebemEntradaByUnidadeId(atendimento.getUnidade().getId()));
+        model.addAttribute("areasEntrada", areasEntrada);
+        model.addAttribute("areasExecucaoRecepcao", areasEntrada);
+        model.addAttribute("areaExecucaoRecepcaoAtualId", areaExecucaoRecepcaoAtualId);
         model.addAttribute("tiposProcedenciaEntrada", pacienteLookupService.listarTiposProcedenciaEntrada());
         model.addAttribute("procedenciasEntrada", pacienteLookupService.listarProcedenciasEntrada(atendimento.getUnidade().getId()));
         model.addAttribute("bairrosEntrada", pacienteLookupService.listarBairrosPorMunicipio(
@@ -350,7 +394,8 @@ public class EntradaController {
     }
 
     private void copyEntradaToForm(br.com.his.care.admission.model.Entrada entrada, EntradaForm form) {
-        form.setAreaId(entrada.getArea() == null ? null : entrada.getArea().getId());
+        form.setAreaPortaEntradaId(entrada.getAreaPortaEntrada() == null ? null : entrada.getAreaPortaEntrada().getId());
+        form.setAreaExecucaoId(entrada.getAreaExecucao() == null ? null : entrada.getAreaExecucao().getId());
         form.setTipoProcedenciaId(entrada.getProcedencia() == null || entrada.getProcedencia().getTipoProcedencia() == null
                 ? null : entrada.getProcedencia().getTipoProcedencia().getId());
         form.setProcedenciaId(entrada.getProcedencia() == null ? null : entrada.getProcedencia().getId());
@@ -428,5 +473,58 @@ public class EntradaController {
                     "entrada.procedencia.required",
                     "Procedencia e obrigatoria.");
         }
+    }
+
+    private Long resolveAreaExecucaoRecepcaoAtual(Long unidadeId, List<Area> areasExecucaoRecepcao) {
+        Long areaAtual = unidadeContext.getAreaExecucaoRecepcaoAtual().orElse(null);
+        if (areaAtual != null && isAreaEntradaValida(areaAtual, areasExecucaoRecepcao)) {
+            return areaAtual;
+        }
+        if (areasExecucaoRecepcao.size() == 1) {
+            Long unico = areasExecucaoRecepcao.get(0).getId();
+            unidadeContext.setAreaExecucaoRecepcaoAtual(unico);
+            return unico;
+        }
+        if (areaAtual != null) {
+            unidadeContext.clearAreaExecucaoRecepcaoAtual();
+        }
+        return null;
+    }
+
+    private void applyAreaExecucaoRecepcaoDefault(EntradaForm form,
+                                                  Long areaExecucaoRecepcaoAtualId,
+                                                  List<Area> areasExecucaoRecepcao) {
+        if (form == null) {
+            return;
+        }
+
+        if (form.getAreaExecucaoId() == null || !isAreaEntradaValida(form.getAreaExecucaoId(), areasExecucaoRecepcao)) {
+            if (areaExecucaoRecepcaoAtualId != null) {
+                form.setAreaExecucaoId(areaExecucaoRecepcaoAtualId);
+            } else if (areasExecucaoRecepcao.size() == 1) {
+                form.setAreaExecucaoId(areasExecucaoRecepcao.get(0).getId());
+            }
+        }
+
+        if (form.getAreaPortaEntradaId() == null || !isAreaEntradaValida(form.getAreaPortaEntradaId(), areasExecucaoRecepcao)) {
+            if (form.getAreaExecucaoId() != null && isAreaEntradaValida(form.getAreaExecucaoId(), areasExecucaoRecepcao)) {
+                form.setAreaPortaEntradaId(form.getAreaExecucaoId());
+            } else if (areasExecucaoRecepcao.size() == 1) {
+                form.setAreaPortaEntradaId(areasExecucaoRecepcao.get(0).getId());
+            }
+        }
+    }
+
+    private void rememberAreaExecucaoRecepcao(Long areaId) {
+        if (areaId != null) {
+            unidadeContext.setAreaExecucaoRecepcaoAtual(areaId);
+        }
+    }
+
+    private boolean isAreaEntradaValida(Long areaId, List<Area> areasExecucaoRecepcao) {
+        if (areaId == null) {
+            return false;
+        }
+        return areasExecucaoRecepcao.stream().anyMatch(area -> area.getId().equals(areaId));
     }
 }

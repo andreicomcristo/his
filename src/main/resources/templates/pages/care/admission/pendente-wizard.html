@@ -178,7 +178,7 @@
             <div class="pending-stepper">
                 <div class="pending-step"
                      th:classappend="${currentStep > 1} ? ' is-done' : (${currentStep == 1} ? ' is-active' : '')">
-                    <div class="pending-step-dot" th:text="${currentStep > 1 ? 'âœ“' : '1'}">1</div>
+                    <div class="pending-step-dot">1</div>
                     <div class="pending-step-title">Paciente</div>
                     <div class="pending-step-subtitle">Completar cadastro</div>
                 </div>
@@ -481,13 +481,24 @@
                             <div class="entry-block-body">
                                 <div class="form-row">
                                     <div class="form-group col-md-3">
-                                        <label>Area da entrada<span class="required-mark">*</span></label>
-                                        <select class="form-control" th:field="*{entradaForm.areaId}">
+                                        <label>Porta de entrada<span class="required-mark">*</span></label>
+                                        <select class="form-control" th:field="*{entradaForm.areaPortaEntradaId}">
                                             <option value="">Selecione</option>
                                             <option th:each="area : ${areasEntrada}" th:value="${area.id}" th:text="${area.descricao}"></option>
                                         </select>
-                                        <small class="text-danger" th:errors="*{entradaForm.areaId}"></small>
+                                        <small class="text-danger" th:errors="*{entradaForm.areaPortaEntradaId}"></small>
                                     </div>
+                                    <div class="form-group col-md-3" th:if="${areaExecucaoRecepcaoAtualId == null}">
+                                        <label>Posto de execucao (recepcao)<span class="required-mark">*</span></label>
+                                        <select class="form-control" th:field="*{entradaForm.areaExecucaoId}">
+                                            <option value="">Selecione</option>
+                                            <option th:each="area : ${areasExecucaoRecepcao}" th:value="${area.id}" th:text="${area.descricao}"></option>
+                                        </select>
+                                        <small class="text-danger" th:errors="*{entradaForm.areaExecucaoId}"></small>
+                                    </div>
+                                    <input type="hidden"
+                                           th:if="${areaExecucaoRecepcaoAtualId != null}"
+                                           th:field="*{entradaForm.areaExecucaoId}"/>
                                     <div class="form-group col-md-3">
                                         <label>Forma de chegada<span class="required-mark">*</span></label>
                                         <select class="form-control" th:field="*{entradaForm.formaChegadaId}">

@@ -52,6 +52,7 @@
                 <tr>
                     <th>ID</th>
                     <th>Unidade</th>
+                    <th>Tipo</th>
                     <th>Descrição</th>
                     <th>Detalhamento</th>
                     <th class="text-center">Opções</th>
@@ -63,6 +64,7 @@
                     <td th:inline="text">
                     <!--[[${item.unidade.nome}]] - -->[[${item.unidade.sigla}]]
                     </td>
+                    <td th:text="${item.tipoArea != null ? item.tipoArea.descricao : '-'}"></td>
                     <td th:text="${item.descricao}"></td>
                     <td th:text="${item.detalhamento != null ? item.detalhamento : '-'}"></td>
                     <td class="text-center">

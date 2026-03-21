@@ -44,9 +44,9 @@ import br.com.his.access.context.UnidadeContext;
 import br.com.his.access.service.OperationalPermissionService;
 import br.com.his.care.inpatient.dto.ObservacaoForm;
 import br.com.his.care.inpatient.model.Observacao;
-import br.com.his.care.attendance.model.TipoAtendimento;
 import br.com.his.care.attendance.repository.AtendimentoRepository;
 import br.com.his.care.attendance.repository.StatusAtendimentoRepository;
+import br.com.his.care.attendance.service.TipoAtendimentoService;
 import br.com.his.care.inpatient.service.ObservacaoService;
 import br.com.his.patient.validation.CpfUtils;
 import jakarta.validation.Valid;
@@ -60,23 +60,26 @@ public class ObservacaoController {
     private final StatusAtendimentoRepository statusAtendimentoRepository;
     private final UnidadeContext unidadeContext;
     private final OperationalPermissionService operationalPermissionService;
+    private final TipoAtendimentoService tipoAtendimentoService;
 
     public ObservacaoController(ObservacaoService observacaoService,
                                 AtendimentoRepository atendimentoRepository,
                                 StatusAtendimentoRepository statusAtendimentoRepository,
                                 UnidadeContext unidadeContext,
-                                OperationalPermissionService operationalPermissionService) {
+                                OperationalPermissionService operationalPermissionService,
+                                TipoAtendimentoService tipoAtendimentoService) {
         this.observacaoService = observacaoService;
         this.atendimentoRepository = atendimentoRepository;
         this.statusAtendimentoRepository = statusAtendimentoRepository;
         this.unidadeContext = unidadeContext;
         this.operationalPermissionService = operationalPermissionService;
+        this.tipoAtendimentoService = tipoAtendimentoService;
     }
 
     @GetMapping
     public String listar(@RequestParam(required = false) String nome,
                          @RequestParam(required = false) String cpf,
-                         @RequestParam(required = false) TipoAtendimento tipoAtendimento,
+                         @RequestParam(name = "tipoAtendimento", required = false) String tipoAtendimento,
                          @RequestParam(required = false) Long statusId,
                          @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicio,
                          @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFim,
@@ -87,7 +90,7 @@ public class ObservacaoController {
                 .filter(item -> Objects.equals(item.getAtendimento().getUnidade().getId(), unidadeId))
                 .filter(item -> matchesNome(item, nome))
                 .filter(item -> matchesCpf(item, cpf))
-                .filter(item -> tipoAtendimento == null || item.getAtendimento().getTipoAtendimento() == tipoAtendimento)
+                .filter(item -> matchesTipoAtendimento(item, tipoAtendimento))
                 .filter(item -> statusId == null || (item.getAtendimento().getStatus() != null
                         && statusId.equals(item.getAtendimento().getStatus().getId())))
                 .filter(item -> matchesPeriodo(item, dataInicio, dataFim))
@@ -96,11 +99,11 @@ public class ObservacaoController {
         model.addAttribute("leitosMap", observacaoService.mapaLeitoAtual(items));
         model.addAttribute("nome", nome);
         model.addAttribute("cpf", cpf);
-        model.addAttribute("tipoAtendimentoSelecionado", tipoAtendimento);
+        model.addAttribute("tipoAtendimentoSelecionado", TipoAtendimentoService.normalizeCodigo(tipoAtendimento));
         model.addAttribute("statusSelecionadoId", statusId);
         model.addAttribute("dataInicio", dataInicio);
         model.addAttribute("dataFim", dataFim);
-        model.addAttribute("tiposAtendimento", TipoAtendimento.values());
+        model.addAttribute("tiposAtendimento", tipoAtendimentoService.listarOpcoesAtivasPorUnidadeOuGlobal(unidadeId));
         model.addAttribute("statusAtendimentoOptions", statusAtendimentoRepository.findAllByOrderByDescricaoAsc());
         return "pages/care/inpatient/observacoes/list";
     }
@@ -249,6 +252,14 @@ public class ObservacaoController {
         String cpfPaciente = item.getAtendimento().getPaciente().getCpf();
         String cpfDigits = CpfUtils.digitsOnly(cpfPaciente);
         return filtroDigits != null && cpfDigits != null && cpfDigits.contains(filtroDigits);
+    }
+
+    private boolean matchesTipoAtendimento(Observacao item, String tipoAtendimento) {
+        String filtro = TipoAtendimentoService.normalizeCodigo(tipoAtendimento);
+        if (filtro == null) {
+            return true;
+        }
+        return filtro.equals(TipoAtendimentoService.normalizeCodigo(item.getAtendimento().getTipoAtendimentoCodigo()));
     }
 
     private boolean matchesPeriodo(Observacao item, LocalDate dataInicio, LocalDate dataFim) {

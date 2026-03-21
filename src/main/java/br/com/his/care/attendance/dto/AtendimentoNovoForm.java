@@ -21,7 +21,6 @@ import br.com.his.care.timeline.dto.*;
 import br.com.his.care.timeline.model.*;
 import br.com.his.care.timeline.repository.*;
 
-import br.com.his.care.attendance.model.TipoAtendimento;
 import jakarta.validation.constraints.NotNull;
 
 public class AtendimentoNovoForm {
@@ -31,7 +30,7 @@ public class AtendimentoNovoForm {
     private String chegadaToken;
 
     @NotNull(message = "Tipo de atendimento e obrigatorio")
-    private TipoAtendimento tipoAtendimento;
+    private String tipoAtendimento;
 
     public Long getPacienteId() {
         return pacienteId;
@@ -49,11 +48,11 @@ public class AtendimentoNovoForm {
         this.chegadaToken = chegadaToken;
     }
 
-    public TipoAtendimento getTipoAtendimento() {
+    public String getTipoAtendimento() {
         return tipoAtendimento;
     }
 
-    public void setTipoAtendimento(TipoAtendimento tipoAtendimento) {
+    public void setTipoAtendimento(String tipoAtendimento) {
         this.tipoAtendimento = tipoAtendimento;
     }
 }

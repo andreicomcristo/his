@@ -147,6 +147,40 @@
                 <div class="alert alert-success" th:if="${successMessage}" th:text="${successMessage}"></div>
                 <div class="alert alert-danger" th:if="${errorMessage}" th:text="${errorMessage}"></div>
 
+                <div class="border rounded p-3 mb-3 bg-light" th:if="${canRegistrarEntrada or canRecepcaoExecutar}">
+                    <div class="d-flex flex-wrap justify-content-between align-items-end">
+                        <form th:action="@{/ui/atendimentos/posto-recepcao}" method="post" class="form-inline mb-2 mb-md-0">
+                            <input type="hidden" name="redirect" th:value="${listActionPath}">
+                            <label for="postoRecepcaoAreaId" class="mr-2 font-weight-bold">Posto da recepcao</label>
+                            <select id="postoRecepcaoAreaId" name="areaId" class="form-control mr-2"
+                                    th:disabled="${#lists.isEmpty(areasExecucaoRecepcao)}">
+                                <option value="">Selecionar no formulario</option>
+                                <option th:each="area : ${areasExecucaoRecepcao}"
+                                        th:value="${area.id}"
+                                        th:selected="${areaExecucaoRecepcaoAtualId == area.id}"
+                                        th:text="${area.descricao}"></option>
+                            </select>
+                            <button type="submit" class="btn btn-primary btn-sm"
+                                    th:disabled="${#lists.isEmpty(areasExecucaoRecepcao)}">Aplicar posto</button>
+                        </form>
+                        <form th:if="${areaExecucaoRecepcaoAtualId != null}" th:action="@{/ui/atendimentos/posto-recepcao}" method="post">
+                            <input type="hidden" name="redirect" th:value="${listActionPath}">
+                            <button type="submit" class="btn btn-outline-secondary btn-sm">Limpar posto</button>
+                        </form>
+                    </div>
+                    <small class="text-muted d-block mt-2">
+                        <span th:if="${areaExecucaoRecepcaoAtualId != null}">
+                            Posto atual aplicado na sessao.
+                        </span>
+                        <span th:if="${areaExecucaoRecepcaoAtualId == null and !#lists.isEmpty(areasExecucaoRecepcao)}">
+                            Nenhum posto fixado na sessao. O sistema exigira selecao no formulario de entrada quando houver mais de uma area.
+                        </span>
+                        <span th:if="${#lists.isEmpty(areasExecucaoRecepcao)}">
+                            Nenhuma area ativa com capacidade de receber entrada foi configurada para a unidade.
+                        </span>
+                    </small>
+                </div>
+
                 <form th:action="${listActionPath}" method="get" class="mb-3">
                     <div class="form-row">
                         <div class="form-group col-md-3">
@@ -162,9 +196,9 @@
                             <select id="tipoAtendimento" name="tipoAtendimento" class="form-control">
                                 <option value="">TODOS</option>
                                 <option th:each="item : ${tiposAtendimento}"
-                                        th:value="${item.name()}"
-                                        th:selected="${tipoAtendimentoSelecionado == item}"
-                                        th:text="${item.name()}"></option>
+                                        th:value="${item.codigo}"
+                                        th:selected="${tipoAtendimentoSelecionado == item.codigo}"
+                                        th:text="${item.descricao}"></option>
                             </select>
                         </div>
                         <div class="form-group col-md-2">
@@ -209,7 +243,7 @@
                 <table class="table table-bordered table-hover table-sm">
                     <thead>
                     <tr>
-                        <th>CÃ³digo</th>
+                        <th>Código</th>
                         <th>Dados do paciente</th>
                         <th>Dados do atendimento/entrada</th>
                         <th>ClassificaÃ§Ã£o de risco</th>
@@ -242,7 +276,7 @@
                                       th:text="${entrada != null and entrada.dataHoraEntrada != null ? #temporals.format(entrada.dataHoraEntrada, 'dd/MM/yyyy - HH:mm') : #temporals.format(a.dataHoraChegada, 'dd/MM/yyyy - HH:mm')}"></span>
                                 <span class="fila-line" th:text="${a.tipoAtendimento}"></span>
                                 <span class="fila-line" th:if="${entrada != null and entrada.motivoEntrada != null}" th:text="${entrada.motivoEntrada.descricao}"></span>
-                                <span class="fila-line" th:if="${entrada != null and entrada.area != null}" th:text="${'Ãrea: ' + entrada.area.descricao}"></span>
+                                <span class="fila-line" th:if="${entrada != null and entrada.areaPortaEntrada != null}" th:text="${'Porta de entrada: ' + entrada.areaPortaEntrada.descricao}"></span>
                             </th:block>
                         </td>
                         <td>

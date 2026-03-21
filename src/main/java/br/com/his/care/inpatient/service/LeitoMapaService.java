@@ -158,7 +158,7 @@ public class LeitoMapaService {
                 if (atendimento != null) {
                     item.setAtendimentoId(atendimento.getId());
                     item.setPacienteNome(atendimento.getPaciente().getNomeExibicao());
-                    item.setTipoAtendimento(atendimento.getTipoAtendimento().name());
+                    item.setTipoAtendimento(atendimento.getTipoAtendimentoCodigo());
                     boolean podeConverter = "OBSERVACAO".equals(item.getContexto())
                             && item.getObservacaoId() != null
                             && !atendimentoIdsComInternacao.contains(atendimento.getId());

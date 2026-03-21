@@ -47,6 +47,7 @@
                 <tr>
                     <th>ID</th>
                     <th>Unidade</th>
+                    <th>Tipo</th>
                     <th>Descrição</th>
                     <th>Detalhamento</th>
                     <th>Data cancelamento</th>
@@ -55,11 +56,12 @@
                 </thead>
                 <tbody>
                 <tr th:if="${#lists.isEmpty(items)}">
-                    <td colspan="6" class="text-center">Nenhuma área cancelada encontrada</td>
+                    <td colspan="7" class="text-center">Nenhuma área cancelada encontrada</td>
                 </tr>
                 <tr th:each="item : ${items}">
                     <td th:text="${item.id}"></td>
                     <td th:text="${item.unidade.nome}"></td>
+                    <td th:text="${item.tipoArea != null ? item.tipoArea.descricao : '-'}"></td>
                     <td th:text="${item.descricao}"></td>
                     <td th:text="${item.detalhamento != null ? item.detalhamento : '-'}"></td>
                     <td th:text="${item.dtCancelamento != null ? #temporals.format(item.dtCancelamento, 'dd/MM/yyyy HH:mm') : '-'}"></td>

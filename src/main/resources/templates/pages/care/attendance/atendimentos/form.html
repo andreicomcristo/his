@@ -151,7 +151,7 @@
                         <div class="form-group col-md-5">
                             <label>Tipo de atendimento</label>
                             <select class="form-control" th:field="*{tipoAtendimento}">
-                                <option th:each="t : ${tiposAtendimento}" th:value="${t}" th:text="${t}"></option>
+                                <option th:each="t : ${tiposAtendimento}" th:value="${t.codigo}" th:text="${t.descricao}"></option>
                             </select>
                             <small class="text-danger" th:errors="*{tipoAtendimento}"></small>
                         </div>
@@ -206,4 +206,3 @@
 </th:block>
 </body>
 </html>
-

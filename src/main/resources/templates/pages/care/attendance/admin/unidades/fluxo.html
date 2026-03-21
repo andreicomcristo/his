@@ -46,36 +46,49 @@
                 </div>
 
                 <hr>
-                <h6>Triagem obrigatoria por tipo de atendimento</h6>
+                <h6>Tipos de atendimento habilitados na unidade</h6>
                 <p class="text-muted mb-2">
-                    Se marcado, nao libera Entrada/Episodio ate finalizar triagem desse tipo.
+                    Configure quais tipos estao ativos na unidade e as regras operacionais de cada tipo.
                 </p>
 
-                <div class="form-row">
-                    <div class="form-group col-md-3">
-                        <div class="form-check">
-                            <input type="checkbox" class="form-check-input" th:field="*{triagemObrigatoriaUrgencia}">
-                            <label class="form-check-label">URGENCIA</label>
-                        </div>
-                    </div>
-                    <div class="form-group col-md-3">
-                        <div class="form-check">
-                            <input type="checkbox" class="form-check-input" th:field="*{triagemObrigatoriaAmbulatorial}">
-                            <label class="form-check-label">AMBULATORIAL</label>
-                        </div>
-                    </div>
-                    <div class="form-group col-md-3">
-                        <div class="form-check">
-                            <input type="checkbox" class="form-check-input" th:field="*{triagemObrigatoriaInternacaoDireta}">
-                            <label class="form-check-label">INTERNACAO_DIRETA</label>
-                        </div>
-                    </div>
-                    <div class="form-group col-md-3">
-                        <div class="form-check">
-                            <input type="checkbox" class="form-check-input" th:field="*{triagemObrigatoriaProcedimento}">
-                            <label class="form-check-label">PROCEDIMENTO</label>
-                        </div>
-                    </div>
+                <div class="table-responsive">
+                    <table class="table table-sm table-bordered">
+                        <thead>
+                        <tr>
+                            <th>Tipo</th>
+                            <th class="text-center">Ativo</th>
+                            <th class="text-center">Triagem obrigatoria</th>
+                            <th class="text-center">Passa em consultorio</th>
+                            <th class="text-center">Permite agendamento</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:if="${#lists.isEmpty(form.tiposAtendimento)}">
+                            <td colspan="5" class="text-center">Nenhum tipo de atendimento cadastrado</td>
+                        </tr>
+                        <tr th:each="item, stat : *{tiposAtendimento}">
+                            <td>
+                                <input type="hidden" th:field="*{tiposAtendimento[__${stat.index}__].tipoAtendimentoId}">
+                                <input type="hidden" th:field="*{tiposAtendimento[__${stat.index}__].codigo}">
+                                <input type="hidden" th:field="*{tiposAtendimento[__${stat.index}__].descricao}">
+                                <span th:text="${item.codigo}">TIPO</span>
+                                <small class="d-block text-muted" th:text="${item.descricao}">Descricao</small>
+                            </td>
+                            <td class="text-center align-middle">
+                                <input type="checkbox" th:field="*{tiposAtendimento[__${stat.index}__].ativo}">
+                            </td>
+                            <td class="text-center align-middle">
+                                <input type="checkbox" th:field="*{tiposAtendimento[__${stat.index}__].triagemObrigatoria}">
+                            </td>
+                            <td class="text-center align-middle">
+                                <input type="checkbox" th:field="*{tiposAtendimento[__${stat.index}__].passaConsultorio}">
+                            </td>
+                            <td class="text-center align-middle">
+                                <input type="checkbox" th:field="*{tiposAtendimento[__${stat.index}__].permiteAgendamento}">
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
                 </div>
 
                 <button class="btn btn-primary btn-sm" type="submit">Salvar configuracao</button>

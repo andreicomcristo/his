@@ -31,6 +31,10 @@ public class Area {
     @Column(name = "detalhamento", length = 500)
     private String detalhamento;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "tipo_area_id", nullable = false)
+    private TipoArea tipoArea;
+
     @Column(name = "dt_cadastro", nullable = false)
     private LocalDateTime dtCadastro;
 
@@ -79,6 +83,14 @@ public class Area {
 
     public void setDetalhamento(String detalhamento) {
         this.detalhamento = detalhamento;
+    }
+
+    public TipoArea getTipoArea() {
+        return tipoArea;
+    }
+
+    public void setTipoArea(TipoArea tipoArea) {
+        this.tipoArea = tipoArea;
     }
 
     public LocalDateTime getDtCadastro() {

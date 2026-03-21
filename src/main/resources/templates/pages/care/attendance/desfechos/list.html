@@ -32,9 +32,9 @@
                             <select id="tipoAtendimento" name="tipoAtendimento" class="form-control">
                                 <option value="">TODOS</option>
                                 <option th:each="item : ${tiposAtendimento}"
-                                        th:value="${item.name()}"
-                                        th:selected="${tipoAtendimentoSelecionado == item}"
-                                        th:text="${item.name()}"></option>
+                                        th:value="${item.codigo}"
+                                        th:selected="${tipoAtendimentoSelecionado == item.codigo}"
+                                        th:text="${item.descricao}"></option>
                             </select>
                         </div>
                         <div class="form-group col-md-2">

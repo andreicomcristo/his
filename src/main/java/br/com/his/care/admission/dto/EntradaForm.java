@@ -27,8 +27,11 @@ import jakarta.validation.constraints.Size;
 
 public class EntradaForm {
 
-    @NotNull(message = "Area da entrada e obrigatoria")
-    private Long areaId;
+    @NotNull(message = "Porta de entrada e obrigatoria")
+    private Long areaPortaEntradaId;
+
+    @NotNull(message = "Area de execucao e obrigatoria")
+    private Long areaExecucaoId;
 
     @NotNull(message = "Tipo de procedencia e obrigatorio")
     private Long tipoProcedenciaId;
@@ -79,12 +82,28 @@ public class EntradaForm {
     @Size(max = 120)
     private String guia;
 
+    public Long getAreaPortaEntradaId() {
+        return areaPortaEntradaId;
+    }
+
+    public void setAreaPortaEntradaId(Long areaPortaEntradaId) {
+        this.areaPortaEntradaId = areaPortaEntradaId;
+    }
+
+    public Long getAreaExecucaoId() {
+        return areaExecucaoId;
+    }
+
+    public void setAreaExecucaoId(Long areaExecucaoId) {
+        this.areaExecucaoId = areaExecucaoId;
+    }
+
     public Long getAreaId() {
-        return areaId;
+        return areaPortaEntradaId;
     }
 
     public void setAreaId(Long areaId) {
-        this.areaId = areaId;
+        this.areaPortaEntradaId = areaId;
     }
 
     public Long getProcedenciaId() {
@@ -239,4 +258,3 @@ public class EntradaForm {
         this.guia = guia;
     }
 }
-

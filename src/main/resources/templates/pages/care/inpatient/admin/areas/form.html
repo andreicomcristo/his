@@ -18,7 +18,15 @@
                         </select>
                         <small class="text-danger" th:errors="*{unidadeId}"></small>
                     </div>
-                    <div class="form-group col-md-8">
+                    <div class="form-group col-md-4">
+                        <label>Tipo de area<span class="required-mark">*</span></label>
+                        <select class="multiselect-dropdown form-control" th:field="*{tipoAreaId}">
+                            <option value="">Selecione</option>
+                            <option th:each="tipo : ${tiposArea}" th:value="${tipo.id}" th:text="${tipo.descricao}"></option>
+                        </select>
+                        <small class="text-danger" th:errors="*{tipoAreaId}"></small>
+                    </div>
+                    <div class="form-group col-md-4">
                         <label>Descricao<span class="required-mark">*</span></label>
                         <input type="text"
                                class="form-control"

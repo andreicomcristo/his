@@ -16,6 +16,9 @@ public class AreaForm {
     @Size(max = 500)
     private String detalhamento;
 
+    @NotNull(message = "Tipo de area e obrigatorio")
+    private Long tipoAreaId;
+
     public Long getUnidadeId() {
         return unidadeId;
     }
@@ -38,5 +41,13 @@ public class AreaForm {
 
     public void setDetalhamento(String detalhamento) {
         this.detalhamento = detalhamento;
+    }
+
+    public Long getTipoAreaId() {
+        return tipoAreaId;
+    }
+
+    public void setTipoAreaId(Long tipoAreaId) {
+        this.tipoAreaId = tipoAreaId;
     }
 }

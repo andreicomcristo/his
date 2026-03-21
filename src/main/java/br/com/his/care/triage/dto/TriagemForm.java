@@ -48,6 +48,7 @@ public class TriagemForm {
     private Integer preenchimentoCapilarCentralSeg;
 
     private Long reguaDorId;
+    private Long areaExecucaoId;
     private Long glasgowAberturaOcularId;
     private Long glasgowRespostaVerbalId;
     private Long glasgowRespostaMotoraId;
@@ -221,6 +222,14 @@ public class TriagemForm {
 
     public void setReguaDorId(Long reguaDorId) {
         this.reguaDorId = reguaDorId;
+    }
+
+    public Long getAreaExecucaoId() {
+        return areaExecucaoId;
+    }
+
+    public void setAreaExecucaoId(Long areaExecucaoId) {
+        this.areaExecucaoId = areaExecucaoId;
     }
 
     public Long getGlasgowAberturaOcularId() {

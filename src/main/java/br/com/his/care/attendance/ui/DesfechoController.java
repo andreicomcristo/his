@@ -46,13 +46,13 @@ import br.com.his.access.service.OperationalPermissionService;
 import br.com.his.care.attendance.dto.DesfechoForm;
 import br.com.his.care.attendance.model.Atendimento;
 import br.com.his.care.attendance.model.Desfecho;
-import br.com.his.care.attendance.model.TipoAtendimento;
 import br.com.his.care.attendance.repository.AtendimentoRepository;
 import br.com.his.care.attendance.repository.DestinoRedeRepository;
 import br.com.his.care.attendance.repository.MotivoDesfechoRepository;
 import br.com.his.care.attendance.repository.StatusAtendimentoRepository;
 import br.com.his.care.attendance.repository.TipoDesfechoRepository;
 import br.com.his.care.attendance.service.DesfechoService;
+import br.com.his.care.attendance.service.TipoAtendimentoService;
 import br.com.his.patient.validation.CpfUtils;
 import jakarta.validation.Valid;
 
@@ -68,6 +68,7 @@ public class DesfechoController {
     private final StatusAtendimentoRepository statusAtendimentoRepository;
     private final UnidadeContext unidadeContext;
     private final OperationalPermissionService operationalPermissionService;
+    private final TipoAtendimentoService tipoAtendimentoService;
 
     public DesfechoController(DesfechoService desfechoService,
                           AtendimentoRepository atendimentoRepository,
@@ -76,7 +77,8 @@ public class DesfechoController {
                           DestinoRedeRepository destinoRedeRepository,
                           StatusAtendimentoRepository statusAtendimentoRepository,
                           UnidadeContext unidadeContext,
-                          OperationalPermissionService operationalPermissionService) {
+                          OperationalPermissionService operationalPermissionService,
+                          TipoAtendimentoService tipoAtendimentoService) {
         this.desfechoService = desfechoService;
         this.atendimentoRepository = atendimentoRepository;
         this.tipoDesfechoRepository = tipoDesfechoRepository;
@@ -85,12 +87,13 @@ public class DesfechoController {
         this.statusAtendimentoRepository = statusAtendimentoRepository;
         this.unidadeContext = unidadeContext;
         this.operationalPermissionService = operationalPermissionService;
+        this.tipoAtendimentoService = tipoAtendimentoService;
     }
 
     @GetMapping
     public String listar(@RequestParam(required = false) String nome,
                          @RequestParam(required = false) String cpf,
-                         @RequestParam(required = false) TipoAtendimento tipoAtendimento,
+                         @RequestParam(name = "tipoAtendimento", required = false) String tipoAtendimento,
                          @RequestParam(required = false) Long statusId,
                          @RequestParam(required = false) Long tipoDesfechoId,
                          @RequestParam(required = false) Long motivoDesfechoId,
@@ -103,7 +106,7 @@ public class DesfechoController {
                 .filter(item -> unidadeId == null || Objects.equals(item.getAtendimento().getUnidade().getId(), unidadeId))
                 .filter(item -> matchesNome(item, nome))
                 .filter(item -> matchesCpf(item, cpf))
-                .filter(item -> tipoAtendimento == null || item.getAtendimento().getTipoAtendimento() == tipoAtendimento)
+                .filter(item -> matchesTipoAtendimento(item, tipoAtendimento))
                 .filter(item -> statusId == null || (item.getAtendimento().getStatus() != null
                         && statusId.equals(item.getAtendimento().getStatus().getId())))
                 .filter(item -> tipoDesfechoId == null || (item.getTipoDesfecho() != null
@@ -116,13 +119,13 @@ public class DesfechoController {
         model.addAttribute("items", items);
         model.addAttribute("nome", nome);
         model.addAttribute("cpf", cpf);
-        model.addAttribute("tipoAtendimentoSelecionado", tipoAtendimento);
+        model.addAttribute("tipoAtendimentoSelecionado", TipoAtendimentoService.normalizeCodigo(tipoAtendimento));
         model.addAttribute("statusSelecionadoId", statusId);
         model.addAttribute("tipoDesfechoSelecionadoId", tipoDesfechoId);
         model.addAttribute("motivoDesfechoSelecionadoId", motivoDesfechoId);
         model.addAttribute("dataInicio", dataInicio);
         model.addAttribute("dataFim", dataFim);
-        model.addAttribute("tiposAtendimento", TipoAtendimento.values());
+        model.addAttribute("tiposAtendimento", tipoAtendimentoService.listarOpcoesAtivasPorUnidadeOuGlobal(unidadeId));
         model.addAttribute("statusAtendimentoOptions", statusAtendimentoRepository.findAllByOrderByDescricaoAsc());
         model.addAttribute("tiposDesfechoOptions", tipoDesfechoRepository.findByAtivoTrueOrderByDescricaoAsc());
         model.addAttribute("motivosDesfechoOptions", motivoDesfechoRepository.findByAtivoTrueOrderByDescricaoAsc());
@@ -269,6 +272,14 @@ public class DesfechoController {
         String cpfPaciente = item.getAtendimento().getPaciente().getCpf();
         String cpfDigits = CpfUtils.digitsOnly(cpfPaciente);
         return filtroDigits != null && cpfDigits != null && cpfDigits.contains(filtroDigits);
+    }
+
+    private boolean matchesTipoAtendimento(Desfecho item, String tipoAtendimento) {
+        String filtro = TipoAtendimentoService.normalizeCodigo(tipoAtendimento);
+        if (filtro == null) {
+            return true;
+        }
+        return filtro.equals(TipoAtendimentoService.normalizeCodigo(item.getAtendimento().getTipoAtendimentoCodigo()));
     }
 
     private boolean matchesPeriodo(Desfecho item, LocalDate dataInicio, LocalDate dataFim) {

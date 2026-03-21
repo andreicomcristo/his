@@ -1,35 +1,13 @@
 package br.com.his.care.attendance.model;
 
-import br.com.his.care.attendance.api.dto.*;
-import br.com.his.care.attendance.dto.*;
-import br.com.his.care.attendance.model.*;
-import br.com.his.care.attendance.repository.*;
-import br.com.his.care.attendance.service.*;
-import br.com.his.care.admission.dto.*;
-import br.com.his.care.admission.model.*;
-import br.com.his.care.admission.repository.*;
-import br.com.his.care.triage.dto.*;
-import br.com.his.care.triage.model.*;
-import br.com.his.care.triage.repository.*;
-import br.com.his.care.inpatient.dto.*;
-import br.com.his.care.inpatient.model.*;
-import br.com.his.care.inpatient.repository.*;
-import br.com.his.care.inpatient.service.*;
-import br.com.his.care.episode.model.*;
-import br.com.his.care.episode.repository.*;
-import br.com.his.care.timeline.dto.*;
-import br.com.his.care.timeline.model.*;
-import br.com.his.care.timeline.repository.*;
-
 import java.time.LocalDateTime;
 
-import br.com.his.access.model.Usuario;
 import br.com.his.access.model.Unidade;
+import br.com.his.access.model.Usuario;
+import br.com.his.care.episode.model.Episodio;
 import br.com.his.patient.model.Paciente;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -58,9 +36,9 @@ public class Atendimento {
     @JoinColumn(name = "episodio_id", nullable = false)
     private Episodio episodio;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "tipo_atendimento", nullable = false, length = 40)
-    private TipoAtendimento tipoAtendimento;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "tipo_atendimento_id", nullable = false)
+    private TipoAtendimentoCadastro tipoAtendimentoCadastro;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "status_id", nullable = false)
@@ -111,12 +89,34 @@ public class Atendimento {
         this.episodio = episodio;
     }
 
-    public TipoAtendimento getTipoAtendimento() {
-        return tipoAtendimento;
+    public TipoAtendimentoCadastro getTipoAtendimentoCadastro() {
+        return tipoAtendimentoCadastro;
     }
 
-    public void setTipoAtendimento(TipoAtendimento tipoAtendimento) {
-        this.tipoAtendimento = tipoAtendimento;
+    public void setTipoAtendimentoCadastro(TipoAtendimentoCadastro tipoAtendimentoCadastro) {
+        this.tipoAtendimentoCadastro = tipoAtendimentoCadastro;
+    }
+
+    public String getTipoAtendimentoCodigo() {
+        if (tipoAtendimentoCadastro == null || tipoAtendimentoCadastro.getCodigo() == null) {
+            return null;
+        }
+        return tipoAtendimentoCadastro.getCodigo().trim().toUpperCase(java.util.Locale.ROOT);
+    }
+
+    public String getTipoAtendimentoDescricao() {
+        if (tipoAtendimentoCadastro == null) {
+            return null;
+        }
+        String descricao = tipoAtendimentoCadastro.getDescricao();
+        if (descricao != null && !descricao.isBlank()) {
+            return descricao;
+        }
+        return getTipoAtendimentoCodigo();
+    }
+
+    public String getTipoAtendimento() {
+        return getTipoAtendimentoDescricao();
     }
 
     public StatusAtendimento getStatus() {

@@ -59,6 +59,40 @@
                 <div class="alert alert-success" th:if="${successMessage}" th:text="${successMessage}"></div>
                 <div class="alert alert-danger" th:if="${errorMessage}" th:text="${errorMessage}"></div>
 
+                <div class="border rounded p-3 mb-3 bg-light">
+                    <div class="d-flex flex-wrap justify-content-between align-items-end">
+                        <form th:action="@{/ui/triagem/posto-triagem}" method="post" class="form-inline mb-2 mb-md-0">
+                            <input type="hidden" name="redirect" value="/ui/triagem">
+                            <label for="postoTriagemAreaId" class="mr-2 font-weight-bold">Posto da triagem</label>
+                            <select id="postoTriagemAreaId" name="areaId" class="form-control mr-2"
+                                    th:disabled="${#lists.isEmpty(areasExecucaoTriagem)}">
+                                <option value="">Selecionar no formulario</option>
+                                <option th:each="area : ${areasExecucaoTriagem}"
+                                        th:value="${area.id}"
+                                        th:selected="${areaExecucaoTriagemAtualId == area.id}"
+                                        th:text="${area.descricao}"></option>
+                            </select>
+                            <button type="submit" class="btn btn-primary btn-sm"
+                                    th:disabled="${#lists.isEmpty(areasExecucaoTriagem)}">Aplicar posto</button>
+                        </form>
+                        <form th:if="${areaExecucaoTriagemAtualId != null}" th:action="@{/ui/triagem/posto-triagem}" method="post">
+                            <input type="hidden" name="redirect" value="/ui/triagem">
+                            <button type="submit" class="btn btn-outline-secondary btn-sm">Limpar posto</button>
+                        </form>
+                    </div>
+                    <small class="text-muted d-block mt-2">
+                        <span th:if="${areaExecucaoTriagemAtualId != null}">
+                            Posto atual aplicado na sessao.
+                        </span>
+                        <span th:if="${areaExecucaoTriagemAtualId == null and !#lists.isEmpty(areasExecucaoTriagem)}">
+                            Nenhum posto fixado na sessao. O sistema exigira selecao no formulario.
+                        </span>
+                        <span th:if="${#lists.isEmpty(areasExecucaoTriagem)}">
+                            Nenhuma area de triagem ativa configurada para a unidade.
+                        </span>
+                    </small>
+                </div>
+
                 <form th:action="@{/ui/triagem}" method="get" class="mb-3">
                     <div class="form-row">
                         <div class="form-group col-md-3">
@@ -78,9 +112,9 @@
                             <select id="tipoAtendimento" name="tipoAtendimento" class="form-control">
                                 <option value="">TODOS</option>
                                 <option th:each="item : ${tiposAtendimento}"
-                                        th:value="${item.name()}"
-                                        th:selected="${tipoAtendimentoSelecionado == item}"
-                                        th:text="${item.name()}"></option>
+                                        th:value="${item.codigo}"
+                                        th:selected="${tipoAtendimentoSelecionado == item.codigo}"
+                                        th:text="${item.descricao}"></option>
                             </select>
                         </div>
                         <div class="form-group col-md-2">

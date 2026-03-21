@@ -136,7 +136,7 @@ public class TransferenciaExternaService {
             Atendimento novoAtendimento = assistencialFlowService.criarAtendimentoTransferencia(
                     transferencia.getEpisodio(),
                     unidadeDestinoAtualId,
-                    transferencia.getAtendimentoOrigem().getTipoAtendimento(),
+                    transferencia.getAtendimentoOrigem().getTipoAtendimentoCodigo(),
                     LocalDateTime.now());
             transferencia.setAtendimentoDestino(novoAtendimento);
         }

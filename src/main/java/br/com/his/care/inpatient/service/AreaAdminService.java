@@ -13,20 +13,25 @@ import br.com.his.access.repository.UnidadeRepository;
 import br.com.his.access.service.UsuarioAuditoriaService;
 import br.com.his.care.inpatient.dto.AreaForm;
 import br.com.his.care.inpatient.model.Area;
+import br.com.his.care.inpatient.model.TipoArea;
 import br.com.his.care.inpatient.repository.AreaRepository;
+import br.com.his.care.inpatient.repository.TipoAreaRepository;
 
 @Service
 public class AreaAdminService {
 
     private final AreaRepository repository;
     private final UnidadeRepository unidadeRepository;
+    private final TipoAreaRepository tipoAreaRepository;
     private final UsuarioAuditoriaService usuarioAuditoriaService;
 
     public AreaAdminService(AreaRepository repository,
                             UnidadeRepository unidadeRepository,
+                            TipoAreaRepository tipoAreaRepository,
                             UsuarioAuditoriaService usuarioAuditoriaService) {
         this.repository = repository;
         this.unidadeRepository = unidadeRepository;
+        this.tipoAreaRepository = tipoAreaRepository;
         this.usuarioAuditoriaService = usuarioAuditoriaService;
     }
 
@@ -137,13 +142,18 @@ public class AreaAdminService {
         form.setUnidadeId(area.getUnidade().getId());
         form.setDescricao(area.getDescricao());
         form.setDetalhamento(area.getDetalhamento());
+        form.setTipoAreaId(area.getTipoArea().getId());
         return form;
     }
 
     private void apply(Area area, AreaForm form) {
         Unidade unidade = unidadeRepository.findById(form.getUnidadeId())
                 .orElseThrow(() -> new IllegalArgumentException("Unidade nao encontrada"));
+        TipoArea tipoArea = tipoAreaRepository.findById(form.getTipoAreaId())
+                .filter(TipoArea::isAtivo)
+                .orElseThrow(() -> new IllegalArgumentException("Tipo de area invalido"));
         area.setUnidade(unidade);
+        area.setTipoArea(tipoArea);
         area.setDescricao(normalizeUpper(form.getDescricao()));
         area.setDetalhamento(normalize(form.getDetalhamento()));
     }

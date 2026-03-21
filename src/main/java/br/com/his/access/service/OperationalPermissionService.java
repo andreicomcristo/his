@@ -1,10 +1,7 @@
 package br.com.his.access.service;
 
-import java.util.Arrays;
-import java.util.EnumMap;
-import java.util.EnumSet;
+import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.springframework.security.core.Authentication;
@@ -13,10 +10,10 @@ import org.springframework.stereotype.Service;
 import br.com.his.access.context.UnidadeContext;
 import br.com.his.access.repository.ColaboradorUnidadeAtuacaoRepository;
 import br.com.his.care.attendance.model.PrimeiroPassoFluxo;
-import br.com.his.care.attendance.model.TipoAtendimento;
-import br.com.his.care.triage.model.UnidadeRegraTriagem;
+import br.com.his.care.attendance.model.UnidadeTipoAtendimento;
+import br.com.his.care.attendance.service.TipoAtendimentoService;
 import br.com.his.care.attendance.repository.UnidadeConfigFluxoRepository;
-import br.com.his.care.triage.repository.UnidadeRegraTriagemRepository;
+import br.com.his.care.attendance.repository.UnidadeTipoAtendimentoRepository;
 
 @Service
 public class OperationalPermissionService {
@@ -33,18 +30,21 @@ public class OperationalPermissionService {
     private final UnidadeContext unidadeContext;
     private final ColaboradorUnidadeAtuacaoRepository colaboradorUnidadeAtuacaoRepository;
     private final UnidadeConfigFluxoRepository unidadeConfigFluxoRepository;
-    private final UnidadeRegraTriagemRepository unidadeRegraTriagemRepository;
+    private final UnidadeTipoAtendimentoRepository unidadeTipoAtendimentoRepository;
+    private final TipoAtendimentoService tipoAtendimentoService;
 
     public OperationalPermissionService(AccessContextService accessContextService,
                                         UnidadeContext unidadeContext,
                                         ColaboradorUnidadeAtuacaoRepository colaboradorUnidadeAtuacaoRepository,
                                         UnidadeConfigFluxoRepository unidadeConfigFluxoRepository,
-                                        UnidadeRegraTriagemRepository unidadeRegraTriagemRepository) {
+                                        UnidadeTipoAtendimentoRepository unidadeTipoAtendimentoRepository,
+                                        TipoAtendimentoService tipoAtendimentoService) {
         this.accessContextService = accessContextService;
         this.unidadeContext = unidadeContext;
         this.colaboradorUnidadeAtuacaoRepository = colaboradorUnidadeAtuacaoRepository;
         this.unidadeConfigFluxoRepository = unidadeConfigFluxoRepository;
-        this.unidadeRegraTriagemRepository = unidadeRegraTriagemRepository;
+        this.unidadeTipoAtendimentoRepository = unidadeTipoAtendimentoRepository;
+        this.tipoAtendimentoService = tipoAtendimentoService;
     }
 
     public boolean has(Authentication authentication, String permission) {
@@ -71,7 +71,7 @@ public class OperationalPermissionService {
     }
 
     public boolean canCriarAtendimento(Authentication authentication) {
-        return !tiposPermitidosCriarAtendimento(authentication).isEmpty();
+        return !tiposPermitidosCriarAtendimentoCodigos(authentication).isEmpty();
     }
 
     public boolean canGerirPermanencia(Authentication authentication) {
@@ -85,53 +85,67 @@ public class OperationalPermissionService {
                 .orElse(false);
     }
 
-    public boolean canCriarAtendimento(Authentication authentication, TipoAtendimento tipoAtendimento) {
-        if (tipoAtendimento == null) {
+    public boolean canCriarAtendimento(Authentication authentication, String tipoAtendimentoCodigo) {
+        String codigo = TipoAtendimentoService.normalizeCodigo(tipoAtendimentoCodigo);
+        if (codigo == null) {
             return false;
         }
-        return tiposPermitidosCriarAtendimento(authentication).contains(tipoAtendimento);
+        return tiposPermitidosCriarAtendimentoCodigos(authentication).contains(codigo);
     }
 
-    public Set<TipoAtendimento> tiposPermitidosCriarAtendimento(Authentication authentication) {
+    public Set<String> tiposPermitidosCriarAtendimentoCodigos(Authentication authentication) {
         boolean canRecepcao = has(authentication, PERM_RECEPCAO_EXECUTAR);
         boolean canTriagem = has(authentication, PERM_TRIAGEM_EXECUTAR);
 
         return unidadeContext.getUnidadeAtual()
                 .map(unidadeId -> resolveTiposPermitidosPorUnidade(unidadeId, canRecepcao, canTriagem))
-                .orElseGet(() -> canRecepcao ? EnumSet.allOf(TipoAtendimento.class) : EnumSet.noneOf(TipoAtendimento.class));
+                .orElseGet(() -> canRecepcao ? tiposAtivosGlobais() : Set.of());
     }
 
-    private Set<TipoAtendimento> resolveTiposPermitidosPorUnidade(Long unidadeId, boolean canRecepcao, boolean canTriagem) {
+    private Set<String> resolveTiposPermitidosPorUnidade(Long unidadeId, boolean canRecepcao, boolean canTriagem) {
         PrimeiroPassoFluxo primeiroPasso = unidadeConfigFluxoRepository.findById(unidadeId)
                 .map(config -> config.getPrimeiroPasso())
                 .orElse(PrimeiroPassoFluxo.RECEPCAO);
-
-        if (primeiroPasso == PrimeiroPassoFluxo.RECEPCAO) {
-            return canRecepcao ? EnumSet.allOf(TipoAtendimento.class) : EnumSet.noneOf(TipoAtendimento.class);
+        List<UnidadeTipoAtendimento> tiposConfigurados = unidadeTipoAtendimentoRepository
+                .findByUnidadeIdAndAtivoTrueOrderByTipoAtendimentoOrdemExibicaoAscTipoAtendimentoDescricaoAsc(unidadeId);
+        if (tiposConfigurados.isEmpty()) {
+            return canRecepcao ? tiposAtivosGlobais() : Set.of();
         }
 
-        EnumSet<TipoAtendimento> permitidos = EnumSet.noneOf(TipoAtendimento.class);
+        Set<String> tiposAtivosUnidade = new LinkedHashSet<>();
+        for (UnidadeTipoAtendimento config : tiposConfigurados) {
+            parseTipo(config).ifPresent(tiposAtivosUnidade::add);
+        }
+        if (tiposAtivosUnidade.isEmpty()) {
+            return Set.of();
+        }
+        if (primeiroPasso == PrimeiroPassoFluxo.RECEPCAO) {
+            return canRecepcao ? tiposAtivosUnidade : Set.of();
+        }
+
+        Set<String> permitidos = new LinkedHashSet<>();
         if (canTriagem) {
-            permitidos.addAll(Arrays.asList(TipoAtendimento.values()));
+            permitidos.addAll(tiposAtivosUnidade);
         }
         if (canRecepcao) {
-            Map<TipoAtendimento, Boolean> triagemObrigatoria = triagemObrigatoriaPorTipo(unidadeId);
-            for (TipoAtendimento tipo : TipoAtendimento.values()) {
-                boolean obrigatoria = triagemObrigatoria.getOrDefault(tipo, false);
-                if (!obrigatoria) {
-                    permitidos.add(tipo);
+            for (UnidadeTipoAtendimento config : tiposConfigurados) {
+                if (config.isTriagemObrigatoria()) {
+                    continue;
                 }
+                parseTipo(config).ifPresent(permitidos::add);
             }
         }
         return permitidos;
     }
 
-    private Map<TipoAtendimento, Boolean> triagemObrigatoriaPorTipo(Long unidadeId) {
-        Map<TipoAtendimento, Boolean> result = new EnumMap<>(TipoAtendimento.class);
-        List<UnidadeRegraTriagem> regras = unidadeRegraTriagemRepository.findByUnidadeId(unidadeId);
-        for (UnidadeRegraTriagem regra : regras) {
-            result.put(regra.getTipoAtendimento(), regra.isTriagemObrigatoria());
+    private java.util.Optional<String> parseTipo(UnidadeTipoAtendimento config) {
+        if (config == null || config.getTipoAtendimento() == null || config.getTipoAtendimento().getCodigo() == null) {
+            return java.util.Optional.empty();
         }
-        return result;
+        return java.util.Optional.ofNullable(TipoAtendimentoService.normalizeCodigo(config.getTipoAtendimento().getCodigo()));
+    }
+
+    private Set<String> tiposAtivosGlobais() {
+        return tipoAtendimentoService.listarCodigosAtivosPorUnidadeOuGlobal(null);
     }
 }

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout('Administracao - Areas do Destino Assistencial', ~{::content})}">
+<th:block th:fragment="content">
+    <div class="main-card mb-3 card">
+        <div class="card-body">
+            <h5 class="card-title">Mapeamento de areas por destino</h5>
+            <p class="text-muted mb-3">
+                <strong th:text="${destino.descricao}">DESTINO</strong>
+                <span> | </span>
+                <span th:text="${destino.unidade.nome}">UNIDADE</span>
+                <span> | </span>
+                <span th:text="${destino.tipoDestinoAssistencial.descricao}">TIPO</span>
+            </p>
+
+            <div class="alert alert-success" th:if="${successMessage}" th:text="${successMessage}"></div>
+            <div class="alert alert-danger" th:if="${errorMessage}" th:text="${errorMessage}"></div>
+
+            <form th:object="${form}" method="post"
+                  th:action="@{'/ui/admin/destinos-assistenciais/' + ${destino.id} + '/areas'}">
+                <div class="form-group" th:if="${#lists.isEmpty(areasDisponiveis)}">
+                    <div class="alert alert-info mb-0">
+                        Nenhuma area ativa encontrada para a unidade deste destino.
+                    </div>
+                </div>
+
+                <div class="form-group" th:each="area : ${areasDisponiveis}">
+                    <div class="form-check">
+                        <input class="form-check-input"
+                               type="checkbox"
+                               th:field="*{areaIds}"
+                               th:value="${area.id}"
+                               th:id="${'area_' + area.id}">
+                        <label class="form-check-label" th:for="${'area_' + area.id}">
+                            <span th:text="${area.descricao}">AREA</span>
+                            <small class="text-muted"
+                                   th:text="${' - Tipo: ' + (area.tipoArea != null ? area.tipoArea.descricao : '-')}">
+                            </small>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="mt-3 mb-4">
+                    <button type="submit" class="btn btn-primary mr-2">Salvar mapeamento</button>
+                    <a class="btn btn-secondary" th:href="@{/ui/admin/destinos-assistenciais}">Voltar</a>
+                </div>
+            </form>
+
+            <h6 class="text-muted text-uppercase mb-3">Areas atualmente vinculadas</h6>
+            <table class="table table-sm table-striped">
+                <thead>
+                <tr>
+                    <th>Prioridade</th>
+                    <th>Area</th>
+                    <th>Tipo de area</th>
+                    <th>Status</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:if="${#lists.isEmpty(areasVinculadas)}">
+                    <td colspan="4" class="text-center">Nenhuma area vinculada</td>
+                </tr>
+                <tr th:each="vinculo : ${areasVinculadas}">
+                    <td th:text="${vinculo.prioridade}">10</td>
+                    <td th:text="${vinculo.area.descricao}">AREA</td>
+                    <td th:text="${vinculo.area.tipoArea != null ? vinculo.area.tipoArea.descricao : '-'}">TIPO</td>
+                    <td>
+                        <span class="badge"
+                              th:classappend="${vinculo.ativo} ? ' badge-success' : ' badge-secondary'"
+                              th:text="${vinculo.ativo} ? 'ATIVO' : 'INATIVO'">
+                        </span>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</th:block>
+</html>

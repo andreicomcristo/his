@@ -57,7 +57,6 @@ import br.com.his.care.admission.model.Entrada;
 import br.com.his.care.inpatient.model.Internacao;
 import br.com.his.care.inpatient.model.Observacao;
 import br.com.his.care.attendance.model.StatusAtendimento;
-import br.com.his.care.attendance.model.TipoAtendimento;
 import br.com.his.care.attendance.repository.DesfechoRepository;
 import br.com.his.care.admission.repository.EntradaRepository;
 import br.com.his.care.inpatient.repository.InternacaoRepository;
@@ -106,6 +105,7 @@ public class AtendimentoController {
     private final MotivoEntradaRepository motivoEntradaRepository;
     private final SituacaoOcupacionalRepository situacaoOcupacionalRepository;
     private final TipoProcedenciaRepository tipoProcedenciaRepository;
+    private final TipoAtendimentoService tipoAtendimentoService;
 
     public AtendimentoController(AssistencialFlowService assistencialFlowService,
                                  DesfechoRepository desfechoRepository,
@@ -128,7 +128,8 @@ public class AtendimentoController {
                                  GrauParentescoRepository grauParentescoRepository,
                                  MotivoEntradaRepository motivoEntradaRepository,
                                  SituacaoOcupacionalRepository situacaoOcupacionalRepository,
-                                 TipoProcedenciaRepository tipoProcedenciaRepository) {
+                                 TipoProcedenciaRepository tipoProcedenciaRepository,
+                                 TipoAtendimentoService tipoAtendimentoService) {
         this.assistencialFlowService = assistencialFlowService;
         this.desfechoRepository = desfechoRepository;
         this.entradaRepository = entradaRepository;
@@ -151,6 +152,7 @@ public class AtendimentoController {
         this.motivoEntradaRepository = motivoEntradaRepository;
         this.situacaoOcupacionalRepository = situacaoOcupacionalRepository;
         this.tipoProcedenciaRepository = tipoProcedenciaRepository;
+        this.tipoAtendimentoService = tipoAtendimentoService;
     }
 
     @GetMapping
@@ -158,7 +160,7 @@ public class AtendimentoController {
                        @RequestParam(required = false) String cpf,
                        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicio,
                        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFim,
-                       @RequestParam(required = false) TipoAtendimento tipoAtendimento,
+                       @RequestParam(name = "tipoAtendimento", required = false) String tipoAtendimento,
                        @RequestParam(required = false) Long statusId,
                        @RequestParam(required = false) Long areaEntradaId,
                        Model model) {
@@ -186,7 +188,7 @@ public class AtendimentoController {
                                    @RequestParam(required = false) String cpf,
                                    @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicio,
                                    @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFim,
-                                   @RequestParam(required = false) TipoAtendimento tipoAtendimento,
+                                   @RequestParam(name = "tipoAtendimento", required = false) String tipoAtendimento,
                                    @RequestParam(required = false) Long statusId,
                                    Model model) {
         requirePermission(OperationalPermissionService.PERM_ATENDIMENTO_ACESSAR);
@@ -215,7 +217,7 @@ public class AtendimentoController {
                                          @RequestParam(required = false) String cpf,
                                          @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicio,
                                          @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFim,
-                                         @RequestParam(required = false) TipoAtendimento tipoAtendimento,
+                                         @RequestParam(name = "tipoAtendimento", required = false) String tipoAtendimento,
                                          @RequestParam(required = false) Long statusId,
                                          @RequestParam(required = false) Long areaEntradaId,
                                          Model model) {
@@ -293,7 +295,7 @@ public class AtendimentoController {
             AtendimentoWizardForm wizard = resetWizard(session, agendamento.getPaciente().getId());
             wizard.setAgendaPacienteId(agendaPacienteId);
             wizard.setCurrentStep(3);
-            wizard.setTipoAtendimento(TipoAtendimento.AMBULATORIAL);
+            wizard.setTipoAtendimento("AMBULATORIAL");
 
             redirectAttributes.addFlashAttribute("successMessage",
                     "Check-in iniciado para " + agendamento.getPaciente().getNomeExibicao() + ". Complete o fluxo de entrada.");
@@ -304,12 +306,29 @@ public class AtendimentoController {
         }
     }
 
+    @PostMapping("/posto-recepcao")
+    public String selecionarPostoRecepcao(@RequestParam(required = false) Long areaId,
+                                          @RequestParam(required = false) String redirect) {
+        requirePostoRecepcaoPermission();
+        Long unidadeId = unidadeAtual();
+        List<Area> areasEntrada = areaRepository.findAreasAtivasRecebemEntradaByUnidadeId(unidadeId);
+        if (areaId == null) {
+            unidadeContext.clearAreaExecucaoRecepcaoAtual();
+        } else {
+            if (!isAreaEntradaValida(areaId, areasEntrada)) {
+                throw new IllegalArgumentException("Area de recepcao invalida para a unidade atual");
+            }
+            unidadeContext.setAreaExecucaoRecepcaoAtual(areaId);
+        }
+        return "redirect:" + safeRedirectPath(redirect, "/ui/atendimentos");
+    }
+
     @GetMapping("/nao-identificados")
     public String naoIdentificados(@RequestParam(required = false) String nome,
                                    @RequestParam(required = false) String cpf,
                                    @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicio,
                                    @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFim,
-                                   @RequestParam(required = false) TipoAtendimento tipoAtendimento,
+                                   @RequestParam(name = "tipoAtendimento", required = false) String tipoAtendimento,
                                    @RequestParam(required = false) Long statusId,
                                    @RequestParam(required = false) Long areaEntradaId,
                                    Model model) {
@@ -328,7 +347,7 @@ public class AtendimentoController {
         List<Atendimento> filtrados = assistencialFlowService.listarNaoIdentificadosEmAberto(unidadeId).stream()
                 .filter(a -> matchesPacienteNome(a, nome))
                 .filter(a -> matchesPacienteCpf(a, cpf))
-                .filter(a -> tipoAtendimento == null || a.getTipoAtendimento() == tipoAtendimento)
+                .filter(a -> matchesTipoAtendimento(a, tipoAtendimento))
                 .filter(a -> matchesDataChegada(a, filtroInicio, filtroFim))
                 .toList();
 
@@ -343,10 +362,10 @@ public class AtendimentoController {
         model.addAttribute("cpf", cpf);
         model.addAttribute("dataInicio", inicio);
         model.addAttribute("dataFim", fim);
-        model.addAttribute("tipoAtendimentoSelecionado", tipoAtendimento);
+        model.addAttribute("tipoAtendimentoSelecionado", TipoAtendimentoService.normalizeCodigo(tipoAtendimento));
         model.addAttribute("statusSelecionadoId", statusId);
         model.addAttribute("areaEntradaSelecionadaId", areaEntradaId);
-        model.addAttribute("tiposAtendimento", TipoAtendimento.values());
+        model.addAttribute("tiposAtendimento", tiposAtendimentoConfigurados(unidadeId));
         model.addAttribute("statusAtendimentoOptions", statusAtendimentoRepository.findAllByOrderByDescricaoAsc());
         model.addAttribute("areasEntradaOptions", areaRepository.findAreasAtivasRecebemEntradaByUnidadeId(unidadeId));
         model.addAttribute("listActionPath", "/ui/atendimentos/nao-identificados");
@@ -500,6 +519,7 @@ public class AtendimentoController {
                     unidadeAtual(),
                     wizard.getTipoAtendimento(),
                     chegada);
+            rememberAreaExecucaoRecepcao(wizard.getEntradaForm().getAreaExecucaoId());
             assistencialFlowService.registrarEntradaPorAtendimento(atendimento.getId(), wizard.getEntradaForm());
             Long agendaPacienteId = wizard.getAgendaPacienteId();
             if (agendaPacienteId != null) {
@@ -574,11 +594,25 @@ public class AtendimentoController {
         }
     }
 
-    private List<TipoAtendimento> tiposPermitidosOrdenados(
+    private void requirePostoRecepcaoPermission() {
+        if (!operationalPermissionService.hasAny(
+                org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication(),
+                Set.of(
+                        OperationalPermissionService.PERM_RECEPCAO_EXECUTAR,
+                        OperationalPermissionService.PERM_ENTRADA_REGISTRAR))) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Sem permissao para configurar posto da recepcao");
+        }
+    }
+
+    private List<TipoAtendimentoOption> tiposPermitidosOrdenados(
             org.springframework.security.core.Authentication authentication) {
-        Set<TipoAtendimento> permitidos = operationalPermissionService.tiposPermitidosCriarAtendimento(authentication);
-        List<TipoAtendimento> ordenados = new ArrayList<>(permitidos);
-        ordenados.sort(java.util.Comparator.comparing(Enum::name));
+        Set<String> permitidos = operationalPermissionService.tiposPermitidosCriarAtendimentoCodigos(authentication);
+        List<TipoAtendimentoOption> ordenados = tiposAtendimentoConfigurados(unidadeAtual()).stream()
+                .filter(item -> permitidos.contains(item.getCodigo()))
+                .toList();
+        if (ordenados.isEmpty()) {
+            ordenados = tipoAtendimentoService.listarOpcoesAtivasPorCodigos(permitidos);
+        }
         return ordenados;
     }
 
@@ -586,27 +620,35 @@ public class AtendimentoController {
                                      HttpSession session,
                                      AtendimentoWizardForm wizard,
                                      Map<String, String> errors) {
+        Long unidadeId = unidadeAtual();
+        List<Area> areasEntrada = areaRepository.findAreasAtivasRecebemEntradaByUnidadeId(unidadeId);
+        Long areaExecucaoRecepcaoAtualId = resolveAreaExecucaoRecepcaoAtual(unidadeId, areasEntrada);
+        applyAreaExecucaoRecepcaoDefault(wizard.getEntradaForm(), areaExecucaoRecepcaoAtualId, areasEntrada);
         var authentication = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
-        List<TipoAtendimento> tiposPermitidos = tiposPermitidosOrdenados(authentication);
+        List<TipoAtendimentoOption> tiposPermitidos = tiposPermitidosOrdenados(authentication);
         if (tiposPermitidos.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Sem permissao para criar atendimento nesta unidade");
         }
-        if (wizard.getTipoAtendimento() == null || !tiposPermitidos.contains(wizard.getTipoAtendimento())) {
-            wizard.setTipoAtendimento(tiposPermitidos.get(0));
+        String tipoSelecionado = TipoAtendimentoService.normalizeCodigo(wizard.getTipoAtendimento());
+        boolean tipoValido = tiposPermitidos.stream().anyMatch(item -> item.getCodigo().equals(tipoSelecionado));
+        if (!tipoValido) {
+            wizard.setTipoAtendimento(tiposPermitidos.get(0).getCodigo());
         }
         model.addAttribute("wizard", wizard);
         model.addAttribute("tiposAtendimento", tiposPermitidos);
         model.addAttribute("horaChegadaCapturada", lookupChegadaToken(session, wizard.getChegadaToken()));
         model.addAttribute("wizardErrors", errors);
         model.addAttribute("patientSummary", buildPatientSummary(wizard));
-        model.addAttribute("areasEntrada", areaRepository.findAreasAtivasRecebemEntradaByUnidadeId(unidadeAtual()));
+        model.addAttribute("areasEntrada", areasEntrada);
+        model.addAttribute("areasExecucaoRecepcao", areasEntrada);
+        model.addAttribute("areaExecucaoRecepcaoAtualId", areaExecucaoRecepcaoAtualId);
         model.addAttribute("tiposProcedenciaEntrada", pacienteLookupService.listarTiposProcedenciaEntrada());
-        model.addAttribute("procedenciasEntrada", pacienteLookupService.listarProcedenciasEntrada(unidadeAtual()));
-        Long municipioId = unidadeRepository.findById(unidadeAtual())
+        model.addAttribute("procedenciasEntrada", pacienteLookupService.listarProcedenciasEntrada(unidadeId));
+        Long municipioId = unidadeRepository.findById(unidadeId)
                 .map(unidade -> unidade.getMunicipio())
                 .map(br.com.his.reference.location.model.Municipio::getId)
                 .orElse(null);
-                        model.addAttribute("bairrosEntrada", pacienteLookupService.listarBairrosPorMunicipio(municipioId));
+        model.addAttribute("bairrosEntrada", pacienteLookupService.listarBairrosPorMunicipio(municipioId));
         model.addAttribute("ufsEntrada", unidadeFederativaRepository.findAllByOrderByDescricaoAsc());
         model.addAttribute("municipiosEntrada", pacienteLookupService.listarMunicipiosProcedenciaEntrada());
         model.addAttribute("formasChegada", formaChegadaRepository.findByAtivoTrueOrderByDescricaoAsc());
@@ -664,12 +706,12 @@ public class AtendimentoController {
                                                        String cpf,
                                                        LocalDate dataInicio,
                                                        LocalDate dataFim,
-                                                       TipoAtendimento tipoAtendimento,
+                                                       String tipoAtendimento,
                                                        Long statusId) {
         List<Atendimento> filtrados = assistencialFlowService.listarPorPeriodo(unidadeId, dataInicio, dataFim).stream()
                 .filter(a -> matchesPacienteNome(a, nome))
                 .filter(a -> matchesPacienteCpf(a, cpf))
-                .filter(a -> tipoAtendimento == null || a.getTipoAtendimento() == tipoAtendimento)
+                .filter(a -> matchesTipoAtendimento(a, tipoAtendimento))
                 .toList();
         return filtrarPorStatusVisual(filtrados, statusId);
     }
@@ -716,10 +758,12 @@ public class AtendimentoController {
                                     String cpf,
                                     LocalDate dataInicio,
                                     LocalDate dataFim,
-                                    TipoAtendimento tipoAtendimento,
+                                    String tipoAtendimento,
                                     Long statusId,
                                     Long areaEntradaId) {
         List<Long> atendimentoIds = atendimentos.stream().map(Atendimento::getId).toList();
+        List<Area> areasExecucaoRecepcao = areaRepository.findAreasAtivasRecebemEntradaByUnidadeId(unidadeId);
+        Long areaExecucaoRecepcaoAtualId = resolveAreaExecucaoRecepcaoAtual(unidadeId, areasExecucaoRecepcao);
         model.addAttribute("atendimentos", atendimentos);
         model.addAttribute("entradasMap", entradasMap);
         model.addAttribute("classificacoesMap", assistencialFlowService.mapaUltimaClassificacao(atendimentoIds));
@@ -730,14 +774,28 @@ public class AtendimentoController {
         model.addAttribute("cpf", cpf);
         model.addAttribute("dataInicio", dataInicio);
         model.addAttribute("dataFim", dataFim);
-        model.addAttribute("tipoAtendimentoSelecionado", tipoAtendimento);
+        model.addAttribute("tipoAtendimentoSelecionado", TipoAtendimentoService.normalizeCodigo(tipoAtendimento));
         model.addAttribute("statusSelecionadoId", statusId);
         model.addAttribute("areaEntradaSelecionadaId", areaEntradaId);
-        model.addAttribute("tiposAtendimento", TipoAtendimento.values());
+        model.addAttribute("tiposAtendimento", tiposAtendimentoConfigurados(unidadeId));
         model.addAttribute("statusAtendimentoOptions", statusAtendimentoRepository.findAllByOrderByDescricaoAsc());
         model.addAttribute("statusObservacaoVisual", statusAtendimentoRepository.findByCodigoIgnoreCase("OBSERVACAO").orElse(null));
         model.addAttribute("statusInternacaoVisual", statusAtendimentoRepository.findByCodigoIgnoreCase("INTERNACAO").orElse(null));
-        model.addAttribute("areasEntradaOptions", areaRepository.findAreasAtivasRecebemEntradaByUnidadeId(unidadeId));
+        model.addAttribute("areasEntradaOptions", areasExecucaoRecepcao);
+        model.addAttribute("areasExecucaoRecepcao", areasExecucaoRecepcao);
+        model.addAttribute("areaExecucaoRecepcaoAtualId", areaExecucaoRecepcaoAtualId);
+    }
+
+    private boolean matchesTipoAtendimento(Atendimento atendimento, String tipoAtendimento) {
+        String filtro = TipoAtendimentoService.normalizeCodigo(tipoAtendimento);
+        if (filtro == null) {
+            return true;
+        }
+        return filtro.equals(TipoAtendimentoService.normalizeCodigo(atendimento.getTipoAtendimentoCodigo()));
+    }
+
+    private List<TipoAtendimentoOption> tiposAtendimentoConfigurados(Long unidadeId) {
+        return tipoAtendimentoService.listarOpcoesAtivasPorUnidadeOuGlobal(unidadeId);
     }
 
     private boolean matchesPacienteNome(Atendimento atendimento, String nome) {
@@ -786,8 +844,8 @@ public class AtendimentoController {
             return true;
         }
         return entrada != null
-                && entrada.getArea() != null
-                && areaEntradaId.equals(entrada.getArea().getId());
+                && entrada.getAreaPortaEntrada() != null
+                && areaEntradaId.equals(entrada.getAreaPortaEntrada().getId());
     }
 
     private static String normalizeFiltro(String value) {
@@ -881,18 +939,23 @@ public class AtendimentoController {
     private Map<String, String> validateAtendimentoStep(AtendimentoWizardForm wizard) {
         Map<String, String> errors = new LinkedHashMap<>();
         var authentication = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
-        List<TipoAtendimento> tiposPermitidos = tiposPermitidosOrdenados(authentication);
-        if (wizard.getTipoAtendimento() == null) {
+        List<TipoAtendimentoOption> tiposPermitidos = tiposPermitidosOrdenados(authentication);
+        String tipoSelecionado = TipoAtendimentoService.normalizeCodigo(wizard.getTipoAtendimento());
+        if (tipoSelecionado == null) {
             errors.put("tipoAtendimento", "Tipo de atendimento e obrigatorio.");
-        } else if (!tiposPermitidos.contains(wizard.getTipoAtendimento())) {
+        } else if (tiposPermitidos.stream().noneMatch(item -> item.getCodigo().equals(tipoSelecionado))) {
             errors.put("tipoAtendimento", "Tipo de atendimento nao permitido para seu perfil na unidade atual.");
         }
+        wizard.setTipoAtendimento(tipoSelecionado);
         return errors;
     }
 
     private Map<String, String> validateEntradaStep(AtendimentoWizardForm wizard) {
         Map<String, String> errors = new LinkedHashMap<>();
         EntradaForm entradaForm = wizard.getEntradaForm();
+        List<Area> areasEntrada = areaRepository.findAreasAtivasRecebemEntradaByUnidadeId(unidadeAtual());
+        Long areaExecucaoRecepcaoAtualId = resolveAreaExecucaoRecepcaoAtual(unidadeAtual(), areasEntrada);
+        applyAreaExecucaoRecepcaoDefault(entradaForm, areaExecucaoRecepcaoAtualId, areasEntrada);
         if (entradaForm.getTipoProcedenciaId() == null) {
             errors.put("entradaForm.tipoProcedenciaId", "Tipo de procedencia e obrigatorio.");
         } else {
@@ -917,8 +980,15 @@ public class AtendimentoController {
                 }
             }
         }
-        if (entradaForm.getAreaId() == null) {
-            errors.put("entradaForm.areaId", "Area da entrada e obrigatoria.");
+        if (entradaForm.getAreaPortaEntradaId() == null) {
+            errors.put("entradaForm.areaPortaEntradaId", "Porta de entrada e obrigatoria.");
+        } else if (!isAreaEntradaValida(entradaForm.getAreaPortaEntradaId(), areasEntrada)) {
+            errors.put("entradaForm.areaPortaEntradaId", "Porta de entrada invalida para a unidade atual.");
+        }
+        if (entradaForm.getAreaExecucaoId() == null) {
+            errors.put("entradaForm.areaExecucaoId", "Area de execucao e obrigatoria.");
+        } else if (!isAreaEntradaValida(entradaForm.getAreaExecucaoId(), areasEntrada)) {
+            errors.put("entradaForm.areaExecucaoId", "Area de execucao invalida para a unidade atual.");
         }
         if (entradaForm.getFormaChegadaId() == null) {
             errors.put("entradaForm.formaChegadaId", "Forma de chegada e obrigatoria.");
@@ -1039,7 +1109,8 @@ public class AtendimentoController {
     }
 
     private void syncEntradaStep(AtendimentoWizardForm wizard, AtendimentoWizardForm submitted) {
-        wizard.getEntradaForm().setAreaId(submitted.getEntradaForm().getAreaId());
+        wizard.getEntradaForm().setAreaPortaEntradaId(submitted.getEntradaForm().getAreaPortaEntradaId());
+        wizard.getEntradaForm().setAreaExecucaoId(submitted.getEntradaForm().getAreaExecucaoId());
         wizard.getEntradaForm().setTipoProcedenciaId(submitted.getEntradaForm().getTipoProcedenciaId());
         wizard.getEntradaForm().setProcedenciaId(submitted.getEntradaForm().getProcedenciaId());
         wizard.getEntradaForm().setProcedenciaBairroId(submitted.getEntradaForm().getProcedenciaBairroId());
@@ -1075,6 +1146,73 @@ public class AtendimentoController {
         if (wizard.isCadastrarNovoPaciente() && wizard.getNovoPacienteForm().getProfissaoId() != null) {
             wizard.getEntradaForm().setProfissaoId(wizard.getNovoPacienteForm().getProfissaoId());
         }
+    }
+
+    private Long resolveAreaExecucaoRecepcaoAtual(Long unidadeId, List<Area> areasExecucaoRecepcao) {
+        Long areaAtual = unidadeContext.getAreaExecucaoRecepcaoAtual().orElse(null);
+        if (areaAtual != null && isAreaEntradaValida(areaAtual, areasExecucaoRecepcao)) {
+            return areaAtual;
+        }
+        if (areasExecucaoRecepcao.size() == 1) {
+            Long unico = areasExecucaoRecepcao.get(0).getId();
+            unidadeContext.setAreaExecucaoRecepcaoAtual(unico);
+            return unico;
+        }
+        if (areaAtual != null) {
+            unidadeContext.clearAreaExecucaoRecepcaoAtual();
+        }
+        return null;
+    }
+
+    private void applyAreaExecucaoRecepcaoDefault(EntradaForm form,
+                                                  Long areaExecucaoRecepcaoAtualId,
+                                                  List<Area> areasExecucaoRecepcao) {
+        if (form == null) {
+            return;
+        }
+
+        if (form.getAreaExecucaoId() == null || !isAreaEntradaValida(form.getAreaExecucaoId(), areasExecucaoRecepcao)) {
+            if (areaExecucaoRecepcaoAtualId != null) {
+                form.setAreaExecucaoId(areaExecucaoRecepcaoAtualId);
+            } else if (areasExecucaoRecepcao.size() == 1) {
+                form.setAreaExecucaoId(areasExecucaoRecepcao.get(0).getId());
+            }
+        }
+
+        if (form.getAreaPortaEntradaId() == null || !isAreaEntradaValida(form.getAreaPortaEntradaId(), areasExecucaoRecepcao)) {
+            if (form.getAreaExecucaoId() != null && isAreaEntradaValida(form.getAreaExecucaoId(), areasExecucaoRecepcao)) {
+                form.setAreaPortaEntradaId(form.getAreaExecucaoId());
+            } else if (areasExecucaoRecepcao.size() == 1) {
+                form.setAreaPortaEntradaId(areasExecucaoRecepcao.get(0).getId());
+            }
+        }
+    }
+
+    private void rememberAreaExecucaoRecepcao(Long areaId) {
+        if (areaId != null) {
+            unidadeContext.setAreaExecucaoRecepcaoAtual(areaId);
+        }
+    }
+
+    private boolean isAreaEntradaValida(Long areaId, List<Area> areasExecucaoRecepcao) {
+        if (areaId == null) {
+            return false;
+        }
+        return areasExecucaoRecepcao.stream().anyMatch(area -> area.getId().equals(areaId));
+    }
+
+    private String safeRedirectPath(String redirect, String defaultPath) {
+        if (redirect == null || redirect.isBlank()) {
+            return defaultPath;
+        }
+        String value = redirect.trim();
+        if (value.contains("\n") || value.contains("\r")) {
+            return defaultPath;
+        }
+        if (!value.startsWith("/ui/")) {
+            return defaultPath;
+        }
+        return value;
     }
 
     private void populatePacienteLookups(Model model, PacienteForm form) {

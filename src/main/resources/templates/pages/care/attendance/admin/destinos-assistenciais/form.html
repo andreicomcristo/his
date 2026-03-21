@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(${modoEdicao} ? 'Administracao - Editar Destino Assistencial' : 'Administracao - Novo Destino Assistencial', ~{::content})}">
+<th:block th:fragment="content">
+    <div class="main-card mb-3 card">
+        <div class="card-body">
+            <h5 class="card-title" th:text="${modoEdicao} ? 'Editar destino assistencial' : 'Novo destino assistencial'"></h5>
+
+            <div class="alert alert-danger" th:if="${errorMessage}" th:text="${errorMessage}"></div>
+
+            <form method="post"
+                  th:object="${form}"
+                  th:action="${modoEdicao} ? @{'/ui/admin/destinos-assistenciais/' + ${itemId}} : @{/ui/admin/destinos-assistenciais}">
+                <div class="form-row">
+                    <div class="form-group col-md-4">
+                        <label>Unidade<span class="required-mark">*</span></label>
+                        <select class="multiselect-dropdown form-control" th:field="*{unidadeId}">
+                            <option value="">Selecione</option>
+                            <option th:each="unidade : ${unidades}" th:value="${unidade.id}" th:text="${unidade.nome}"></option>
+                        </select>
+                        <small class="text-danger" th:errors="*{unidadeId}"></small>
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label>Tipo de destino<span class="required-mark">*</span></label>
+                        <select class="multiselect-dropdown form-control" th:field="*{tipoDestinoAssistencialId}">
+                            <option value="">Selecione</option>
+                            <option th:each="tipo : ${tiposDestinoAssistencial}"
+                                    th:value="${tipo.id}"
+                                    th:text="${tipo.descricao}"></option>
+                        </select>
+                        <small class="text-danger" th:errors="*{tipoDestinoAssistencialId}"></small>
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label>Codigo<span class="required-mark">*</span></label>
+                        <input type="text"
+                               class="form-control"
+                               th:field="*{codigo}"
+                               placeholder="Ex.: CONSULTORIO_CLINICA_1">
+                        <small class="text-danger" th:errors="*{codigo}"></small>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group col-md-8">
+                        <label>Descricao<span class="required-mark">*</span></label>
+                        <input type="text"
+                               class="form-control"
+                               th:field="*{descricao}"
+                               placeholder="Descricao do destino assistencial">
+                        <small class="text-danger" th:errors="*{descricao}"></small>
+                    </div>
+                    <div class="form-group col-md-2">
+                        <label>Ordem<span class="required-mark">*</span></label>
+                        <input type="number"
+                               min="0"
+                               max="9999"
+                               class="form-control"
+                               th:field="*{ordemExibicao}">
+                        <small class="text-danger" th:errors="*{ordemExibicao}"></small>
+                    </div>
+                    <div class="form-group col-md-2 d-flex align-items-center">
+                        <div class="form-check mt-4">
+                            <input type="checkbox" class="form-check-input" th:field="*{ativo}">
+                            <label class="form-check-label">Ativo</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group col-md-12">
+                        <label>Observacao</label>
+                        <textarea class="form-control"
+                                  rows="3"
+                                  th:field="*{observacao}"
+                                  placeholder="Observacoes do destino (opcional)"></textarea>
+                        <small class="text-danger" th:errors="*{observacao}"></small>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-sm mr-2">Salvar</button>
+                <a th:href="@{/ui/admin/destinos-assistenciais}" class="btn btn-secondary btn-sm">Voltar</a>
+            </form>
+        </div>
+    </div>
+</th:block>
+</html>

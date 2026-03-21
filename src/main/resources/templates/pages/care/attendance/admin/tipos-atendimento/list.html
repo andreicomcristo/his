@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout('Administracao - Tipos de Atendimento', ~{::content})}">
+<th:block th:fragment="content">
+    <div class="main-card mb-3 card">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="card-title mb-0">Tipos de atendimento</h5>
+                <a class="btn btn-primary btn-sm" th:href="@{/ui/admin/tipos-atendimento/novo}">
+                    <i class="nav-link-icon lnr-plus-circle mr-2"></i>Adicionar
+                </a>
+            </div>
+
+            <div class="alert alert-success" th:if="${successMessage}" th:text="${successMessage}"></div>
+            <div class="alert alert-danger" th:if="${errorMessage}" th:text="${errorMessage}"></div>
+
+            <form method="get" th:action="@{/ui/admin/tipos-atendimento}" class="mb-3">
+                <div class="form-row">
+                    <div class="form-group col-md-12">
+                        <label class="filtro-label">Pesquisa</label>
+                        <input type="text"
+                               name="q"
+                               class="form-control"
+                               placeholder="Buscar por codigo ou descricao"
+                               th:value="${q}">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-md-12 d-flex">
+                        <button class="btn btn-sm btn-primary mr-2" type="submit">
+                            <i class="nav-link-icon lnr-magnifier mr-2"></i>Buscar
+                        </button>
+                        <a class="btn btn-sm btn-secondary" th:href="@{/ui/admin/tipos-atendimento}">
+                            <i class="nav-link-icon lnr-cross mr-2"></i>Limpar
+                        </a>
+                    </div>
+                </div>
+            </form>
+
+            <table class="table table-sm table-striped">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Codigo</th>
+                    <th>Descricao</th>
+                    <th>Ordem</th>
+                    <th>Status</th>
+                    <th class="text-center">Opcoes</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:if="${#lists.isEmpty(items)}">
+                    <td colspan="6" class="text-center">Nenhum tipo de atendimento encontrado</td>
+                </tr>
+                <tr th:each="item : ${items}">
+                    <td th:text="${item.id}">1</td>
+                    <td th:text="${item.codigo}">URGENCIA</td>
+                    <td th:text="${item.descricao}">Urgencia</td>
+                    <td th:text="${item.ordemExibicao}">10</td>
+                    <td>
+                        <span class="badge" th:classappend="${item.ativo} ? ' badge-success' : ' badge-secondary'"
+                              th:text="${item.ativo} ? 'ATIVO' : 'INATIVO'">ATIVO</span>
+                    </td>
+                    <td class="text-center">
+                        <a class="btn btn-sm btn-outline-warning mr-1"
+                           th:href="@{'/ui/admin/tipos-atendimento/' + ${item.id} + '/editar'}">Editar</a>
+                        <form class="d-inline" method="post"
+                              th:action="@{'/ui/admin/tipos-atendimento/' + ${item.id} + '/excluir'}">
+                            <button class="btn btn-sm btn-outline-danger" type="submit">Excluir</button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</th:block>
+</html>
+

@@ -15,6 +15,8 @@ public class UnidadeContext {
 
     private static final String SESSION_UNIDADE_KEY = "unidade_atual_id";
     private static final String SESSION_ATUACAO_KEY = "colaborador_unidade_atuacao_id";
+    private static final String SESSION_AREA_RECEPCAO_KEY = "area_execucao_recepcao_id";
+    private static final String SESSION_AREA_TRIAGEM_KEY = "area_execucao_triagem_id";
 
     public Optional<Long> getUnidadeAtual() {
         return readLongFromSession(SESSION_UNIDADE_KEY);
@@ -31,6 +33,8 @@ public class UnidadeContext {
             session.setAttribute(SESSION_UNIDADE_KEY, id);
             if (!Objects.equals(unidadeAtual, id)) {
                 session.removeAttribute(SESSION_ATUACAO_KEY);
+                session.removeAttribute(SESSION_AREA_RECEPCAO_KEY);
+                session.removeAttribute(SESSION_AREA_TRIAGEM_KEY);
             }
         }
     }
@@ -58,11 +62,59 @@ public class UnidadeContext {
         }
     }
 
+    public Optional<Long> getAreaExecucaoRecepcaoAtual() {
+        return readLongFromSession(SESSION_AREA_RECEPCAO_KEY);
+    }
+
+    public void setAreaExecucaoRecepcaoAtual(Long areaId) {
+        HttpSession session = getSession(true);
+        if (session == null) {
+            return;
+        }
+        if (areaId == null) {
+            session.removeAttribute(SESSION_AREA_RECEPCAO_KEY);
+            return;
+        }
+        session.setAttribute(SESSION_AREA_RECEPCAO_KEY, areaId);
+    }
+
+    public void clearAreaExecucaoRecepcaoAtual() {
+        HttpSession session = getSession(false);
+        if (session != null) {
+            session.removeAttribute(SESSION_AREA_RECEPCAO_KEY);
+        }
+    }
+
+    public Optional<Long> getAreaExecucaoTriagemAtual() {
+        return readLongFromSession(SESSION_AREA_TRIAGEM_KEY);
+    }
+
+    public void setAreaExecucaoTriagemAtual(Long areaId) {
+        HttpSession session = getSession(true);
+        if (session == null) {
+            return;
+        }
+        if (areaId == null) {
+            session.removeAttribute(SESSION_AREA_TRIAGEM_KEY);
+            return;
+        }
+        session.setAttribute(SESSION_AREA_TRIAGEM_KEY, areaId);
+    }
+
+    public void clearAreaExecucaoTriagemAtual() {
+        HttpSession session = getSession(false);
+        if (session != null) {
+            session.removeAttribute(SESSION_AREA_TRIAGEM_KEY);
+        }
+    }
+
     public void clearUnidadeAtual() {
         HttpSession session = getSession(false);
         if (session != null) {
             session.removeAttribute(SESSION_UNIDADE_KEY);
             session.removeAttribute(SESSION_ATUACAO_KEY);
+            session.removeAttribute(SESSION_AREA_RECEPCAO_KEY);
+            session.removeAttribute(SESSION_AREA_TRIAGEM_KEY);
         }
     }
 

@@ -21,7 +21,6 @@ import br.com.his.care.timeline.dto.*;
 import br.com.his.care.timeline.model.*;
 import br.com.his.care.timeline.repository.*;
 
-import br.com.his.care.attendance.model.TipoAtendimento;
 import br.com.his.patient.dto.PacienteForm;
 
 public class AtendimentoWizardForm {
@@ -38,7 +37,7 @@ public class AtendimentoWizardForm {
     private String sexoTemporario = "NI";
     private Integer idadeAparenteTemporario;
 
-    private TipoAtendimento tipoAtendimento;
+    private String tipoAtendimento;
     private Long agendaPacienteId;
 
     private final EntradaForm entradaForm = new EntradaForm();
@@ -176,11 +175,11 @@ public class AtendimentoWizardForm {
         this.idadeAparenteTemporario = idadeAparenteTemporario;
     }
 
-    public TipoAtendimento getTipoAtendimento() {
+    public String getTipoAtendimento() {
         return tipoAtendimento;
     }
 
-    public void setTipoAtendimento(TipoAtendimento tipoAtendimento) {
+    public void setTipoAtendimento(String tipoAtendimento) {
         this.tipoAtendimento = tipoAtendimento;
     }
 
