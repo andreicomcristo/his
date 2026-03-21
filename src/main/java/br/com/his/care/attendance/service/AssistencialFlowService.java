@@ -827,7 +827,7 @@ public class AssistencialFlowService {
 
     @Transactional(readOnly = true)
     public List<Atendimento> listarFilaClassificacao(Long unidadeId) {
-        return atendimentoRepository.findFilaClassificacao(unidadeId, statusesAbertos());
+        return atendimentoRepository.findFilaClassificacao(unidadeId, statusesFilaClassificacao());
     }
 
     @Transactional(readOnly = true)
@@ -1492,6 +1492,12 @@ public class AssistencialFlowService {
                 "AGUARDANDO_TRIAGEM",
                 "AGUARDANDO_MEDICO",
                 "EM_ATENDIMENTO");
+    }
+
+    private static List<String> statusesFilaClassificacao() {
+        return List.of(
+                "AGUARDANDO_TRIAGEM",
+                "EM_TRIAGEM");
     }
 
     private StatusAtendimento status(String codigo) {

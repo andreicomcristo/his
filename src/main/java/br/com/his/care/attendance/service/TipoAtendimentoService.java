@@ -42,6 +42,21 @@ public class TipoAtendimentoService {
     }
 
     @Transactional(readOnly = true)
+    public List<TipoAtendimentoOption> listarOpcoesComTriagemObrigatoriaPorUnidade(Long unidadeId) {
+        if (unidadeId == null) {
+            return List.of();
+        }
+        return unidadeTipoAtendimentoRepository
+                .findByUnidadeIdAndAtivoTrueOrderByTipoAtendimentoOrdemExibicaoAscTipoAtendimentoDescricaoAsc(unidadeId)
+                .stream()
+                .filter(UnidadeTipoAtendimento::isTriagemObrigatoria)
+                .map(UnidadeTipoAtendimento::getTipoAtendimento)
+                .filter(item -> item != null && item.isAtivo())
+                .map(this::toOption)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
     public List<TipoAtendimentoOption> listarOpcoesAtivasGlobais() {
         return tipoAtendimentoCadastroRepository.findByAtivoTrueOrderByOrdemExibicaoAscDescricaoAsc().stream()
                 .map(this::toOption)

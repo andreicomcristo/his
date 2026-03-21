@@ -88,6 +88,7 @@ public class AtendimentoController {
     private final EntradaRepository entradaRepository;
     private final ObservacaoRepository observacaoRepository;
     private final InternacaoRepository internacaoRepository;
+    private final LeitoOcupacaoRepository leitoOcupacaoRepository;
     private final StatusAtendimentoRepository statusAtendimentoRepository;
     private final UnidadeContext unidadeContext;
     private final UnidadeRepository unidadeRepository;
@@ -112,6 +113,7 @@ public class AtendimentoController {
                                  EntradaRepository entradaRepository,
                                  ObservacaoRepository observacaoRepository,
                                  InternacaoRepository internacaoRepository,
+                                 LeitoOcupacaoRepository leitoOcupacaoRepository,
                                  StatusAtendimentoRepository statusAtendimentoRepository,
                                  UnidadeContext unidadeContext,
                                  UnidadeRepository unidadeRepository,
@@ -135,6 +137,7 @@ public class AtendimentoController {
         this.entradaRepository = entradaRepository;
         this.observacaoRepository = observacaoRepository;
         this.internacaoRepository = internacaoRepository;
+        this.leitoOcupacaoRepository = leitoOcupacaoRepository;
         this.statusAtendimentoRepository = statusAtendimentoRepository;
         this.unidadeContext = unidadeContext;
         this.unidadeRepository = unidadeRepository;
@@ -223,17 +226,26 @@ public class AtendimentoController {
                                          Model model) {
         requirePermission(OperationalPermissionService.PERM_ATENDIMENTO_ACESSAR);
         Long unidadeId = unidadeAtual();
+        Set<String> tiposComTriagemObrigatoria = tipoAtendimentoService
+                .listarOpcoesComTriagemObrigatoriaPorUnidade(unidadeId)
+                .stream()
+                .map(TipoAtendimentoOption::getCodigo)
+                .collect(Collectors.toSet());
         List<Atendimento> atendimentosBase = carregarAtendimentosBase(unidadeId, nome, cpf, dataInicio, dataFim, tipoAtendimento, statusId);
         Map<Long, Entrada> entradasMap = mapEntradas(atendimentosBase.stream().map(Atendimento::getId).toList());
         Map<Long, br.com.his.care.triage.model.ClassificacaoRisco> classificacoesMap =
                 assistencialFlowService.mapaUltimaClassificacao(atendimentosBase.stream().map(Atendimento::getId).toList());
         List<Atendimento> atendimentos = atendimentosBase.stream()
                 .filter(a -> entradasMap.containsKey(a.getId()))
+                .filter(this::isAguardandoTriagem)
+                .filter(a -> tiposComTriagemObrigatoria.contains(
+                        TipoAtendimentoService.normalizeCodigo(a.getTipoAtendimentoCodigo())))
                 .filter(a -> classificacoesMap.get(a.getId()) == null)
                 .filter(a -> matchesAreaEntrada(entradasMap.get(a.getId()), areaEntradaId))
                 .toList();
         populateListaModel(model, unidadeId, atendimentos, entradasMap, nome, cpf, dataInicio, dataFim,
                 tipoAtendimento, statusId, areaEntradaId);
+        model.addAttribute("tiposAtendimento", tipoAtendimentoService.listarOpcoesComTriagemObrigatoriaPorUnidade(unidadeId));
         model.addAttribute("pageTitle", "Atendimentos pendentes de classificacao");
         model.addAttribute("listActionPath", "/ui/atendimentos/pendentes-classificacao");
         model.addAttribute("showNovoAtendimentoButton", false);
@@ -356,6 +368,9 @@ public class AtendimentoController {
         List<Atendimento> atendimentos = filtrados.stream()
                 .filter(a -> matchesAreaEntrada(entradasMap.get(a.getId()), areaEntradaId))
                 .toList();
+        List<Long> atendimentoIds = atendimentos.stream().map(Atendimento::getId).toList();
+        Map<Long, Observacao> observacoesAtivasMap = mapObservacoesAtivas(atendimentoIds);
+        Map<Long, Internacao> internacoesAtivasMap = mapInternacoesAtivas(atendimentoIds);
 
         model.addAttribute("atendimentos", atendimentos);
         model.addAttribute("nome", nome);
@@ -367,6 +382,12 @@ public class AtendimentoController {
         model.addAttribute("areaEntradaSelecionadaId", areaEntradaId);
         model.addAttribute("tiposAtendimento", tiposAtendimentoConfigurados(unidadeId));
         model.addAttribute("statusAtendimentoOptions", statusAtendimentoRepository.findAllByOrderByDescricaoAsc());
+        model.addAttribute("observacoesAtivasMap", observacoesAtivasMap);
+        model.addAttribute("internacoesAtivasMap", internacoesAtivasMap);
+        model.addAttribute("observacoesOcupacaoAtivaMap", mapOcupacaoObservacaoPorAtendimento(observacoesAtivasMap));
+        model.addAttribute("internacoesOcupacaoAtivaMap", mapOcupacaoInternacaoPorAtendimento(internacoesAtivasMap));
+        model.addAttribute("statusObservacaoVisual", statusAtendimentoRepository.findByCodigoIgnoreCase("OBSERVACAO").orElse(null));
+        model.addAttribute("statusInternacaoVisual", statusAtendimentoRepository.findByCodigoIgnoreCase("INTERNACAO").orElse(null));
         model.addAttribute("areasEntradaOptions", areaRepository.findAreasAtivasRecebemEntradaByUnidadeId(unidadeId));
         model.addAttribute("listActionPath", "/ui/atendimentos/nao-identificados");
         return "pages/care/attendance/atendimentos/nao-identificados";
@@ -701,6 +722,54 @@ public class AtendimentoController {
         return result;
     }
 
+    private Map<Long, LeitoOcupacao> mapOcupacaoObservacaoPorAtendimento(Map<Long, Observacao> observacoesAtivasMap) {
+        if (observacoesAtivasMap.isEmpty()) {
+            return Map.of();
+        }
+        List<Long> observacaoIds = observacoesAtivasMap.values().stream()
+                .map(Observacao::getId)
+                .toList();
+        Map<Long, LeitoOcupacao> porObservacaoId = new HashMap<>();
+        for (LeitoOcupacao ocupacao : leitoOcupacaoRepository.findAbertasByObservacaoIds(observacaoIds)) {
+            if (ocupacao.getObservacaoAtendimento() == null || ocupacao.getObservacaoAtendimento().getId() == null) {
+                continue;
+            }
+            porObservacaoId.putIfAbsent(ocupacao.getObservacaoAtendimento().getId(), ocupacao);
+        }
+        Map<Long, LeitoOcupacao> porAtendimento = new HashMap<>();
+        for (Map.Entry<Long, Observacao> entry : observacoesAtivasMap.entrySet()) {
+            LeitoOcupacao ocupacao = porObservacaoId.get(entry.getValue().getId());
+            if (ocupacao != null) {
+                porAtendimento.put(entry.getKey(), ocupacao);
+            }
+        }
+        return porAtendimento;
+    }
+
+    private Map<Long, LeitoOcupacao> mapOcupacaoInternacaoPorAtendimento(Map<Long, Internacao> internacoesAtivasMap) {
+        if (internacoesAtivasMap.isEmpty()) {
+            return Map.of();
+        }
+        List<Long> internacaoIds = internacoesAtivasMap.values().stream()
+                .map(Internacao::getId)
+                .toList();
+        Map<Long, LeitoOcupacao> porInternacaoId = new HashMap<>();
+        for (LeitoOcupacao ocupacao : leitoOcupacaoRepository.findAbertasByInternacaoIds(internacaoIds)) {
+            if (ocupacao.getInternacao() == null || ocupacao.getInternacao().getId() == null) {
+                continue;
+            }
+            porInternacaoId.putIfAbsent(ocupacao.getInternacao().getId(), ocupacao);
+        }
+        Map<Long, LeitoOcupacao> porAtendimento = new HashMap<>();
+        for (Map.Entry<Long, Internacao> entry : internacoesAtivasMap.entrySet()) {
+            LeitoOcupacao ocupacao = porInternacaoId.get(entry.getValue().getId());
+            if (ocupacao != null) {
+                porAtendimento.put(entry.getKey(), ocupacao);
+            }
+        }
+        return porAtendimento;
+    }
+
     private List<Atendimento> carregarAtendimentosBase(Long unidadeId,
                                                        String nome,
                                                        String cpf,
@@ -768,8 +837,12 @@ public class AtendimentoController {
         model.addAttribute("entradasMap", entradasMap);
         model.addAttribute("classificacoesMap", assistencialFlowService.mapaUltimaClassificacao(atendimentoIds));
         model.addAttribute("desfechosMap", mapDesfechos(atendimentoIds));
-        model.addAttribute("observacoesAtivasMap", mapObservacoesAtivas(atendimentoIds));
-        model.addAttribute("internacoesAtivasMap", mapInternacoesAtivas(atendimentoIds));
+        Map<Long, Observacao> observacoesAtivasMap = mapObservacoesAtivas(atendimentoIds);
+        Map<Long, Internacao> internacoesAtivasMap = mapInternacoesAtivas(atendimentoIds);
+        model.addAttribute("observacoesAtivasMap", observacoesAtivasMap);
+        model.addAttribute("internacoesAtivasMap", internacoesAtivasMap);
+        model.addAttribute("observacoesOcupacaoAtivaMap", mapOcupacaoObservacaoPorAtendimento(observacoesAtivasMap));
+        model.addAttribute("internacoesOcupacaoAtivaMap", mapOcupacaoInternacaoPorAtendimento(internacoesAtivasMap));
         model.addAttribute("nome", nome);
         model.addAttribute("cpf", cpf);
         model.addAttribute("dataInicio", dataInicio);
@@ -824,6 +897,12 @@ public class AtendimentoController {
         }
         StatusAtendimento status = atendimento.getStatus();
         return status != null && statusId.equals(status.getId());
+    }
+
+    private boolean isAguardandoTriagem(Atendimento atendimento) {
+        return atendimento != null
+                && atendimento.getStatus() != null
+                && "AGUARDANDO_TRIAGEM".equalsIgnoreCase(atendimento.getStatus().getCodigo());
     }
 
     private boolean matchesDataChegada(Atendimento atendimento, LocalDate dataInicio, LocalDate dataFim) {

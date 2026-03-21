@@ -293,7 +293,11 @@
                             </th:block>
                         </td>
                         <td>
-                            <th:block th:with="desfecho=${desfechosMap[a.id]}, internacaoAtiva=${internacoesAtivasMap[a.id]}, observacaoAtiva=${observacoesAtivasMap[a.id]}">
+                            <th:block th:with="desfecho=${desfechosMap[a.id]},
+                                               internacaoAtiva=${internacoesAtivasMap[a.id]},
+                                               observacaoAtiva=${observacoesAtivasMap[a.id]},
+                                               internacaoOcupacaoAtiva=${internacoesOcupacaoAtivaMap[a.id]},
+                                               observacaoOcupacaoAtiva=${observacoesOcupacaoAtivaMap[a.id]}">
                                 <th:block th:if="${desfecho != null}">
                                     <span class="fila-status-pill"
                                           th:style="${desfecho.motivoDesfecho.cor != null ? 'background:' + desfecho.motivoDesfecho.cor + '; color:#fff;' : ''}"
@@ -307,6 +311,10 @@
                                           th:text="${statusInternacaoVisual != null ? statusInternacaoVisual.descricao : 'INTERNACAO'}"></span>
                                     <span class="fila-line mt-2"
                                           th:text="${#temporals.format(internacaoAtiva.dataHoraInicioInternacao != null ? internacaoAtiva.dataHoraInicioInternacao : internacaoAtiva.dataHoraDecisaoInternacao, 'dd/MM/yyyy - HH:mm')}"></span>
+                                    <span class="fila-line" th:if="${internacaoOcupacaoAtiva != null and internacaoOcupacaoAtiva.leito != null and internacaoOcupacaoAtiva.leito.area != null}"
+                                          th:text="${'Area: ' + internacaoOcupacaoAtiva.leito.area.descricao}"></span>
+                                    <span class="fila-line" th:if="${internacaoOcupacaoAtiva != null and internacaoOcupacaoAtiva.leito != null}"
+                                          th:text="${'Leito: ' + internacaoOcupacaoAtiva.leito.codigo + (internacaoOcupacaoAtiva.leito.descricao != null and !#strings.isEmpty(internacaoOcupacaoAtiva.leito.descricao) ? ' - ' + internacaoOcupacaoAtiva.leito.descricao : '')}"></span>
                                 </th:block>
                                 <th:block th:if="${desfecho == null and internacaoAtiva == null and observacaoAtiva != null}">
                                     <span class="fila-status-pill"
@@ -314,6 +322,10 @@
                                           th:text="${statusObservacaoVisual != null ? statusObservacaoVisual.descricao : 'OBSERVACAO'}"></span>
                                     <span class="fila-line mt-2"
                                           th:text="${#temporals.format(observacaoAtiva.dataHoraInicio, 'dd/MM/yyyy - HH:mm')}"></span>
+                                    <span class="fila-line" th:if="${observacaoOcupacaoAtiva != null and observacaoOcupacaoAtiva.leito != null and observacaoOcupacaoAtiva.leito.area != null}"
+                                          th:text="${'Area: ' + observacaoOcupacaoAtiva.leito.area.descricao}"></span>
+                                    <span class="fila-line" th:if="${observacaoOcupacaoAtiva != null and observacaoOcupacaoAtiva.leito != null}"
+                                          th:text="${'Leito: ' + observacaoOcupacaoAtiva.leito.codigo + (observacaoOcupacaoAtiva.leito.descricao != null and !#strings.isEmpty(observacaoOcupacaoAtiva.leito.descricao) ? ' - ' + observacaoOcupacaoAtiva.leito.descricao : '')}"></span>
                                 </th:block>
                                 <th:block th:if="${desfecho == null and internacaoAtiva == null and observacaoAtiva == null}">
                                     <span class="fila-status-pill"

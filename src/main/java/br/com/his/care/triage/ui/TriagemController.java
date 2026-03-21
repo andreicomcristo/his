@@ -160,12 +160,19 @@ public class TriagemController {
                          Model model) {
         requirePermission();
         Long unidadeId = unidadeAtual();
+        List<TipoAtendimentoOption> tiposComTriagemObrigatoria = tipoAtendimentoService
+                .listarOpcoesComTriagemObrigatoriaPorUnidade(unidadeId);
+        Set<String> codigosTriagemObrigatoria = tiposComTriagemObrigatoria.stream()
+                .map(TipoAtendimentoOption::getCodigo)
+                .collect(Collectors.toSet());
         List<Area> areasExecucaoTriagem = areaRepository.findAreasAtivasTriagemByUnidadeId(unidadeId);
         Long areaExecucaoTriagemAtualId = resolveAreaExecucaoTriagemAtual(unidadeId, areasExecucaoTriagem);
         List<Atendimento> atendimentos = assistencialFlowService.listarFilaClassificacao(unidadeId).stream()
                 .filter(atendimento -> matchesNome(atendimento, nome))
                 .filter(atendimento -> matchesCpf(atendimento, cpf))
                 .filter(atendimento -> matchesAtendimentoId(atendimento, atendimentoId))
+                .filter(atendimento -> codigosTriagemObrigatoria.contains(
+                        TipoAtendimentoService.normalizeCodigo(atendimento.getTipoAtendimentoCodigo())))
                 .filter(atendimento -> matchesTipoAtendimento(atendimento, tipoAtendimento))
                 .filter(atendimento -> statusId == null
                         || (atendimento.getStatus() != null && statusId.equals(atendimento.getStatus().getId())))
@@ -183,7 +190,7 @@ public class TriagemController {
         model.addAttribute("statusSelecionadoId", statusId);
         model.addAttribute("dataInicio", dataInicio);
         model.addAttribute("dataFim", dataFim);
-        model.addAttribute("tiposAtendimento", tiposAtendimentoConfigurados(unidadeId));
+        model.addAttribute("tiposAtendimento", tiposComTriagemObrigatoria);
         model.addAttribute("statusAtendimentoOptions", statusAtendimentoRepository.findAllByOrderByDescricaoAsc());
         model.addAttribute("areasExecucaoTriagem", areasExecucaoTriagem);
         model.addAttribute("areaExecucaoTriagemAtualId", areaExecucaoTriagemAtualId);

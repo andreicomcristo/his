@@ -108,7 +108,34 @@
                             <td th:text="${a.paciente.sexo}">NI</td>
                             <td th:text="${a.paciente.idadeAparente != null ? a.paciente.idadeAparente : '-'}">-</td>
                             <td th:text="${a.tipoAtendimento}">-</td>
-                            <td th:text="${a.status != null ? a.status.descricao : '-'}">-</td>
+                            <td>
+                                <th:block th:with="internacaoAtiva=${internacoesAtivasMap[a.id]},
+                                                   observacaoAtiva=${observacoesAtivasMap[a.id]},
+                                                   internacaoOcupacaoAtiva=${internacoesOcupacaoAtivaMap[a.id]},
+                                                   observacaoOcupacaoAtiva=${observacoesOcupacaoAtivaMap[a.id]}">
+                                    <span th:text="${a.status != null ? a.status.descricao : '-'}">-</span>
+                                    <div th:if="${internacaoAtiva != null}" class="mt-1">
+                                        <small class="d-block text-muted"
+                                               th:text="${#temporals.format(internacaoAtiva.dataHoraInicioInternacao != null ? internacaoAtiva.dataHoraInicioInternacao : internacaoAtiva.dataHoraDecisaoInternacao, 'dd/MM/yyyy - HH:mm')}"></small>
+                                        <small class="d-block text-muted"
+                                               th:if="${internacaoOcupacaoAtiva != null and internacaoOcupacaoAtiva.leito != null and internacaoOcupacaoAtiva.leito.area != null}"
+                                               th:text="${'Area: ' + internacaoOcupacaoAtiva.leito.area.descricao}"></small>
+                                        <small class="d-block text-muted"
+                                               th:if="${internacaoOcupacaoAtiva != null and internacaoOcupacaoAtiva.leito != null}"
+                                               th:text="${'Leito: ' + internacaoOcupacaoAtiva.leito.codigo + (internacaoOcupacaoAtiva.leito.descricao != null and !#strings.isEmpty(internacaoOcupacaoAtiva.leito.descricao) ? ' - ' + internacaoOcupacaoAtiva.leito.descricao : '')}"></small>
+                                    </div>
+                                    <div th:if="${internacaoAtiva == null and observacaoAtiva != null}" class="mt-1">
+                                        <small class="d-block text-muted"
+                                               th:text="${#temporals.format(observacaoAtiva.dataHoraInicio, 'dd/MM/yyyy - HH:mm')}"></small>
+                                        <small class="d-block text-muted"
+                                               th:if="${observacaoOcupacaoAtiva != null and observacaoOcupacaoAtiva.leito != null and observacaoOcupacaoAtiva.leito.area != null}"
+                                               th:text="${'Area: ' + observacaoOcupacaoAtiva.leito.area.descricao}"></small>
+                                        <small class="d-block text-muted"
+                                               th:if="${observacaoOcupacaoAtiva != null and observacaoOcupacaoAtiva.leito != null}"
+                                               th:text="${'Leito: ' + observacaoOcupacaoAtiva.leito.codigo + (observacaoOcupacaoAtiva.leito.descricao != null and !#strings.isEmpty(observacaoOcupacaoAtiva.leito.descricao) ? ' - ' + observacaoOcupacaoAtiva.leito.descricao : '')}"></small>
+                                    </div>
+                                </th:block>
+                            </td>
                             <td>
                                 <a th:href="@{/ui/pacientes/{id}/identificar(id=${a.paciente.id}, atendimentoId=${a.id}, retorno='/ui/atendimentos/nao-identificados')}"
                                    class="btn btn-primary btn-sm">Identificar paciente</a>
