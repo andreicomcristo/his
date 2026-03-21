@@ -62,7 +62,6 @@ import br.com.his.care.triage.model.GlasgowRespostaPupilar;
 import br.com.his.care.triage.model.GlasgowRespostaVerbal;
 import br.com.his.care.attendance.model.PrimeiroPassoFluxo;
 import br.com.his.care.triage.model.ReguaDor;
-import br.com.his.care.attendance.model.TipoAtendimento;
 import br.com.his.care.triage.repository.AlergiaSeveridadeRepository;
 import br.com.his.care.triage.repository.AlergiaSubstanciaRepository;
 import br.com.his.care.triage.repository.AvcSinalAlertaRepository;
@@ -88,6 +87,7 @@ public class TriagemController {
 
     private static final String SESSION_TRIAGEM_CHEGADAS = "triagemChegadas";
     private static final String SESSION_TRIAGEM_WIZARD = "triagemWizard";
+    private static final String SESSION_TRIAGEM_INICIO_CAPTURADO = "triagemInicioCapturadoPorAtendimento";
 
     private final AssistencialFlowService assistencialFlowService;
     private final OperationalPermissionService operationalPermissionService;
@@ -96,6 +96,7 @@ public class TriagemController {
     private final PacienteLookupService pacienteLookupService;
     private final UnidadeConfigFluxoRepository unidadeConfigFluxoRepository;
     private final StatusAtendimentoRepository statusAtendimentoRepository;
+    private final AreaRepository areaRepository;
     private final AlergiaSubstanciaRepository alergiaSubstanciaRepository;
     private final AlergiaSeveridadeRepository alergiaSeveridadeRepository;
     private final ComorbidadeRepository comorbidadeRepository;
@@ -106,6 +107,7 @@ public class TriagemController {
     private final GlasgowRespostaVerbalRepository glasgowRespostaVerbalRepository;
     private final GlasgowRespostaMotoraRepository glasgowRespostaMotoraRepository;
     private final GlasgowRespostaPupilarRepository glasgowRespostaPupilarRepository;
+    private final TipoAtendimentoService tipoAtendimentoService;
 
     public TriagemController(AssistencialFlowService assistencialFlowService,
                              OperationalPermissionService operationalPermissionService,
@@ -114,6 +116,7 @@ public class TriagemController {
                              PacienteLookupService pacienteLookupService,
                              UnidadeConfigFluxoRepository unidadeConfigFluxoRepository,
                              StatusAtendimentoRepository statusAtendimentoRepository,
+                             AreaRepository areaRepository,
                              AlergiaSubstanciaRepository alergiaSubstanciaRepository,
                              AlergiaSeveridadeRepository alergiaSeveridadeRepository,
                              ComorbidadeRepository comorbidadeRepository,
@@ -123,7 +126,8 @@ public class TriagemController {
                              GlasgowAberturaOcularRepository glasgowAberturaOcularRepository,
                              GlasgowRespostaVerbalRepository glasgowRespostaVerbalRepository,
                              GlasgowRespostaMotoraRepository glasgowRespostaMotoraRepository,
-                             GlasgowRespostaPupilarRepository glasgowRespostaPupilarRepository) {
+                             GlasgowRespostaPupilarRepository glasgowRespostaPupilarRepository,
+                             TipoAtendimentoService tipoAtendimentoService) {
         this.assistencialFlowService = assistencialFlowService;
         this.operationalPermissionService = operationalPermissionService;
         this.unidadeContext = unidadeContext;
@@ -131,6 +135,7 @@ public class TriagemController {
         this.pacienteLookupService = pacienteLookupService;
         this.unidadeConfigFluxoRepository = unidadeConfigFluxoRepository;
         this.statusAtendimentoRepository = statusAtendimentoRepository;
+        this.areaRepository = areaRepository;
         this.alergiaSubstanciaRepository = alergiaSubstanciaRepository;
         this.alergiaSeveridadeRepository = alergiaSeveridadeRepository;
         this.comorbidadeRepository = comorbidadeRepository;
@@ -141,24 +146,27 @@ public class TriagemController {
         this.glasgowRespostaVerbalRepository = glasgowRespostaVerbalRepository;
         this.glasgowRespostaMotoraRepository = glasgowRespostaMotoraRepository;
         this.glasgowRespostaPupilarRepository = glasgowRespostaPupilarRepository;
+        this.tipoAtendimentoService = tipoAtendimentoService;
     }
 
     @GetMapping
     public String listar(@RequestParam(required = false) String nome,
                          @RequestParam(required = false) String cpf,
                          @RequestParam(required = false) Long atendimentoId,
-                         @RequestParam(required = false) TipoAtendimento tipoAtendimento,
+                         @RequestParam(name = "tipoAtendimento", required = false) String tipoAtendimento,
                          @RequestParam(required = false) Long statusId,
                          @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicio,
                          @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFim,
                          Model model) {
         requirePermission();
         Long unidadeId = unidadeAtual();
+        List<Area> areasExecucaoTriagem = areaRepository.findAreasAtivasTriagemByUnidadeId(unidadeId);
+        Long areaExecucaoTriagemAtualId = resolveAreaExecucaoTriagemAtual(unidadeId, areasExecucaoTriagem);
         List<Atendimento> atendimentos = assistencialFlowService.listarFilaClassificacao(unidadeId).stream()
                 .filter(atendimento -> matchesNome(atendimento, nome))
                 .filter(atendimento -> matchesCpf(atendimento, cpf))
                 .filter(atendimento -> matchesAtendimentoId(atendimento, atendimentoId))
-                .filter(atendimento -> tipoAtendimento == null || atendimento.getTipoAtendimento() == tipoAtendimento)
+                .filter(atendimento -> matchesTipoAtendimento(atendimento, tipoAtendimento))
                 .filter(atendimento -> statusId == null
                         || (atendimento.getStatus() != null && statusId.equals(atendimento.getStatus().getId())))
                 .filter(atendimento -> matchesPeriodo(atendimento, dataInicio, dataFim))
@@ -171,13 +179,33 @@ public class TriagemController {
         model.addAttribute("nome", nome);
         model.addAttribute("cpf", cpf);
         model.addAttribute("atendimentoId", atendimentoId);
-        model.addAttribute("tipoAtendimentoSelecionado", tipoAtendimento);
+        model.addAttribute("tipoAtendimentoSelecionado", TipoAtendimentoService.normalizeCodigo(tipoAtendimento));
         model.addAttribute("statusSelecionadoId", statusId);
         model.addAttribute("dataInicio", dataInicio);
         model.addAttribute("dataFim", dataFim);
-        model.addAttribute("tiposAtendimento", TipoAtendimento.values());
+        model.addAttribute("tiposAtendimento", tiposAtendimentoConfigurados(unidadeId));
         model.addAttribute("statusAtendimentoOptions", statusAtendimentoRepository.findAllByOrderByDescricaoAsc());
+        model.addAttribute("areasExecucaoTriagem", areasExecucaoTriagem);
+        model.addAttribute("areaExecucaoTriagemAtualId", areaExecucaoTriagemAtualId);
         return "pages/care/triage/list";
+    }
+
+    @PostMapping("/posto-triagem")
+    public String selecionarPostoTriagem(@RequestParam(required = false) Long areaId,
+                                         @RequestParam(required = false) String redirect) {
+        requirePermission();
+        Long unidadeId = unidadeAtual();
+        List<Area> areas = areaRepository.findAreasAtivasTriagemByUnidadeId(unidadeId);
+        if (areaId == null) {
+            unidadeContext.clearAreaExecucaoTriagemAtual();
+        } else {
+            boolean valido = areas.stream().anyMatch(area -> area.getId().equals(areaId));
+            if (!valido) {
+                throw new IllegalArgumentException("Area de triagem invalida para a unidade atual");
+            }
+            unidadeContext.setAreaExecucaoTriagemAtual(areaId);
+        }
+        return "redirect:" + safeRedirectPath(redirect, "/ui/triagem");
     }
 
     @GetMapping("/novo")
@@ -326,6 +354,7 @@ public class TriagemController {
                     unidadeAtual(),
                     wizard.getTipoAtendimento(),
                     chegada);
+            rememberAreaExecucaoTriagem(wizard.getTriagemForm().getAreaExecucaoId());
             assistencialFlowService.iniciarTriagem(atendimento.getId());
             assistencialFlowService.finalizarTriagem(atendimento.getId(), wizard.getTriagemForm());
             session.removeAttribute(SESSION_TRIAGEM_WIZARD);
@@ -339,33 +368,30 @@ public class TriagemController {
     }
 
     @GetMapping("/{atendimentoId}")
-    public String tela(@PathVariable Long atendimentoId, Model model) {
+    public String tela(@PathVariable Long atendimentoId, Model model, HttpSession session) {
         requirePermission();
         var triagemAbertaOpt = assistencialFlowService.buscarTriagemAberta(atendimentoId);
         boolean triagemAberta = triagemAbertaOpt.isPresent();
         boolean possuiClassificacaoFinalizada = assistencialFlowService.buscarUltimaClassificacaoFinalizada(atendimentoId).isPresent();
         boolean modoReclassificacao = !triagemAberta && possuiClassificacaoFinalizada;
 
-        if (!triagemAberta && !modoReclassificacao) {
-            try {
-                assistencialFlowService.iniciarTriagem(atendimentoId);
-                triagemAbertaOpt = assistencialFlowService.buscarTriagemAberta(atendimentoId);
-                triagemAberta = triagemAbertaOpt.isPresent();
-            } catch (IllegalArgumentException ex) {
-                model.addAttribute("errorMessage", ex.getMessage());
-            }
-        }
-
         Atendimento atendimento = assistencialFlowService.buscarAtendimento(atendimentoId);
+        List<Area> areasExecucaoTriagem = areaRepository.findAreasAtivasTriagemByUnidadeId(atendimento.getUnidade().getId());
+        Long areaExecucaoTriagemAtualId = resolveAreaExecucaoTriagemAtual(atendimento.getUnidade().getId(), areasExecucaoTriagem);
         model.addAttribute("atendimento", atendimento);
         model.addAttribute("triagemAberta", triagemAberta);
         model.addAttribute("modoReclassificacao", modoReclassificacao);
-        model.addAttribute("inicioTriagemCapturada", triagemAbertaOpt.map(ClassificacaoRisco::getDataInicio).orElse(null));
+        model.addAttribute("inicioTriagemCapturada",
+                capturarInicioTriagemAoAbrirTela(session, atendimentoId, triagemAbertaOpt, modoReclassificacao));
         model.addAttribute("classificacaoResumo",
                 assistencialFlowService.mapaUltimaClassificacao(java.util.List.of(atendimentoId)).get(atendimentoId));
         if (!model.containsAttribute("form")) {
             model.addAttribute("form", new TriagemForm());
         }
+        TriagemForm form = (TriagemForm) model.getAttribute("form");
+        applyAreaExecucaoTriagemDefault(form, areaExecucaoTriagemAtualId, areasExecucaoTriagem);
+        model.addAttribute("areasExecucaoTriagem", areasExecucaoTriagem);
+        model.addAttribute("areaExecucaoTriagemAtualId", areaExecucaoTriagemAtualId);
         model.addAttribute("classificacaoCores", classificacaoCorRepository.findByAtivoTrueOrderByOrdemExibicaoAscDescricaoAsc());
         populateTriagemLookups(model);
         return "pages/care/triage/form";
@@ -388,8 +414,10 @@ public class TriagemController {
                             @Valid @ModelAttribute("form") TriagemForm form,
                             BindingResult bindingResult,
                             Model model,
+                            HttpSession session,
                             RedirectAttributes redirectAttributes) {
         requirePermission();
+        Atendimento atendimento = assistencialFlowService.buscarAtendimento(atendimentoId);
         boolean triagemAberta = assistencialFlowService.buscarTriagemAberta(atendimentoId).isPresent();
         boolean possuiClassificacaoFinalizada = assistencialFlowService.buscarUltimaClassificacaoFinalizada(atendimentoId).isPresent();
         if (!triagemAberta && possuiClassificacaoFinalizada) {
@@ -397,16 +425,30 @@ public class TriagemController {
             return "redirect:/ui/triagem/" + atendimentoId;
         }
         applyCustomAlergiaValidation(form, bindingResult, "");
+        validateAreaExecucaoTriagemForm(atendimento, form, bindingResult, "");
         if (bindingResult.hasErrors()) {
-            model.addAttribute("atendimento", assistencialFlowService.buscarAtendimento(atendimentoId));
             model.addAttribute("triagemAberta", true);
             model.addAttribute("modoReclassificacao", false);
+            model.addAttribute("atendimento", atendimento);
+            List<Area> areasExecucaoTriagem = areaRepository.findAreasAtivasTriagemByUnidadeId(atendimento.getUnidade().getId());
+            Long areaExecucaoTriagemAtualId = resolveAreaExecucaoTriagemAtual(atendimento.getUnidade().getId(), areasExecucaoTriagem);
+            model.addAttribute("areasExecucaoTriagem", areasExecucaoTriagem);
+            model.addAttribute("areaExecucaoTriagemAtualId", areaExecucaoTriagemAtualId);
+            model.addAttribute("inicioTriagemCapturada",
+                    lookupInicioTriagemCapturada(session, atendimentoId, assistencialFlowService.buscarTriagemAberta(atendimentoId), false));
             model.addAttribute("classificacaoCores", classificacaoCorRepository.findByAtivoTrueOrderByOrdemExibicaoAscDescricaoAsc());
             populateTriagemLookups(model);
             return "pages/care/triage/form";
         }
         try {
-            assistencialFlowService.finalizarTriagem(atendimentoId, form);
+            rememberAreaExecucaoTriagem(form.getAreaExecucaoId());
+            LocalDateTime inicioTriagemCapturada = lookupInicioTriagemCapturada(
+                    session,
+                    atendimentoId,
+                    assistencialFlowService.buscarTriagemAberta(atendimentoId),
+                    false);
+            assistencialFlowService.finalizarTriagem(atendimentoId, form, inicioTriagemCapturada);
+            clearInicioTriagemCapturada(session, atendimentoId);
             redirectAttributes.addFlashAttribute("successMessage", "Triagem finalizada");
             return "redirect:/ui/triagem";
         } catch (IllegalArgumentException ex) {
@@ -422,6 +464,7 @@ public class TriagemController {
                                 Model model,
                                 RedirectAttributes redirectAttributes) {
         requirePermission();
+        Atendimento atendimento = assistencialFlowService.buscarAtendimento(atendimentoId);
         boolean triagemAberta = assistencialFlowService.buscarTriagemAberta(atendimentoId).isPresent();
         if (triagemAberta) {
             redirectAttributes.addFlashAttribute("errorMessage", "Finalize a classificacao inicial antes de reclassificar.");
@@ -432,15 +475,21 @@ public class TriagemController {
             return "redirect:/ui/triagem/" + atendimentoId;
         }
         applyReclassificacaoValidation(form, bindingResult);
+        validateAreaExecucaoTriagemForm(atendimento, form, bindingResult, "");
         if (bindingResult.hasErrors()) {
-            model.addAttribute("atendimento", assistencialFlowService.buscarAtendimento(atendimentoId));
             model.addAttribute("triagemAberta", false);
             model.addAttribute("modoReclassificacao", true);
+            model.addAttribute("atendimento", atendimento);
+            List<Area> areasExecucaoTriagem = areaRepository.findAreasAtivasTriagemByUnidadeId(atendimento.getUnidade().getId());
+            Long areaExecucaoTriagemAtualId = resolveAreaExecucaoTriagemAtual(atendimento.getUnidade().getId(), areasExecucaoTriagem);
+            model.addAttribute("areasExecucaoTriagem", areasExecucaoTriagem);
+            model.addAttribute("areaExecucaoTriagemAtualId", areaExecucaoTriagemAtualId);
             model.addAttribute("classificacaoCores", classificacaoCorRepository.findByAtivoTrueOrderByOrdemExibicaoAscDescricaoAsc());
             populateTriagemLookups(model);
             return "pages/care/triage/form";
         }
         try {
+            rememberAreaExecucaoTriagem(form.getAreaExecucaoId());
             assistencialFlowService.registrarReclassificacao(atendimentoId, form);
             redirectAttributes.addFlashAttribute("successMessage", "Reclassificacao registrada");
             return "redirect:/ui/triagem";
@@ -485,13 +534,19 @@ public class TriagemController {
                                      HttpSession session,
                                      AtendimentoWizardForm wizard,
                                      Map<String, String> errors) {
+        Long unidadeId = unidadeAtual();
+        List<Area> areasExecucaoTriagem = areaRepository.findAreasAtivasTriagemByUnidadeId(unidadeId);
+        Long areaExecucaoTriagemAtualId = resolveAreaExecucaoTriagemAtual(unidadeId, areasExecucaoTriagem);
+        applyAreaExecucaoTriagemDefault(wizard.getTriagemForm(), areaExecucaoTriagemAtualId, areasExecucaoTriagem);
         var authentication = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
-        List<TipoAtendimento> tiposPermitidos = tiposPermitidosOrdenados(authentication);
+        List<TipoAtendimentoOption> tiposPermitidos = tiposPermitidosOrdenados(authentication);
         if (tiposPermitidos.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Sem permissao para criar atendimento nesta unidade");
         }
-        if (wizard.getTipoAtendimento() == null || !tiposPermitidos.contains(wizard.getTipoAtendimento())) {
-            wizard.setTipoAtendimento(tiposPermitidos.get(0));
+        String tipoSelecionado = TipoAtendimentoService.normalizeCodigo(wizard.getTipoAtendimento());
+        boolean tipoValido = tiposPermitidos.stream().anyMatch(item -> item.getCodigo().equals(tipoSelecionado));
+        if (!tipoValido) {
+            wizard.setTipoAtendimento(tiposPermitidos.get(0).getCodigo());
         }
         model.addAttribute("wizard", wizard);
         model.addAttribute("tiposAtendimento", tiposPermitidos);
@@ -500,15 +555,25 @@ public class TriagemController {
         model.addAttribute("wizardErrors", errors);
         model.addAttribute("sexos", pacienteLookupService.listarSexos());
         model.addAttribute("patientSummary", buildPatientSummary(wizard));
+        model.addAttribute("areasExecucaoTriagem", areasExecucaoTriagem);
+        model.addAttribute("areaExecucaoTriagemAtualId", areaExecucaoTriagemAtualId);
         populateTriagemLookups(model);
     }
 
-    private List<TipoAtendimento> tiposPermitidosOrdenados(
+    private List<TipoAtendimentoOption> tiposPermitidosOrdenados(
             org.springframework.security.core.Authentication authentication) {
-        Set<TipoAtendimento> permitidos = operationalPermissionService.tiposPermitidosCriarAtendimento(authentication);
-        List<TipoAtendimento> ordenados = new ArrayList<>(permitidos);
-        ordenados.sort(java.util.Comparator.comparing(Enum::name));
+        Set<String> permitidos = operationalPermissionService.tiposPermitidosCriarAtendimentoCodigos(authentication);
+        List<TipoAtendimentoOption> ordenados = tiposAtendimentoConfigurados(unidadeAtual()).stream()
+                .filter(item -> permitidos.contains(item.getCodigo()))
+                .toList();
+        if (ordenados.isEmpty()) {
+            ordenados = tipoAtendimentoService.listarOpcoesAtivasPorCodigos(permitidos);
+        }
         return ordenados;
+    }
+
+    private List<TipoAtendimentoOption> tiposAtendimentoConfigurados(Long unidadeId) {
+        return tipoAtendimentoService.listarOpcoesAtivasPorUnidadeOuGlobal(unidadeId);
     }
 
     private AtendimentoWizardForm getOrCreateWizard(HttpSession session, Long pacienteId) {
@@ -593,18 +658,28 @@ public class TriagemController {
     private Map<String, String> validateAtendimentoStep(AtendimentoWizardForm wizard) {
         Map<String, String> errors = new LinkedHashMap<>();
         var authentication = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
-        List<TipoAtendimento> tiposPermitidos = tiposPermitidosOrdenados(authentication);
-        if (wizard.getTipoAtendimento() == null) {
+        List<TipoAtendimentoOption> tiposPermitidos = tiposPermitidosOrdenados(authentication);
+        String tipoSelecionado = TipoAtendimentoService.normalizeCodigo(wizard.getTipoAtendimento());
+        if (tipoSelecionado == null) {
             errors.put("tipoAtendimento", "Tipo de atendimento e obrigatorio.");
-        } else if (!tiposPermitidos.contains(wizard.getTipoAtendimento())) {
+        } else if (tiposPermitidos.stream().noneMatch(item -> item.getCodigo().equals(tipoSelecionado))) {
             errors.put("tipoAtendimento", "Tipo de atendimento nao permitido para seu perfil na unidade atual.");
         }
+        wizard.setTipoAtendimento(tipoSelecionado);
         return errors;
     }
 
     private Map<String, String> validateTriagemStep(AtendimentoWizardForm wizard) {
         Map<String, String> errors = new LinkedHashMap<>();
         TriagemForm form = wizard.getTriagemForm();
+        List<Area> areasExecucaoTriagem = areaRepository.findAreasAtivasTriagemByUnidadeId(unidadeAtual());
+        Long areaExecucaoTriagemAtualId = resolveAreaExecucaoTriagemAtual(unidadeAtual(), areasExecucaoTriagem);
+        applyAreaExecucaoTriagemDefault(form, areaExecucaoTriagemAtualId, areasExecucaoTriagem);
+        if (form.getAreaExecucaoId() == null) {
+            errors.put("triagemForm.areaExecucaoId", "Posto de triagem e obrigatorio.");
+        } else if (!isAreaTriagemValida(form.getAreaExecucaoId(), areasExecucaoTriagem)) {
+            errors.put("triagemForm.areaExecucaoId", "Posto de triagem invalido para a unidade atual.");
+        }
         if (form.getClassificacaoCorId() == null) {
             errors.put("triagemForm.classificacaoCorId", "Classificacao de risco e obrigatoria.");
         }
@@ -717,6 +792,7 @@ public class TriagemController {
         destino.setMedicacoesUsoContinuo(origem.getMedicacoesUsoContinuo());
         destino.setDiscriminador(origem.getDiscriminador());
         destino.setObservacao(origem.getObservacao());
+        destino.setAreaExecucaoId(origem.getAreaExecucaoId());
         destino.setAlergias(cloneAlergias(origem.getAlergias()));
         destino.setComorbidadeIds(origem.getComorbidadeIds() == null ? new ArrayList<>() : new ArrayList<>(origem.getComorbidadeIds()));
         destino.setAvcSinalAlertaIds(origem.getAvcSinalAlertaIds() == null ? new ArrayList<>() : new ArrayList<>(origem.getAvcSinalAlertaIds()));
@@ -904,6 +980,14 @@ public class TriagemController {
         return filtro != null && filtro.equals(cpfDigits);
     }
 
+    private boolean matchesTipoAtendimento(Atendimento atendimento, String tipoAtendimento) {
+        String filtro = TipoAtendimentoService.normalizeCodigo(tipoAtendimento);
+        if (filtro == null) {
+            return true;
+        }
+        return filtro.equals(TipoAtendimentoService.normalizeCodigo(atendimento.getTipoAtendimentoCodigo()));
+    }
+
     private boolean matchesAtendimentoId(Atendimento atendimento, Long atendimentoId) {
         if (atendimentoId == null) {
             return true;
@@ -930,6 +1014,82 @@ public class TriagemController {
         return true;
     }
 
+    private void validateAreaExecucaoTriagemForm(Atendimento atendimento,
+                                                  TriagemForm form,
+                                                  BindingResult bindingResult,
+                                                  String fieldPrefix) {
+        List<Area> areasExecucaoTriagem = areaRepository.findAreasAtivasTriagemByUnidadeId(atendimento.getUnidade().getId());
+        Long areaExecucaoTriagemAtualId = resolveAreaExecucaoTriagemAtual(atendimento.getUnidade().getId(), areasExecucaoTriagem);
+        applyAreaExecucaoTriagemDefault(form, areaExecucaoTriagemAtualId, areasExecucaoTriagem);
+        String field = fieldPrefix + "areaExecucaoId";
+        if (form.getAreaExecucaoId() == null) {
+            bindingResult.rejectValue(field, "required", "Posto de triagem e obrigatorio.");
+            return;
+        }
+        if (!isAreaTriagemValida(form.getAreaExecucaoId(), areasExecucaoTriagem)) {
+            bindingResult.rejectValue(field, "invalid", "Posto de triagem invalido para a unidade atual.");
+        }
+    }
+
+    private Long resolveAreaExecucaoTriagemAtual(Long unidadeId, List<Area> areasExecucaoTriagem) {
+        Long areaAtual = unidadeContext.getAreaExecucaoTriagemAtual().orElse(null);
+        if (areaAtual != null && isAreaTriagemValida(areaAtual, areasExecucaoTriagem)) {
+            return areaAtual;
+        }
+        if (areasExecucaoTriagem.size() == 1) {
+            Long unico = areasExecucaoTriagem.get(0).getId();
+            unidadeContext.setAreaExecucaoTriagemAtual(unico);
+            return unico;
+        }
+        if (areaAtual != null) {
+            unidadeContext.clearAreaExecucaoTriagemAtual();
+        }
+        return null;
+    }
+
+    private void applyAreaExecucaoTriagemDefault(TriagemForm form,
+                                                 Long areaExecucaoTriagemAtualId,
+                                                 List<Area> areasExecucaoTriagem) {
+        if (form == null) {
+            return;
+        }
+        if (form.getAreaExecucaoId() != null && isAreaTriagemValida(form.getAreaExecucaoId(), areasExecucaoTriagem)) {
+            return;
+        }
+        if (areaExecucaoTriagemAtualId != null) {
+            form.setAreaExecucaoId(areaExecucaoTriagemAtualId);
+        } else if (areasExecucaoTriagem.size() == 1) {
+            form.setAreaExecucaoId(areasExecucaoTriagem.get(0).getId());
+        }
+    }
+
+    private void rememberAreaExecucaoTriagem(Long areaId) {
+        if (areaId != null) {
+            unidadeContext.setAreaExecucaoTriagemAtual(areaId);
+        }
+    }
+
+    private boolean isAreaTriagemValida(Long areaId, List<Area> areasExecucaoTriagem) {
+        if (areaId == null) {
+            return false;
+        }
+        return areasExecucaoTriagem.stream().anyMatch(area -> area.getId().equals(areaId));
+    }
+
+    private String safeRedirectPath(String redirect, String defaultPath) {
+        if (redirect == null || redirect.isBlank()) {
+            return defaultPath;
+        }
+        String value = redirect.trim();
+        if (value.contains("\n") || value.contains("\r")) {
+            return defaultPath;
+        }
+        if (!value.startsWith("/ui/")) {
+            return defaultPath;
+        }
+        return value;
+    }
+
     private String registerChegadaToken(HttpSession session) {
         Map<String, LocalDateTime> chegadas = getChegadas(session);
         String token = UUID.randomUUID().toString();
@@ -953,6 +1113,48 @@ public class TriagemController {
         return getChegadas(session).get(token);
     }
 
+    private LocalDateTime capturarInicioTriagemAoAbrirTela(HttpSession session,
+                                                           Long atendimentoId,
+                                                           java.util.Optional<ClassificacaoRisco> triagemAbertaOpt,
+                                                           boolean modoReclassificacao) {
+        if (modoReclassificacao || atendimentoId == null) {
+            return null;
+        }
+        LocalDateTime inicioAberto = triagemAbertaOpt
+                .map(ClassificacaoRisco::getDataInicio)
+                .orElse(null);
+        if (inicioAberto != null) {
+            return inicioAberto;
+        }
+        Map<Long, LocalDateTime> capturas = getInicioTriagemCapturado(session);
+        LocalDateTime inicioCapturado = LocalDateTime.now();
+        capturas.put(atendimentoId, inicioCapturado);
+        return inicioCapturado;
+    }
+
+    private LocalDateTime lookupInicioTriagemCapturada(HttpSession session,
+                                                       Long atendimentoId,
+                                                       java.util.Optional<ClassificacaoRisco> triagemAbertaOpt,
+                                                       boolean modoReclassificacao) {
+        if (modoReclassificacao || atendimentoId == null) {
+            return null;
+        }
+        LocalDateTime inicioAberto = triagemAbertaOpt
+                .map(ClassificacaoRisco::getDataInicio)
+                .orElse(null);
+        if (inicioAberto != null) {
+            return inicioAberto;
+        }
+        return getInicioTriagemCapturado(session).get(atendimentoId);
+    }
+
+    private void clearInicioTriagemCapturada(HttpSession session, Long atendimentoId) {
+        if (atendimentoId == null) {
+            return;
+        }
+        getInicioTriagemCapturado(session).remove(atendimentoId);
+    }
+
     @SuppressWarnings("unchecked")
     private Map<String, LocalDateTime> getChegadas(HttpSession session) {
         Object attr = session.getAttribute(SESSION_TRIAGEM_CHEGADAS);
@@ -961,6 +1163,17 @@ public class TriagemController {
         }
         Map<String, LocalDateTime> novoMapa = new HashMap<>();
         session.setAttribute(SESSION_TRIAGEM_CHEGADAS, novoMapa);
+        return novoMapa;
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<Long, LocalDateTime> getInicioTriagemCapturado(HttpSession session) {
+        Object attr = session.getAttribute(SESSION_TRIAGEM_INICIO_CAPTURADO);
+        if (attr instanceof Map<?, ?> map) {
+            return (Map<Long, LocalDateTime>) map;
+        }
+        Map<Long, LocalDateTime> novoMapa = new HashMap<>();
+        session.setAttribute(SESSION_TRIAGEM_INICIO_CAPTURADO, novoMapa);
         return novoMapa;
     }
 }

@@ -81,7 +81,6 @@ import br.com.his.care.attendance.model.PrimeiroPassoFluxo;
 import br.com.his.care.triage.model.ReguaDor;
 import br.com.his.care.admission.model.SituacaoOcupacional;
 import br.com.his.care.attendance.model.StatusAtendimento;
-import br.com.his.care.attendance.model.TipoAtendimento;
 import br.com.his.care.attendance.model.UnidadeConfigFluxo;
 import br.com.his.care.inpatient.repository.AreaRepository;
 import br.com.his.care.triage.repository.AvcSinalAlertaRepository;
@@ -113,7 +112,7 @@ import br.com.his.care.triage.repository.ReguaDorRepository;
 import br.com.his.care.admission.repository.SituacaoOcupacionalRepository;
 import br.com.his.care.attendance.repository.StatusAtendimentoRepository;
 import br.com.his.care.attendance.repository.UnidadeConfigFluxoRepository;
-import br.com.his.care.triage.repository.UnidadeRegraTriagemRepository;
+import br.com.his.care.attendance.repository.UnidadeTipoAtendimentoRepository;
 import br.com.his.reference.location.model.Bairro;
 import br.com.his.reference.location.model.Municipio;
 import br.com.his.reference.location.repository.BairroRepository;
@@ -166,7 +165,7 @@ public class AssistencialFlowService {
     private final AtendimentoEventoRepository atendimentoEventoRepository;
     private final UnidadeRepository unidadeRepository;
     private final UnidadeConfigFluxoRepository unidadeConfigFluxoRepository;
-    private final UnidadeRegraTriagemRepository unidadeRegraTriagemRepository;
+    private final UnidadeTipoAtendimentoRepository unidadeTipoAtendimentoRepository;
     private final PacienteService pacienteService;
     private final UsuarioAuditoriaService usuarioAuditoriaService;
 
@@ -206,7 +205,7 @@ public class AssistencialFlowService {
                                    AtendimentoEventoRepository atendimentoEventoRepository,
                                    UnidadeRepository unidadeRepository,
                                    UnidadeConfigFluxoRepository unidadeConfigFluxoRepository,
-                                   UnidadeRegraTriagemRepository unidadeRegraTriagemRepository,
+                                   UnidadeTipoAtendimentoRepository unidadeTipoAtendimentoRepository,
                                    PacienteService pacienteService,
                                    UsuarioAuditoriaService usuarioAuditoriaService) {
         this.atendimentoRepository = atendimentoRepository;
@@ -245,33 +244,34 @@ public class AssistencialFlowService {
         this.atendimentoEventoRepository = atendimentoEventoRepository;
         this.unidadeRepository = unidadeRepository;
         this.unidadeConfigFluxoRepository = unidadeConfigFluxoRepository;
-        this.unidadeRegraTriagemRepository = unidadeRegraTriagemRepository;
+        this.unidadeTipoAtendimentoRepository = unidadeTipoAtendimentoRepository;
         this.pacienteService = pacienteService;
         this.usuarioAuditoriaService = usuarioAuditoriaService;
     }
 
     @Transactional
-    public Atendimento criarAtendimento(Long pacienteId, Long unidadeId, TipoAtendimento tipoAtendimento) {
-        return criarAtendimento(pacienteId, unidadeId, tipoAtendimento, null);
+    public Atendimento criarAtendimento(Long pacienteId, Long unidadeId, String tipoAtendimentoCodigo) {
+        return criarAtendimento(pacienteId, unidadeId, tipoAtendimentoCodigo, null);
     }
 
     @Transactional
     public Atendimento criarAtendimento(Long pacienteId,
                                         Long unidadeId,
-                                        TipoAtendimento tipoAtendimento,
+                                        String tipoAtendimentoCodigo,
                                         LocalDateTime dataHoraChegada) {
-        return criarAtendimento(pacienteId, unidadeId, tipoAtendimento, dataHoraChegada, null);
+        return criarAtendimento(pacienteId, unidadeId, tipoAtendimentoCodigo, dataHoraChegada, null);
     }
 
     @Transactional
     public Atendimento criarAtendimento(Long pacienteId,
                                         Long unidadeId,
-                                        TipoAtendimento tipoAtendimento,
+                                        String tipoAtendimentoCodigo,
                                         LocalDateTime dataHoraChegada,
                                         Episodio episodioExistente) {
         Paciente paciente = resolvePacienteDefinitivo(pacienteService.buscarPorId(pacienteId));
         Unidade unidade = unidadeRepository.findById(unidadeId)
                 .orElseThrow(() -> new IllegalArgumentException("Unidade nao encontrada: " + unidadeId));
+        UnidadeTipoAtendimento tipoAtendimentoConfig = validarTipoAtendimentoConfigurado(unidadeId, tipoAtendimentoCodigo);
         validarSemAtendimentoAberto(paciente.getId(), unidadeId, episodioExistente);
 
         UnidadeConfigFluxo config = getConfig(unidadeId);
@@ -296,7 +296,7 @@ public class AssistencialFlowService {
         atendimento.setPaciente(paciente);
         atendimento.setUnidade(unidade);
         atendimento.setEpisodio(episodio);
-        atendimento.setTipoAtendimento(tipoAtendimento);
+        atendimento.setTipoAtendimentoCadastro(tipoAtendimentoConfig.getTipoAtendimento());
         atendimento.setStatus(resolveInitialStatus(config));
         atendimento.setDataHoraChegada(chegada);
         atendimento.setDataCriacao(now);
@@ -342,13 +342,13 @@ public class AssistencialFlowService {
 
     @Transactional
     public Atendimento criarAtendimentoComPaciente(Long unidadeId,
-                                                   TipoAtendimento tipoAtendimento,
+                                                   String tipoAtendimentoCodigo,
                                                    Long pacienteId,
                                                    boolean criarTemporario,
                                                    String sexoTemporario,
                                                    Integer idadeAparenteTemporario) {
         return criarAtendimentoComPaciente(unidadeId,
-                tipoAtendimento,
+                tipoAtendimentoCodigo,
                 pacienteId,
                 criarTemporario,
                 sexoTemporario,
@@ -358,7 +358,7 @@ public class AssistencialFlowService {
 
     @Transactional
     public Atendimento criarAtendimentoComPaciente(Long unidadeId,
-                                                   TipoAtendimento tipoAtendimento,
+                                                   String tipoAtendimentoCodigo,
                                                    Long pacienteId,
                                                    boolean criarTemporario,
                                                    String sexoTemporario,
@@ -372,7 +372,7 @@ public class AssistencialFlowService {
         if (pacienteSelecionadoId == null) {
             throw new IllegalArgumentException("Informe um paciente existente ou marque criar temporario");
         }
-        return criarAtendimento(pacienteSelecionadoId, unidadeId, tipoAtendimento, dataHoraChegada);
+        return criarAtendimento(pacienteSelecionadoId, unidadeId, tipoAtendimentoCodigo, dataHoraChegada);
     }
 
     @Transactional
@@ -381,24 +381,33 @@ public class AssistencialFlowService {
         if (isEncerrado(atendimento)) {
             throw new IllegalArgumentException("Atendimento ja encerrado");
         }
-        abrirPeriodo(atendimento, AtendimentoPeriodoTipo.TRIAGEM, LocalDateTime.now(), currentUsername(), true);
-        ensureTriagemAberta(atendimento);
+        LocalDateTime inicioTriagem = LocalDateTime.now();
+        abrirPeriodo(atendimento, AtendimentoPeriodoTipo.TRIAGEM, inicioTriagem, currentUsername(), true);
+        ensureTriagemAberta(atendimento, inicioTriagem);
         atendimento.setStatus(status("EM_TRIAGEM"));
         atendimentoRepository.save(atendimento);
     }
 
     @Transactional
     public void finalizarTriagem(Long atendimentoId, TriagemForm form) {
+        finalizarTriagem(atendimentoId, form, null);
+    }
+
+    @Transactional
+    public void finalizarTriagem(Long atendimentoId, TriagemForm form, LocalDateTime inicioTriagemCapturada) {
         Atendimento atendimento = buscarAtendimento(atendimentoId);
         if (isEncerrado(atendimento)) {
             throw new IllegalArgumentException("Atendimento ja encerrado");
         }
         LocalDateTime agora = LocalDateTime.now();
-        garantirPeriodoTriagemAberto(atendimento, agora);
-        ClassificacaoRisco classificacao = ensureTriagemAberta(atendimento);
+        LocalDateTime inicioTriagem = normalizeInicioTriagemCapturada(inicioTriagemCapturada, agora);
+        garantirPeriodoTriagemAberto(atendimento, inicioTriagem);
+        ClassificacaoRisco classificacao = ensureTriagemAberta(atendimento, inicioTriagem);
+        Area areaExecucaoTriagem = resolveAreaExecucaoTriagem(atendimento, form.getAreaExecucaoId());
         ClassificacaoCor classificacaoCor = classificacaoCorRepository.findById(form.getClassificacaoCorId())
                 .orElseThrow(() -> new IllegalArgumentException("Classificacao de risco nao encontrada"));
         classificacao.setClassificacaoCor(classificacaoCor);
+        classificacao.setAreaExecucao(areaExecucaoTriagem);
         ClassificacaoSinaisVitais sinaisVitais = classificacao.getSinaisVitais();
         if (sinaisVitais == null) {
             sinaisVitais = new ClassificacaoSinaisVitais();
@@ -480,6 +489,16 @@ public class AssistencialFlowService {
         atendimentoRepository.save(atendimento);
     }
 
+    private LocalDateTime normalizeInicioTriagemCapturada(LocalDateTime inicioTriagemCapturada, LocalDateTime fallback) {
+        if (inicioTriagemCapturada == null) {
+            return fallback;
+        }
+        if (inicioTriagemCapturada.isAfter(fallback)) {
+            return fallback;
+        }
+        return inicioTriagemCapturada;
+    }
+
     @Transactional
     public void registrarReclassificacao(Long atendimentoId, TriagemForm form) {
         Atendimento atendimento = buscarAtendimento(atendimentoId);
@@ -549,8 +568,17 @@ public class AssistencialFlowService {
 
     private Entrada registrarEntrada(Atendimento atendimento, EntradaForm form) {
         Entrada entrada = entradaRepository.findByAtendimentoId(atendimento.getId()).orElseGet(Entrada::new);
-        Area area = areaRepository.findByIdAndDtCancelamentoIsNull(form.getAreaId())
-                .orElseThrow(() -> new IllegalArgumentException("Area da entrada nao encontrada"));
+        List<Area> areasEntradaPermitidas = areaRepository.findAreasAtivasRecebemEntradaByUnidadeId(atendimento.getUnidade().getId());
+        Area areaPortaEntrada = resolveAreaEntrada(
+                atendimento,
+                form.getAreaPortaEntradaId(),
+                areasEntradaPermitidas,
+                "Porta de entrada");
+        Area areaExecucao = resolveAreaEntrada(
+                atendimento,
+                form.getAreaExecucaoId(),
+                areasEntradaPermitidas,
+                "Area de execucao");
         FormaChegada formaChegada = formaChegadaRepository.findById(form.getFormaChegadaId())
                 .orElseThrow(() -> new IllegalArgumentException("Forma de chegada nao encontrada"));
         MotivoEntrada motivoEntrada = form.getMotivoEntradaId() == null
@@ -576,9 +604,6 @@ public class AssistencialFlowService {
                 ? null
                 : profissaoRepository.findById(form.getProfissaoId())
                         .orElseThrow(() -> new IllegalArgumentException("Profissao nao encontrada"));
-        if (!area.getUnidade().getId().equals(atendimento.getUnidade().getId())) {
-            throw new IllegalArgumentException("Area da entrada invalida para a unidade atual");
-        }
         if (!formaChegada.isAtivo()) {
             throw new IllegalArgumentException("Forma de chegada inativa");
         }
@@ -631,7 +656,8 @@ public class AssistencialFlowService {
             }
         }
         entrada.setAtendimento(atendimento);
-        entrada.setArea(area);
+        entrada.setAreaPortaEntrada(areaPortaEntrada);
+        entrada.setAreaExecucao(areaExecucao);
         entrada.setFormaChegada(formaChegada);
         entrada.setProcedencia(procedencia);
         entrada.setMotivoEntrada(motivoEntrada);
@@ -657,6 +683,36 @@ public class AssistencialFlowService {
         avancarFluxoAposEntrada(atendimento);
         registrarEvento(atendimento, AtendimentoEventoTipo.ENTRADA_REGISTRADA, null);
         return entrada;
+    }
+
+    private Area resolveAreaEntrada(Atendimento atendimento,
+                                    Long areaId,
+                                    List<Area> areasEntradaPermitidas,
+                                    String labelCampo) {
+        if (areaId == null) {
+            throw new IllegalArgumentException(labelCampo + " e obrigatoria");
+        }
+        Area area = areaRepository.findByIdAndUnidadeIdAndDtCancelamentoIsNull(areaId, atendimento.getUnidade().getId())
+                .orElseThrow(() -> new IllegalArgumentException(labelCampo + " invalida para a unidade atual"));
+        boolean areaPermitida = areasEntradaPermitidas.stream().anyMatch(item -> item.getId().equals(areaId));
+        if (!areaPermitida) {
+            throw new IllegalArgumentException(labelCampo + " selecionada nao possui capacidade de entrada");
+        }
+        return area;
+    }
+
+    private Area resolveAreaExecucaoTriagem(Atendimento atendimento, Long areaExecucaoId) {
+        if (areaExecucaoId == null) {
+            throw new IllegalArgumentException("Area de execucao da triagem e obrigatoria");
+        }
+        Area area = areaRepository.findByIdAndUnidadeIdAndDtCancelamentoIsNull(areaExecucaoId, atendimento.getUnidade().getId())
+                .orElseThrow(() -> new IllegalArgumentException("Area de execucao da triagem invalida para a unidade atual"));
+        boolean areaTriagem = areaRepository.findAreasAtivasTriagemByUnidadeId(atendimento.getUnidade().getId()).stream()
+                .anyMatch(item -> item.getId().equals(areaExecucaoId));
+        if (!areaTriagem) {
+            throw new IllegalArgumentException("Area selecionada nao possui capacidade de triagem");
+        }
+        return area;
     }
 
     @Transactional
@@ -834,7 +890,7 @@ public class AssistencialFlowService {
     @Transactional
     public Atendimento criarAtendimentoTransferencia(Episodio episodio,
                                                      Long unidadeDestinoId,
-                                                     TipoAtendimento tipoAtendimento,
+                                                     String tipoAtendimentoCodigo,
                                                      LocalDateTime dataHoraChegada) {
         if (episodio == null) {
             throw new IllegalArgumentException("Episodio obrigatorio para transferencia");
@@ -842,7 +898,7 @@ public class AssistencialFlowService {
         Atendimento atendimento = criarAtendimento(
                 episodio.getPaciente().getId(),
                 unidadeDestinoId,
-                tipoAtendimento,
+                tipoAtendimentoCodigo,
                 dataHoraChegada,
                 episodio);
         registrarEvento(atendimento, AtendimentoEventoTipo.TRANSFERENCIA_RECEBIDA, null);
@@ -976,11 +1032,15 @@ public class AssistencialFlowService {
     }
 
     private ClassificacaoRisco ensureTriagemAberta(Atendimento atendimento) {
+        return ensureTriagemAberta(atendimento, LocalDateTime.now());
+    }
+
+    private ClassificacaoRisco ensureTriagemAberta(Atendimento atendimento, LocalDateTime dataInicioPadrao) {
         return classificacaoRiscoRepository.findFirstByAtendimentoIdAndDataFimIsNull(atendimento.getId())
                 .orElseGet(() -> {
                     ClassificacaoRisco classificacao = new ClassificacaoRisco();
                     classificacao.setAtendimento(atendimento);
-                    classificacao.setDataInicio(LocalDateTime.now());
+                    classificacao.setDataInicio(dataInicioPadrao == null ? LocalDateTime.now() : dataInicioPadrao);
                     return classificacaoRiscoRepository.save(classificacao);
                 });
     }
@@ -997,10 +1057,32 @@ public class AssistencialFlowService {
                 });
     }
 
-    private boolean isTriagemObrigatoria(Long unidadeId, TipoAtendimento tipoAtendimento) {
-        return unidadeRegraTriagemRepository.findByUnidadeIdAndTipoAtendimento(unidadeId, tipoAtendimento)
-                .map(r -> r.isTriagemObrigatoria())
+    private boolean isTriagemObrigatoria(Long unidadeId, String tipoAtendimentoCodigo) {
+        String codigoNormalizado = TipoAtendimentoService.normalizeCodigo(tipoAtendimentoCodigo);
+        if (unidadeId == null || codigoNormalizado == null) {
+            return false;
+        }
+        return unidadeTipoAtendimentoRepository
+                .findByUnidadeIdAndTipoAtendimentoCodigoIgnoreCase(unidadeId, codigoNormalizado)
+                .filter(config -> config.isAtivo()
+                        && config.getTipoAtendimento() != null
+                        && config.getTipoAtendimento().isAtivo())
+                .map(config -> config.isTriagemObrigatoria())
                 .orElse(false);
+    }
+
+    private UnidadeTipoAtendimento validarTipoAtendimentoConfigurado(Long unidadeId, String tipoAtendimentoCodigo) {
+        String codigoNormalizado = TipoAtendimentoService.normalizeCodigo(tipoAtendimentoCodigo);
+        if (codigoNormalizado == null) {
+            throw new IllegalArgumentException("Tipo de atendimento e obrigatorio");
+        }
+        UnidadeTipoAtendimento config = unidadeTipoAtendimentoRepository
+                .findByUnidadeIdAndTipoAtendimentoCodigoIgnoreCase(unidadeId, codigoNormalizado)
+                .orElseThrow(() -> new IllegalArgumentException("Tipo de atendimento nao habilitado para a unidade atual"));
+        if (!config.isAtivo() || config.getTipoAtendimento() == null || !config.getTipoAtendimento().isAtivo()) {
+            throw new IllegalArgumentException("Tipo de atendimento inativo para a unidade atual");
+        }
+        return config;
     }
 
     private StatusAtendimento resolveInitialStatus(UnidadeConfigFluxo config) {
@@ -1026,7 +1108,7 @@ public class AssistencialFlowService {
         AtendimentoPeriodoTipo proximoPeriodo;
         StatusAtendimento proximoStatus;
         if (periodoAtual == AtendimentoPeriodoTipo.RECEPCAO) {
-            proximoPeriodo = isTriagemObrigatoria(atendimento.getUnidade().getId(), atendimento.getTipoAtendimento())
+            proximoPeriodo = isTriagemObrigatoria(atendimento.getUnidade().getId(), atendimento.getTipoAtendimentoCodigo())
                     ? AtendimentoPeriodoTipo.AGUARDANDO_TRIAGEM
                     : AtendimentoPeriodoTipo.AGUARDANDO_MEDICO;
             proximoStatus = proximoPeriodo == AtendimentoPeriodoTipo.AGUARDANDO_TRIAGEM
